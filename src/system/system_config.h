@@ -30,6 +30,8 @@ class SystemParameters: public Parameters{
 
         // std::shared_ptr<ImuParameters> vector_imu_params_;
 
+        bool use_opencv_vis_;
+        bool use_rviz_vis_;
 
     public:
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;

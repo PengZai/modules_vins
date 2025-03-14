@@ -13,7 +13,7 @@ fi
 docker build -t $IMAGE_NAME -f "${HOME}/vscode_projects/${PROJECT_NAME}/catkin_ws/src/${PROJECT_NAME}/Docker/Dockerfile" .
 
 
-xhost +local:docker
+xhost +local:root
 
 docker run \
     -e DISPLAY \
@@ -30,4 +30,4 @@ docker run \
 
 # docker run --rm -it --name $PROJECT_NAME $IMAGE_NAME /bin/bash
 
-xhost -local:docker
+# xhost -local:root

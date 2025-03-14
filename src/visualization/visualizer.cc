@@ -8,9 +8,12 @@ namespace modules_vins{
     Visualizer::Visualizer(const std::shared_ptr<SystemConfig> &config, const std::shared_ptr<ros::NodeHandle> &nh):
     config_(config)
     {
-
-        this->opencv_visualizer_ = std::make_shared<OpenCVVisualizer>(config);
-        this->ros1_visualizer_ = std::make_shared<ROS1Visualizer>(config, nh);
+        if(this->config_->params_->use_opencv_vis_){
+            this->opencv_visualizer_ = std::make_shared<OpenCVVisualizer>(config);
+        }
+        if(this->config_->params_->use_rviz_vis_){
+            this->ros1_visualizer_ = std::make_shared<ROS1Visualizer>(config, nh);
+        }
     
     }
 
@@ -24,8 +27,13 @@ namespace modules_vins{
 
     void Visualizer::publish(const CameraFrame &camera_frame){
 
-        this->opencv_visualizer_->publish(camera_frame);
-        this->ros1_visualizer_->publish(camera_frame);
+
+        if(this->config_->params_->use_opencv_vis_){
+            this->opencv_visualizer_->publish(camera_frame);
+        }
+        if(this->config_->params_->use_rviz_vis_){
+            this->ros1_visualizer_->publish(camera_frame);
+        }
     }
 
  

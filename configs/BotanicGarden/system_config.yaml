@@ -13,5 +13,9 @@ system:
   imu_config_name: "imu_config.yaml"
   camera_config_name: "camera_config.yaml"
 
+  # visualization tool
+  use_opencv_vis: 1
+  use_rviz_vis: 1
+
 
   
