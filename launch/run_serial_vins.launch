@@ -1,0 +1,19 @@
+<launch>
+
+    <arg name="config"      default="BotanicGarden" /> <!-- euroc_mav, tum_vi, rpng_aruco, kaist Orchard_EMR_Jun_2024-->
+    <arg name="config_path" default="$(find modules_vins)/configs/$(arg config)/system_config.yaml" />
+
+    <arg name="dataset" default="1018_00_img10hz600p"/>
+    <arg name="bag_path" default="/root/datasets/BotanicGarden/1018-00/$(arg dataset).bag"/>
+
+
+    <node name="modules_vins" pkg="modules_vins" type="run_serial_vins" output="screen">
+
+        <param name="bag_path"                  type="str"    value="$(arg bag_path)"/>
+        <param name="config_path"               type="str"    value="$(arg config_path)" />
+
+    </node>
+
+
+
+</launch>

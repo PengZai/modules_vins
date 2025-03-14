@@ -1,0 +1,17 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+system:
+  log_verbosity: "VERBOSE" # VERBOSE, KEY, QUIET
+  max_cameras: 2 # number of cameras, 2 for stereo, 1 for monocular
+  max_imus: 1 # number of IMUs
+  max_stereo_time_offset: 0.02 # max time offset for stereo image pair (unit: second)
+
+
+  num_feature_points: 200
+
+  # relative config file name
+  imu_config_name: "imu_config.yaml"
+  camera_config_name: "camera_config.yaml"
+
+
+  

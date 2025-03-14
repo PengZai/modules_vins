@@ -1,0 +1,10 @@
+cmake-build-*
+build
+Build
+.vscode
+*.pt
+*.torchscript
+
+
+examples/torchscripts_tutorials/datasets
+examples/torchscripts_tutorials/runs
