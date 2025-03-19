@@ -46,8 +46,7 @@ std::ostream& operator<<(std::ostream& os, const Image& img) {
     << "Sensor ID: " << img.sensor_id_ << "\n"
     << "Data Size: " << img.data_.rows << "x" << img.data_.cols << "\n"
     << "Keypoints Count: " << img.keypoint_vector_.size() << "\n"
-    << "Descriptor Size: " << img.descriptors_.rows << "x" << img.descriptors_.cols << "\n"
-    << "Keypoint Graph Size: " << img.keypoint_graph.size();
+    << "Descriptor Size: " << img.descriptors_.rows << "x" << img.descriptors_.cols << "\n";
     return os;
 }
 

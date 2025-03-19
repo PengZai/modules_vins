@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
+#include "point.h"
 
 namespace modules_vins {
 
@@ -17,12 +17,17 @@ class Image{
         int sensor_id_;
         cv::Mat data_;
         cv::Mat gray_data_;
-        std::vector<cv::KeyPoint> keypoint_vector_;
+        std::vector<KeyPoint> keypoint_vector_;
         cv::Mat descriptors_;
+        
+    
+        // matches for previous
+        std::vector<cv::DMatch> matches_in_time_;
 
-        // The key int represents a index of keypoint in this image.
-        // The value std::vector<std::pair<int, int>> represents a list of associated keypoints in different images.
-        std::map<int, std::vector<std::pair<int, int>>> keypoint_graph;
+        // matches in frame
+        std::vector<cv::DMatch> matches_in_frame_;
+
+
 
 
         friend std::ostream& operator<<(std::ostream& os, const Image& img);

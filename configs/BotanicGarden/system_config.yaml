@@ -8,6 +8,7 @@ system:
 
 
   num_feature_points: 200
+  threshold_for_tracking_descriptor:10.0
 
   # relative config file name
   imu_config_name: "imu_config.yaml"

@@ -22,6 +22,7 @@ class SystemParameters: public Parameters{
         int max_imus_; // number of IMUs
 
         int num_feature_points_;
+        double threshold_for_tracking_descriptor_;
         double max_stereo_time_offset_;
 
 

@@ -15,8 +15,8 @@ class Tracker{
     public:
 
     Tracker(const std::shared_ptr<SystemConfig> &sys_config);
-    void track(Image &img0, Image &img1);
-    
+    void trackInFrame(Image &img0, Image &img1);
+    void trackInTime(Image &img0, Image &img1);
     void pipeline(CameraFrame &camera_frame);
 
     protected:

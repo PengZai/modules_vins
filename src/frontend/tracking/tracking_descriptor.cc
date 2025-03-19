@@ -11,13 +11,9 @@ BFMatcher::BFMatcher(){
 }
 
 
-void BFMatcher::matching(cv::Mat &descriptors1, cv::Mat &descriptors2){
+void BFMatcher::matching(Image &img0, Image &img1, std::vector<cv::DMatch> &matches){
 
-    std::vector<cv::DMatch> matches;
-    this->bf_->match(descriptors1, descriptors2, matches); // Find the two best matches
-    // for(const cv::DMatch & match: matches){
-    //     VLOG(VERBOSE) << match.imgIdx;
-    // }
+    this->bf_->match(img0.descriptors_, img1.descriptors_, matches); // Find the two best matches
 
 
 }

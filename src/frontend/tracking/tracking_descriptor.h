@@ -3,6 +3,7 @@
 #include<opencv2/opencv.hpp>
 #include<memory>
 #include"../../log/logging.h"
+#include"../../data/camera.h"
 
 namespace modules_vins{
 
@@ -10,7 +11,7 @@ class BFMatcher{
 
     public:
     BFMatcher();
-    void matching(cv::Mat &descriptors1, cv::Mat &descriptors2);
+    void matching(Image &img0, Image &img1, std::vector<cv::DMatch> &matches);
 
     protected:
 
