@@ -14,9 +14,15 @@ class Image{
 
     public:
         double timestamp_;
-        int sensor_id_;
+
+        static int image_id_counter_;
+        int image_id_;
+
+        //which camera this image belong to
+        int sensor_id_; 
         cv::Mat data_;
         cv::Mat gray_data_;
+        std::vector<cv::KeyPoint> cv_keypoint_vector_;
         std::vector<KeyPoint> keypoint_vector_;
         cv::Mat descriptors_;
         
@@ -57,16 +63,14 @@ class CameraFrame {
     public:
     CameraFrame();
     CameraFrame(const std::vector<Image> image_vector);
+    // CameraFrame(const CameraFrame &camera_frame);
 
     std::vector<Image> image_vector_;
+    static int frame_id_counter_;
     int frame_id_;
 
     // Sophus::SE3<float> Tcw;
 
-    
-    // The key std::pair<int, int> represents a keypoint in (image_index, keypoint_index) format.
-    // The value std::vector<std::pair<int, int>> represents a list of associated keypoints in different images.
-    std::map<std::pair<int, int>, std::vector<std::pair<int, int>>> keypoint_graph;
 
 
 

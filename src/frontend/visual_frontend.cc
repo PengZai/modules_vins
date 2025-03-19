@@ -15,14 +15,14 @@ sys_config_(sys_config)
 void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
 
-    camera_frame_deque_.push_back(camera_frame);
+    // camera_frame_deque_.push_back(camera_frame);
 
     detector_->pipeline(camera_frame);
     
 
     trakcer_->pipeline(camera_frame);
 
-    camera_frame_deque_.pop_front();
+    // camera_frame_deque_.pop_front();
     
 
 

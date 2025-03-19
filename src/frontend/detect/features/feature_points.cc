@@ -10,31 +10,23 @@ ORBFeature::ORBFeature(int num_features){
     
 }
 
-void ORBFeature::detect(const cv::Mat &img, std::vector<KeyPoint> &keypoints){
+void ORBFeature::detect(Image &img){
 
-    std::vector<cv::KeyPoint> cvKeypoints;
-    this->orb->detect(img, cvKeypoints);
-
-    // Convert cv::KeyPoint to modules_vins::KeyPoint
-    keypoints.clear();
-    keypoints.reserve(cvKeypoints.size());
-    for (const cv::KeyPoint& kp : cvKeypoints) {
-        keypoints.emplace_back(kp); // Assuming KeyPoint has a constructor accepting cv::KeyPoint
+    this->orb->detect(img.data_, img.cv_keypoint_vector_);
+    for(int i=0; i < (int)img.cv_keypoint_vector_.size(); i++){
+        cv::KeyPoint &kp = img.cv_keypoint_vector_[i];
+        img.keypoint_vector_.emplace_back(kp);
     }
+
+    
 }
 
-void ORBFeature::compute(const cv::Mat &img, std::vector<KeyPoint> &keypoints, cv::Mat &descriptors){
+void ORBFeature::compute(Image &img){
 
     std::vector<cv::KeyPoint> cvKeypoints;
-    this->orb->compute(img, cvKeypoints, descriptors);
+    this->orb->compute(img.data_, img.cv_keypoint_vector_, img.descriptors_);
 
-    // Convert cv::KeyPoint to modules_vins::KeyPoint
-    keypoints.clear();
-    keypoints.reserve(cvKeypoints.size());
-    for (const cv::KeyPoint& kp : cvKeypoints) {
-        keypoints.emplace_back(kp); // Assuming KeyPoint has a constructor accepting cv::KeyPoint
-    }
-
+    
 }
     
 

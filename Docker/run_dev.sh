@@ -30,4 +30,4 @@ docker run \
 
 # docker run --rm -it --name $PROJECT_NAME $IMAGE_NAME /bin/bash
 
-# xhost -local:root
+xhost -local:root

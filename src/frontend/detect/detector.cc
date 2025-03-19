@@ -25,7 +25,7 @@ void Detector::detect(Image &img){
         std::exit(EXIT_FAILURE);
     }
 
-    this->orb_feature_->detect(img.gray_data_, img.keypoint_vector_);
+    this->orb_feature_->detect(img);
 
 
     // VLOG(VERBOSE) << img.data_;
@@ -37,7 +37,7 @@ void Detector::detect(Image &img){
 
 void Detector::computeDescriptor(Image &img){
 
-    this->orb_feature_->compute(img.data_, img.keypoint_vector_, img.descriptors_);
+    this->orb_feature_->compute(img);
 
     VLOG(VERBOSE) << img;
 }

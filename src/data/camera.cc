@@ -20,23 +20,38 @@ namespace modules_vins{
 
 // };
 
+int Image::image_id_counter_ = -1;
+
 Image::Image(double timestamp, int sensor_id, cv::Mat data):
-timestamp_(timestamp), sensor_id_(sensor_id), data_(data)
+timestamp_(timestamp), sensor_id_(sensor_id), data_(data), image_id_(++Image::image_id_counter_)
 {
 
 }
 
+// just for auto incremental
+int CameraFrame::frame_id_counter_=-1;
 
 
-CameraFrame::CameraFrame(){
-    
+CameraFrame::CameraFrame():
+frame_id_(++CameraFrame::frame_id_counter_)
+{
+
+
 }
 
 CameraFrame::CameraFrame(const std::vector<Image> image_vector):
-image_vector_(image_vector)
+image_vector_(image_vector), frame_id_(++CameraFrame::frame_id_counter_)
 {
 
 }
+
+// CameraFrame::CameraFrame(const CameraFrame &camera_frame):
+// image_vector_(camera_frame.image_vector_), frame_id_(camera_frame.frame_id_)
+// {
+//     CameraFrame::frame_id_counter_++;
+//     this->frame_id_ = frame_id_counter_;
+// }
+
 
 
 // Overload operator<< for logging

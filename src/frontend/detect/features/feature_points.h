@@ -2,7 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d.hpp>
-#include "../../../data/point.h"
+#include "../../../data/camera.h"
 
 
 namespace modules_vins{
@@ -13,8 +13,8 @@ class ORBFeature{
     public:
     ORBFeature(int num_features);
 
-    void detect(const cv::Mat &img, std::vector<KeyPoint> &keypoints);
-    void compute(const cv::Mat &img, std::vector<KeyPoint> &keypoints, cv::Mat &descriptors);
+    void detect(Image &img);
+    void compute(Image &img);
 
     protected:
     int num_features_;

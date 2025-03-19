@@ -5,7 +5,7 @@
 namespace modules_vins{
 
 
-class KeyPoint : public cv::KeyPoint{
+class KeyPoint{
 
 
     public:
@@ -13,11 +13,17 @@ class KeyPoint : public cv::KeyPoint{
     KeyPoint(const cv::KeyPoint &kp);
 
     void setId(int id);
+    void setCVKeyPoint(const cv::KeyPoint &kp);
+    void setKeyPointPosition(const double x, const double y);
     void setMatchInTime(const cv::DMatch &match_in_time);
     // void setMatchInFrame(const cv::DMatch &match_in_frame);
 
     public:
     int id_ = -1;
+    float x_;
+    float y_;
+
+    cv::KeyPoint cv_keypoint_;
 
     // struct cv::DMatch {
     //     int queryIdx;  // Index of keypoint in the first image (query image)

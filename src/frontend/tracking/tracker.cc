@@ -12,27 +12,36 @@ Tracker::Tracker(const std::shared_ptr<SystemConfig> &sys_config){
 
 void Tracker::trackInFrame(Image &img0, Image &img1){
 
-    std::vector<cv::DMatch> raw_matches;
-    this->bf_->matching(img0, img1, raw_matches);
-    for (int i=0; i < raw_matches.size(); i++) {
-        cv::DMatch &match = raw_matches[i];
+    std::vector<cv::DMatch> matches;
+    this->bf_->matching(img0, img1, matches);
+    for (int i=0; i < (int)matches.size(); i++) {
+        cv::DMatch &match = matches[i];
         if(match.distance < this->sys_config_->params_->threshold_for_tracking_descriptor_){
             continue;
         }
         // Manually assign `imgIdx`
         match.imgIdx = img1.sensor_id_; // Store index of the train image
+        img0.keypoint_vector_[match.queryIdx].match_in_time_ = match;
         img0.matches_in_frame_.push_back(match);
     }
 }
 
 void Tracker::trackInTime(Image &img0, Image &img1){
 
-    std::vector<cv::DMatch> raw_matches;
-    this->bf_->matching(img0, img1, raw_matches);
-    for (int i=0; i < raw_matches.size(); i++) {
-        cv::DMatch &match = raw_matches[i];
-        if(match.distance < this->sys_config_->params_->threshold_for_tracking_descriptor_){
-            continue;
+    std::vector<cv::DMatch> matches;
+    this->bf_->matching(img0, img1, matches);
+
+    // Sort matches based on distance (best matches first)
+    std::sort(matches.begin(), matches.end(), [](const cv::DMatch &a, const cv::DMatch &b) {
+        return a.distance < b.distance;
+    });
+
+
+    for (int i=0; i < (int)matches.size(); i++) {
+        cv::DMatch &match = matches[i];
+        if(match.distance > this->sys_config_->params_->threshold_for_tracking_descriptor_){
+            // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
+            break;
         }
         // Manually assign `imgIdx`
         match.imgIdx = img1.sensor_id_; // Store index of the train image

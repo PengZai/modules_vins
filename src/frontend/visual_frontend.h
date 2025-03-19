@@ -21,7 +21,7 @@ class VisualFrontend{
 
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
-    std::deque<CameraFrame> camera_frame_deque_;
+    // std::deque<CameraFrame> camera_frame_deque_;
     
 
     std::shared_ptr<Detector> detector_;

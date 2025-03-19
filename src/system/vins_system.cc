@@ -63,7 +63,7 @@ void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msg
         
     }
 
-
+    
     CameraFrame camera_frame(image_vector);
     this->camera_frame_deque_.push_back(camera_frame);
 
