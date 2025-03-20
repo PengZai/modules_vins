@@ -70,6 +70,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/log/log.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/data/data.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/frontend.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/visualization.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/utils/utils.cmake)
 
 
 

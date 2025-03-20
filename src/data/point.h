@@ -16,12 +16,16 @@ class KeyPoint{
     void setCVKeyPoint(const cv::KeyPoint &kp);
     void setKeyPointPosition(const double x, const double y);
     void setMatchInTime(const cv::DMatch &match_in_time);
+    void set3DKeyPoint(const cv::Point3f point3d);
+
     // void setMatchInFrame(const cv::DMatch &match_in_frame);
 
     public:
     int id_ = -1;
-    float x_;
-    float y_;
+
+    cv::Point2f point2d_;
+    cv::Point3f point3d_;
+
 
     cv::KeyPoint cv_keypoint_;
 

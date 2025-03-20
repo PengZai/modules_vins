@@ -174,8 +174,6 @@ void System::callbackVisualNavigation(){
 
 
 
-// }
-
 
 
 } // namespace modules_vins

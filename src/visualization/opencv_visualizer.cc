@@ -30,10 +30,10 @@ namespace modules_vins
                 for(const KeyPoint &keypoint : img.keypoint_vector_){
 
                     const float r = 5;
-                    pt1.x=keypoint.x_-r;
-                    pt1.y=keypoint.y_-r;
-                    pt2.x=keypoint.x_+r;
-                    pt2.y=keypoint.y_+r;
+                    pt1.x=keypoint.point2d_.x-r;
+                    pt1.y=keypoint.point2d_.y-r;
+                    pt2.x=keypoint.point2d_.x+r;
+                    pt2.y=keypoint.point2d_.y+r;
     
                     if(keypoint.match_in_time_.trainIdx != -1){
                         cv::rectangle(img.data_,pt1,pt2,this->GreenColor_);

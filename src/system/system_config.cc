@@ -40,6 +40,8 @@ void SystemConfig::loadFromPath(const std::string &config_path){
         
     }
 
+
+    camera_config->calculateExtrinsicsAndProjectionMatrixBetweenCameras();
 }
 
 

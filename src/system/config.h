@@ -83,7 +83,7 @@ class Parameters{
  
         }
 
-        void parse(const std::string &parameter_name, Eigen::Matrix4d parsed_values){
+        void parse(const std::string &parameter_name, Eigen::Matrix4d &parsed_values){
             std::stringstream log_stream;
             cv::FileNode node = (*this->node_)[parameter_name];
             
@@ -98,6 +98,7 @@ class Parameters{
         
                 for (size_t j = 0; j < row.size(); ++j) {
                     parsed_values(i, j) = static_cast<double>(row[j]);
+
                     log_stream << parsed_values(i) << ", ";
                 }
 

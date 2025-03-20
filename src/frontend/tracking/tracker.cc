@@ -23,7 +23,13 @@ void Tracker::trackInFrame(Image &img0, Image &img1){
         match.imgIdx = img1.sensor_id_; // Store index of the train image
         img0.keypoint_vector_[match.queryIdx].match_in_time_ = match;
         img0.matches_in_frame_.push_back(match);
+
+        Eigen::Matrix4d eyeMatrix = Eigen::Matrix4d::Identity();
+
+        Eigen::Matrix<double, 3, 4> P_cam_1_w= this->sys_config_->camera_config_->getProjectionMatrixBetweenCamerasBySensorID(eyeMatrix, img0.sensor_id_, img1.sensor_id_);
     }
+
+    
 }
 
 void Tracker::trackInTime(Image &img0, Image &img1){
