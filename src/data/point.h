@@ -2,29 +2,50 @@
 
 #include<opencv2/opencv.hpp>
 
+
 namespace modules_vins{
 
+
+class MapPoint{
+
+    public:
+
+    MapPoint();
+    MapPoint(const cv::Point3f pt);
+
+    void setPosition(const cv::Point3f pt);
+
+    cv::Point3f pt_;
+
+    static int id_counter_;
+    int id_ = -1;
+
+
+
+
+
+};
 
 class KeyPoint{
 
 
     public:
     KeyPoint();
-    KeyPoint(const cv::KeyPoint &kp);
+    KeyPoint(const cv::KeyPoint kp);
 
-    void setId(int id);
     void setCVKeyPoint(const cv::KeyPoint &kp);
     void setKeyPointPosition(const double x, const double y);
     void setMatchInTime(const cv::DMatch &match_in_time);
-    void set3DKeyPoint(const cv::Point3f point3d);
+    void setMapPointPtr(const std::shared_ptr<MapPoint> map_point_ptr);
 
     // void setMatchInFrame(const cv::DMatch &match_in_frame);
 
     public:
+    static int id_counter_;
     int id_ = -1;
 
-    cv::Point2f point2d_;
-    cv::Point3f point3d_;
+    cv::Point2f pt_;
+    std::shared_ptr<MapPoint> map_point_ptr_;
 
 
     cv::KeyPoint cv_keypoint_;
@@ -39,5 +60,8 @@ class KeyPoint{
     // cv::DMatch match_in_frame_;
 
 };
+
+
+
 
 } //namespace modules_vins

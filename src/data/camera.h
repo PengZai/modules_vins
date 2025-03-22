@@ -15,8 +15,8 @@ class Image{
     public:
         double timestamp_;
 
-        static int image_id_counter_;
-        int image_id_;
+        static int id_counter_;
+        int id_;
 
         //which camera this image belong to
         int sensor_id_; 
@@ -66,8 +66,8 @@ class CameraFrame {
     // CameraFrame(const CameraFrame &camera_frame);
 
     std::vector<Image> image_vector_;
-    static int frame_id_counter_;
-    int frame_id_;
+    static int id_counter_;
+    int id_;
 
     // Sophus::SE3<float> Tcw;
 

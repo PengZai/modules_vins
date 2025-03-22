@@ -55,7 +55,7 @@ class CameraConfig : public Config
 
     protected:
 
-        std::unordered_map<std::pair<unsigned int, unsigned int>, Eigen::Matrix4d, pair_hash> map_extrinsics_between_cameras_;
+        std::map<std::pair<unsigned int, unsigned int>, Eigen::Matrix4d> map_extrinsics_between_cameras_;
 
 }; 
 

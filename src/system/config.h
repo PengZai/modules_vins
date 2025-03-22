@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include <memory>
 #include <opencv2/opencv.hpp>
 #include <sstream>

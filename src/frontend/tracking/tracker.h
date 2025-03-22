@@ -6,6 +6,7 @@
 #include "../../data/camera.h"
 #include "../../system/system_config.h"
 #include "tracking_descriptor.h"
+#include "two_view_reconstruction.h"
 
 
 namespace modules_vins{
@@ -15,8 +16,8 @@ class Tracker{
     public:
 
     Tracker(const std::shared_ptr<SystemConfig> &sys_config);
-    void trackInFrame(Image &img0, Image &img1);
-    void trackInTime(Image &img0, Image &img1);
+    void trackInFrame(CameraFrame &camera_frame);
+    void trackInTime(CameraFrame &camera_frame);
     void pipeline(CameraFrame &camera_frame);
 
     protected:

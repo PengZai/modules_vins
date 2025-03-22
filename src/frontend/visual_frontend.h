@@ -8,6 +8,7 @@
 #include "../data/camera.h"
 #include "detect/detector.h"
 #include "tracking/tracker.h"
+#include "reconstruct/reconstructor.h"
 
 namespace modules_vins{
 
@@ -26,6 +27,7 @@ class VisualFrontend{
 
     std::shared_ptr<Detector> detector_;
     std::shared_ptr<Tracker> trakcer_;
+    std::shared_ptr<Reconstructor> reconstructor_;
 
 };
     

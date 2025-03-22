@@ -5,37 +5,65 @@ namespace modules_vins
 {
 
 
+
+int MapPoint::id_counter_ = -1;
+
+
+MapPoint::MapPoint():
+id_(++MapPoint::id_counter_)
+{
+
+};
+
+MapPoint::MapPoint(const cv::Point3f pt):
+id_(++MapPoint::id_counter_), pt_(pt)
+{
+
+};
+
+void MapPoint::setPosition(const cv::Point3f pt){
+    this->pt_ = pt;
+}
+
+
+
+int KeyPoint::id_counter_ = -1;
+
+
+
 KeyPoint::KeyPoint():
-id_(-1){
+id_(++KeyPoint::id_counter_){
     this->match_in_time_.trainIdx = -1;
     this->match_in_time_.queryIdx = id_;
 }
 
-KeyPoint::KeyPoint(const cv::KeyPoint &kp):
-cv_keypoint_(kp), id_(-1), point2d_(kp.pt){
+KeyPoint::KeyPoint(const cv::KeyPoint kp):
+cv_keypoint_(kp), id_(++KeyPoint::id_counter_), pt_(kp.pt){
     this->match_in_time_.trainIdx = -1;
     this->match_in_time_.queryIdx = id_;
+    id_counter_++;
 
 }
 
-void KeyPoint::setId(int id){
-    this->id_ = id;
-}
+
 
 void KeyPoint::setCVKeyPoint(const cv::KeyPoint &kp){
     this->cv_keypoint_ = kp;
-    this->point2d_ = kp.pt;
+    this->pt_ = kp.pt;
 
 }
 
-void KeyPoint::set3DKeyPoint(const cv::Point3f point3d){
-    this->point3d_ = point3d;
+
+void setMapPoint(const MapPoint map_point);
+
+void KeyPoint::setMapPointPtr(const std::shared_ptr<MapPoint> map_point_ptr){
+    this->map_point_ptr_ = map_point_ptr;
 }
 
 
 void KeyPoint::setKeyPointPosition(const double x, const double y){
-    this->point2d_.x = x;
-    this->point2d_.y = y;
+    this->pt_.x = x;
+    this->pt_.y = y;
 }
 
 void KeyPoint::setMatchInTime(const cv::DMatch &match_in_time){
