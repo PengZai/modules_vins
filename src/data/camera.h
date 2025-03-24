@@ -15,7 +15,8 @@ class Image{
 
     public:
 
-    Image(double timestamp, int sensor_id, cv::Mat data);
+        Image(double timestamp, int sensor_id, cv::Mat data);
+        std::vector<cv::Point3f> getMapPoints() const;
 
     public:
         static int id_counter_;

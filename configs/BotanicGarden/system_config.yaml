@@ -8,7 +8,9 @@ system:
 
 
   num_feature_points: 200
-  threshold_for_tracking_descriptor:25.0
+  threshold_for_tracking_descriptor_in_time:25.0 # for tracking cross time
+  threshold_for_tracking_descriptor_in_frame:35.0 # for tracking cross images in same frame
+
 
   # relative config file name
   imu_config_name: "imu_config.yaml"

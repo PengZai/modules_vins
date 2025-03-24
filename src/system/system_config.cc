@@ -73,7 +73,8 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     
     parse("max_stereo_time_offset", this->max_stereo_time_offset_);
     parse("num_feature_points", this->num_feature_points_);
-    parse("threshold_for_tracking_descriptor", this->threshold_for_tracking_descriptor_);
+    parse("threshold_for_tracking_descriptor_in_time", this->threshold_for_tracking_descriptor_in_time_);
+    parse("threshold_for_tracking_descriptor_in_frame", this->threshold_for_tracking_descriptor_in_frame_);
 
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);

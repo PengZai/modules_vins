@@ -72,6 +72,12 @@ CameraParameters::CameraParameters():
     resolution_(2), distortion_coeffs_(4), intrinsics_(4)
 {}
 
+Eigen::VectorXd CameraParameters::getDistortionCoeffs(){
+
+    return this->distortion_coeffs_;
+}
+
+
 Eigen::Matrix3d CameraParameters::getIntrinsicsMatrix(){
 
 
@@ -82,6 +88,8 @@ Eigen::Matrix3d CameraParameters::getIntrinsicsMatrix(){
 
     return K;
 }
+
+
 
 void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
 

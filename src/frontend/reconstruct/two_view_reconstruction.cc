@@ -19,23 +19,35 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
         return;
     }
 
-    std::vector<cv::Point2f> tracked_points_from_img_i, tracked_points_from_img_j;
+    // we collected these tracked points haven't been triangulated yet
+    std::vector<cv::Point2f> not_yet_triangulated_points_from_img_i, not_yet_triangulated_points_from_img_j;
+    std::vector<cv::DMatch> not_yet_triangulated_matches;
+
     for(int i=0; i < (int)img_i->matches_in_frame_.size(); i++){
 
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
         std::shared_ptr<KeyPoint> &tracked_point_from_img_i = img_i->keypoint_vector_[match.queryIdx];
+        std::shared_ptr<KeyPoint> &tracked_point_from_img_j = img_j->keypoint_vector_[match.trainIdx];
 
         // if tracked point has been reconstructed in previous point, then we don't reconstruct again,
         // as they belong to same map point.
         if(tracked_point_from_img_i->prev_keypoint_in_time_ != nullptr &&
              tracked_point_from_img_i->prev_keypoint_in_time_->map_point_ptr_!=nullptr){
             // copy the address of the same map point
-            tracked_point_from_img_i->map_point_ptr_ = tracked_point_from_img_i->prev_keypoint_in_time_->map_point_ptr_;
+            tracked_point_from_img_i->setMapPointPtr(tracked_point_from_img_i->prev_keypoint_in_time_->map_point_ptr_);
+            tracked_point_from_img_j->setMapPointPtr(tracked_point_from_img_i->map_point_ptr_);
             continue;
         }
-        tracked_points_from_img_i.push_back(img_i->cv_keypoint_vector_[match.queryIdx].pt);
-        tracked_points_from_img_j.push_back(img_j->cv_keypoint_vector_[match.trainIdx].pt);
+
+        not_yet_triangulated_points_from_img_i.push_back(img_i->cv_keypoint_vector_[match.queryIdx].pt);
+        not_yet_triangulated_points_from_img_j.push_back(img_j->cv_keypoint_vector_[match.trainIdx].pt);
+        not_yet_triangulated_matches.push_back(match);
+    }
+
+    // we can't find any tracked point that could be used for tirangulation
+    if(not_yet_triangulated_points_from_img_i.size() == 0 || not_yet_triangulated_points_from_img_j.size() == 0){
+        return;
     }
 
     cv::Mat points4D;
@@ -50,20 +62,20 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
     cv::Mat cv_Pj(3, 4, CV_64F, P_cam_j_world.data());
     
 
-    cv::triangulatePoints(cv_Pi, cv_Pj, tracked_points_from_img_i, tracked_points_from_img_j, points4D);
+    cv::triangulatePoints(cv_Pi, cv_Pj, not_yet_triangulated_points_from_img_i, not_yet_triangulated_points_from_img_j, points4D);
 
     // Step 9: Convert Homogeneous Coordinates to 3D
     for (int i = 0; i < points4D.cols; i++) {
         
-        cv::DMatch &match = img_i->matches_in_frame_[i];
+        cv::DMatch &match = not_yet_triangulated_matches[i];
         std::shared_ptr<KeyPoint> &keypoint_from_img_i = img_i->keypoint_vector_[match.queryIdx];
         std::shared_ptr<KeyPoint> &keypoint_from_img_j = img_j->keypoint_vector_[match.trainIdx];
 
         cv::Mat col = points4D.col(i);
         col /= col.at<float>(3);  // Normalize by last coordinate
         cv::Point3f pt3f(col.at<float>(0), col.at<float>(1), col.at<float>(2));
-        keypoint_from_img_i->map_point_ptr_ = std::make_shared<MapPoint>(pt3f);
-        keypoint_from_img_j->map_point_ptr_ = std::make_shared<MapPoint>(pt3f);
+        keypoint_from_img_i->setMapPointPtr(std::make_shared<MapPoint>(pt3f));
+        keypoint_from_img_j->setMapPointPtr(std::make_shared<MapPoint>(pt3f));
 
         // objectPoints.emplace_back(col.at<float>(0), col.at<float>(1), col.at<float>(2));
     }

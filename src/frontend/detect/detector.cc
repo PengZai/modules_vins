@@ -39,7 +39,7 @@ void Detector::computeDescriptor(const std::shared_ptr<Image> &img){
 
     this->orb_feature_->compute(img);
 
-    VLOG(VERBOSE) << img;
+
 }
 
 
@@ -52,7 +52,7 @@ void Detector::pipeline(CameraFrame &camera_frame){
 
         computeDescriptor(img);
 
-        VLOG(VERBOSE) << img;
+        VLOG(VERBOSE) << *img;
 
     }
 

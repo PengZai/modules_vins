@@ -8,6 +8,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/detect/features
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/tracking
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/reconstruct
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/pose_estimate
 )
 
 
@@ -24,7 +25,7 @@ list(APPEND LIBRARY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/reconstruct/reconstructor.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/reconstruct/two_view_reconstruction.cc
 
-
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/pose_estimate/pose_estimator.cc
 
 
 )

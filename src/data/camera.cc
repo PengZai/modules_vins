@@ -28,6 +28,21 @@ id_(++Image::id_counter_), timestamp_(timestamp), sensor_id_(sensor_id), data_(d
 
 }
 
+
+std::vector<cv::Point3f> Image::getMapPoints() const {
+    
+    std::vector<cv::Point3f> map_points;
+    for(int i = 0;i<this->keypoint_vector_.size(); i++){
+        const std::shared_ptr<KeyPoint> &kp = keypoint_vector_.at(i);
+        if(kp->map_point_ptr_ != nullptr){
+            map_points.push_back(kp->map_point_ptr_->pt_);
+        }
+    }
+
+    return map_points;
+}
+
+
 // just for auto incremental
 int CameraFrame::id_counter_=-1;
 
@@ -61,13 +76,13 @@ void CameraFrame::setMap(const std::shared_ptr<Map> &map){
 
 
 // Overload operator<< for logging
-std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Image> &img) {
+std::ostream& operator<<(std::ostream& os, const Image &img) {
     os << "Image Info: \n" 
-    << "Timestamp: " << img->timestamp_ << "\n" 
-    << "Sensor ID: " << img->sensor_id_ << "\n"
-    << "Data Size: " << img->data_.rows << "x" << img->data_.cols << "\n"
-    << "Keypoints Count: " << img->keypoint_vector_.size() << "\n"
-    << "Descriptor Size: " << img->descriptors_.rows << "x" << img->descriptors_.cols << "\n";
+    << "Timestamp: " << img.timestamp_ << "\n" 
+    << "Sensor ID: " << img.sensor_id_ << "\n"
+    << "Data Size: " << img.data_.rows << "x" << img.data_.cols << "\n"
+    << "Keypoints Count: " << img.keypoint_vector_.size() << "\n"
+    << "Descriptor Size: " << img.descriptors_.rows << "x" << img.descriptors_.cols << "\n";
     return os;
 }
 

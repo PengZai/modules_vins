@@ -74,8 +74,25 @@ void KeyPoint::setPrevKeyPointInTime(const std::shared_ptr<KeyPoint> &prev_keypo
 
 void KeyPoint::setMapPointPtr(const std::shared_ptr<MapPoint> &map_point_ptr){
     this->map_point_ptr_ = map_point_ptr;
+    setMapPointPtrForward(map_point_ptr);
+    setMapPointPtrBackward(map_point_ptr);
+
 }
 
+
+void KeyPoint::setMapPointPtrForward(const std::shared_ptr<MapPoint> &map_point_ptr){
+    this->map_point_ptr_ = map_point_ptr;
+    if(this->next_keypoint_in_time_ != nullptr){
+        this->next_keypoint_in_time_->setMapPointPtrForward(map_point_ptr);
+    }
+}
+
+void KeyPoint::setMapPointPtrBackward(const std::shared_ptr<MapPoint> &map_point_ptr){
+    this->map_point_ptr_ = map_point_ptr;
+    if(this->prev_keypoint_in_time_ != nullptr){
+        this->prev_keypoint_in_time_->setMapPointPtrBackward(map_point_ptr);
+    }
+}
 
 void KeyPoint::setKeyPointPosition(const double x, const double y){
     this->pt_.x = x;

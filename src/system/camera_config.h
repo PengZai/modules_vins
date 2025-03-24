@@ -20,6 +20,7 @@ class CameraParameters : public Parameters
 
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
         Eigen::Matrix3d getIntrinsicsMatrix();
+        Eigen::VectorXd getDistortionCoeffs();
 
 
     public:
