@@ -13,8 +13,8 @@ class ORBFeature{
     public:
     ORBFeature(int num_features);
 
-    void detect(Image &img);
-    void compute(Image &img);
+    void detect(const std::shared_ptr<Image> &img);
+    void compute(const std::shared_ptr<Image> &img);
 
     protected:
     int num_features_;

@@ -24,6 +24,7 @@ class System {
         void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
         void setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_frontend);
         void setVisualizer(const std::shared_ptr<Visualizer> &visualizer);
+        void setMap(const std::shared_ptr<Map> &map);
 
         // msg0 and msg1 come from camera 0 and camera 1 respectively, 
         // in which msg0 and msg1 have been software synchronized
@@ -45,6 +46,9 @@ class System {
         std::deque<CameraFrame> camera_frame_deque_;
         std::atomic<bool> is_thread_running_;
         std::shared_ptr<ros::NodeHandle> nh_;
+
+        std::shared_ptr<Map> map_;
+
 
 
 

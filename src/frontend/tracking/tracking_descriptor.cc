@@ -11,9 +11,9 @@ BFMatcher::BFMatcher(){
 }
 
 
-void BFMatcher::matching(Image &img0, Image &img1, std::vector<cv::DMatch> &matches){
+void BFMatcher::matching(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1, std::vector<cv::DMatch> &matches){
 
-    this->bf_->match(img0.descriptors_, img1.descriptors_, matches); // Find the two best matches
+    this->bf_->match(img0->descriptors_, img1->descriptors_, matches); // Find the two best matches
 
 
 }

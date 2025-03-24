@@ -26,10 +26,10 @@ namespace modules_vins{
         std_msgs::Header header;
 
         for(int i=0; i < this->config_->params_->max_cameras_; i++){
-            const Image &img = camera_frame.image_vector_.at(i);
+            const std::shared_ptr<Image> &img = camera_frame.image_vector_.at(i);
             header.stamp = ros::Time::now();
-            header.frame_id = "cam" + img.sensor_id_;
-            sensor_msgs::ImagePtr msg = cv_bridge::CvImage(header, "bgr8", img.data_).toImageMsg();
+            header.frame_id = "cam" + img->sensor_id_;
+            sensor_msgs::ImagePtr msg = cv_bridge::CvImage(header, "bgr8", img->data_).toImageMsg();
             output_image_pub_vector_.at(i).publish(msg);
         
         }

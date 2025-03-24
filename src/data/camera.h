@@ -1,10 +1,15 @@
 #pragma once
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <memory>
+
 #include "point.h"
+#include "map.h"
+
 
 namespace modules_vins {
 
+class Map;
 
 class Image{
 
@@ -13,18 +18,18 @@ class Image{
     Image(double timestamp, int sensor_id, cv::Mat data);
 
     public:
-        double timestamp_;
-
         static int id_counter_;
         int id_;
+        double timestamp_;
 
         //which camera this image belong to
         int sensor_id_; 
         cv::Mat data_;
         cv::Mat gray_data_;
         std::vector<cv::KeyPoint> cv_keypoint_vector_;
-        std::vector<KeyPoint> keypoint_vector_;
         cv::Mat descriptors_;
+
+        std::vector<std::shared_ptr<KeyPoint>> keypoint_vector_;
         
     
         // matches for previous
@@ -62,12 +67,18 @@ class CameraFrame {
 
     public:
     CameraFrame();
-    CameraFrame(const std::vector<Image> image_vector);
+    CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
+    
+    void setMap(const std::shared_ptr<Map> &map);
     // CameraFrame(const CameraFrame &camera_frame);
 
-    std::vector<Image> image_vector_;
+    std::vector<std::shared_ptr<Image>> image_vector_;
     static int id_counter_;
     int id_;
+
+
+    protected:
+    std::shared_ptr<Map> map_;
 
     // Sophus::SE3<float> Tcw;
 

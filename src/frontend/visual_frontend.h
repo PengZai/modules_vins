@@ -6,6 +6,7 @@
 
 #include "../system/system_config.h"
 #include "../data/camera.h"
+#include "../data/map.h"
 #include "detect/detector.h"
 #include "tracking/tracker.h"
 #include "reconstruct/reconstructor.h"
@@ -17,14 +18,13 @@ class VisualFrontend{
     public:
 
     VisualFrontend(const std::shared_ptr<SystemConfig> &sys_config);
-
+    void setMap(const std::shared_ptr<Map> &map);
+    void updateMap(const CameraFrame &camera_frame);
     void pipeline(CameraFrame &camera_frame);
 
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
-    // std::deque<CameraFrame> camera_frame_deque_;
-    
-
+    std::shared_ptr<Map> map_;
     std::shared_ptr<Detector> detector_;
     std::shared_ptr<Tracker> trakcer_;
     std::shared_ptr<Reconstructor> reconstructor_;

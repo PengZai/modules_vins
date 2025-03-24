@@ -22,7 +22,7 @@ class TwoViewReconstructor{
 
     public:
     TwoViewReconstructor(const std::shared_ptr<SystemConfig> &sys_config);    
-    void reconstruct(Image &img0, Image &img1);
+    void reconstruct(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1);
 
     std::shared_ptr<SystemConfig> sys_config_;
 

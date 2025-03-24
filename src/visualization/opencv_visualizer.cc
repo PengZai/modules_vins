@@ -20,28 +20,28 @@ namespace modules_vins
         cv::Point2f pt1,pt2;
 
         for(int i=0; i < this->config_->params_->max_cameras_; i++){
-            const Image &img = camera_frame.image_vector_.at(i);
+            const std::shared_ptr<Image> &img = camera_frame.image_vector_.at(i);
 
             // we only draw keypoint on camera0
-            if(img.sensor_id_ == 0){
+            if(img->sensor_id_ == 0){
 
                 
 
-                for(const KeyPoint &keypoint : img.keypoint_vector_){
+                for(const std::shared_ptr<KeyPoint> &keypoint : img->keypoint_vector_){
 
                     const float r = 5;
-                    pt1.x=keypoint.pt_.x-r;
-                    pt1.y=keypoint.pt_.y-r;
-                    pt2.x=keypoint.pt_.x+r;
-                    pt2.y=keypoint.pt_.y+r;
+                    pt1.x=keypoint->pt_.x-r;
+                    pt1.y=keypoint->pt_.y-r;
+                    pt2.x=keypoint->pt_.x+r;
+                    pt2.y=keypoint->pt_.y+r;
     
-                    if(keypoint.match_in_time_.trainIdx != -1){
-                        cv::rectangle(img.data_,pt1,pt2,this->GreenColor_);
-                        cv::circle(img.data_,keypoint.cv_keypoint_.pt,2,this->GreenColor_,-1);
+                    if(keypoint->match_in_time_.trainIdx != -1){
+                        cv::rectangle(img->data_,pt1,pt2,this->GreenColor_);
+                        cv::circle(img->data_,keypoint->cv_keypoint_.pt,2,this->GreenColor_,-1);
                     }
                     else{
-                        cv::rectangle(img.data_,pt1,pt2,this->RedColor_);
-                        cv::circle(img.data_,keypoint.cv_keypoint_.pt,2,this->RedColor_,-1);
+                        cv::rectangle(img->data_,pt1,pt2,this->RedColor_);
+                        cv::circle(img->data_,keypoint->cv_keypoint_.pt,2,this->RedColor_,-1);
                     }
                     
                 }
@@ -49,10 +49,10 @@ namespace modules_vins
                 if(camera_frame_deque_.size()>1){
 
                     CameraFrame &previous_camera_frame = this->camera_frame_deque_.front();
-                    const Image &img_from_previous_camera_frame = previous_camera_frame.image_vector_.at(0);
+                    const std::shared_ptr<Image> &img_from_previous_camera_frame = previous_camera_frame.image_vector_.at(0);
                     cv::Mat img_matches;
     
-                    cv::drawMatches(img.data_, img.cv_keypoint_vector_, img_from_previous_camera_frame.data_, img_from_previous_camera_frame.cv_keypoint_vector_, img.matches_in_time_, img_matches,
+                    cv::drawMatches(img->data_, img->cv_keypoint_vector_, img_from_previous_camera_frame->data_, img_from_previous_camera_frame->cv_keypoint_vector_, img->matches_in_time_, img_matches,
                         cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
                     );
 
@@ -62,7 +62,7 @@ namespace modules_vins
 
                 }
 
-                cv::imshow("Image"+std::to_string(i), img.data_);
+                cv::imshow("Image"+std::to_string(i), img->data_);
 
             }
             

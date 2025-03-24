@@ -13,6 +13,13 @@ sys_config_(sys_config)
 
 }
 
+
+void VisualFrontend::setMap(const std::shared_ptr<Map> &map){
+    this->map_ = map;
+}
+
+
+
 void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
 
@@ -24,7 +31,10 @@ void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
     this->reconstructor_->pipeline(camera_frame);
 
-    VLOG(VERBOSE) << "end";
+
+    this->map_->update(camera_frame);
+
+    VLOG(VERBOSE) << "visual frontend end";
 
     
 

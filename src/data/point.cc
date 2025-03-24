@@ -32,13 +32,23 @@ int KeyPoint::id_counter_ = -1;
 
 
 KeyPoint::KeyPoint():
-id_(++KeyPoint::id_counter_){
+id_(++KeyPoint::id_counter_),
+map_point_ptr_(nullptr), 
+next_keypoint_in_time_(nullptr), 
+prev_keypoint_in_time_(nullptr)
+{
     this->match_in_time_.trainIdx = -1;
     this->match_in_time_.queryIdx = id_;
 }
 
 KeyPoint::KeyPoint(const cv::KeyPoint kp):
-cv_keypoint_(kp), id_(++KeyPoint::id_counter_), pt_(kp.pt){
+id_(++KeyPoint::id_counter_), 
+pt_(kp.pt), 
+cv_keypoint_(kp), 
+map_point_ptr_(nullptr), 
+next_keypoint_in_time_(nullptr), 
+prev_keypoint_in_time_(nullptr)
+{
     this->match_in_time_.trainIdx = -1;
     this->match_in_time_.queryIdx = id_;
     id_counter_++;
@@ -53,10 +63,16 @@ void KeyPoint::setCVKeyPoint(const cv::KeyPoint &kp){
 
 }
 
+void KeyPoint::setNextKeyPointInTime(const std::shared_ptr<KeyPoint> &next_keypoint_in_time){
+    this->next_keypoint_in_time_ = next_keypoint_in_time;
+}
+void KeyPoint::setPrevKeyPointInTime(const std::shared_ptr<KeyPoint> &prev_keypoint_in_time){
+    this->prev_keypoint_in_time_ = prev_keypoint_in_time;
+}
 
-void setMapPoint(const MapPoint map_point);
 
-void KeyPoint::setMapPointPtr(const std::shared_ptr<MapPoint> map_point_ptr){
+
+void KeyPoint::setMapPointPtr(const std::shared_ptr<MapPoint> &map_point_ptr){
     this->map_point_ptr_ = map_point_ptr;
 }
 
@@ -72,9 +88,9 @@ void KeyPoint::setMatchInTime(const cv::DMatch &match_in_time){
 
 
 
-// void KeyPoint::setMatchInFrame(const cv::DMatch &match_in_frame){
-//     this->match_in_frame_ = match_in_frame;
-// }
+void KeyPoint::setMatchInFrame(const cv::DMatch &match_in_frame){
+    this->match_in_frame_ = match_in_frame;
+}
 
     
 } // namespace modules_vins

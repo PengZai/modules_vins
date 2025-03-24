@@ -45,7 +45,7 @@ void SystemConfig::loadFromPath(const std::string &config_path){
 }
 
 
-void SystemConfig::setCameraConfig(const std::shared_ptr<CameraConfig> camera_config){
+void SystemConfig::setCameraConfig(const std::shared_ptr<CameraConfig> &camera_config){
     this->camera_config_ = camera_config;
 }
 

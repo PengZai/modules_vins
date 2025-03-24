@@ -32,12 +32,17 @@ void System::setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_fro
 }
 
 
+void System::setMap(const std::shared_ptr<Map> &map){
+    this->map_ = map;
+}
+
+
 
 void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msgs){
 
 
  
-    std::vector<Image> image_vector;
+    std::vector<std::shared_ptr<Image>> image_vector;
 
     for(int cam_id=0; cam_id < (int)msgs.size(); cam_id++){
 
@@ -58,13 +63,14 @@ void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msg
         }
 
 
-        Image img(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
+        std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
         image_vector.emplace_back(img);
         
     }
 
     
     CameraFrame camera_frame(image_vector);
+    camera_frame.setMap(this->map_);
     this->camera_frame_deque_.push_back(camera_frame);
 
 

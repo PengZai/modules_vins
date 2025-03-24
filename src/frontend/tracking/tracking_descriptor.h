@@ -11,7 +11,7 @@ class BFMatcher{
 
     public:
     BFMatcher();
-    void matching(Image &img0, Image &img1, std::vector<cv::DMatch> &matches);
+    void matching(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1, std::vector<cv::DMatch> &matches);
 
     protected:
 

@@ -16,8 +16,8 @@ class Detector{
     public:
     Detector(const std::shared_ptr<SystemConfig> &sys_config);
     void pipeline(CameraFrame &camera_frame);
-    void detect(Image &img);
-    void computeDescriptor(Image &img);
+    void detect(const std::shared_ptr<Image> &img);
+    void computeDescriptor(const std::shared_ptr<Image> &img);
 
 
     protected:

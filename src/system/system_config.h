@@ -50,7 +50,7 @@ class SystemConfig: public Config
         void loadFromPath(const std::string &config_path);
         void loadConfigFromPath(const std::string &config_path) override;
 
-        void setCameraConfig(const std::shared_ptr<CameraConfig> camera_config);
+        void setCameraConfig(const std::shared_ptr<CameraConfig> &camera_config);
 
     
     public:

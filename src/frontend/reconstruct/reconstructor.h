@@ -6,6 +6,8 @@
 #include "../../data/camera.h"
 #include "../../system/system_config.h"
 #include "../../data/camera.h"
+#include "../../data/map.h"
+
 
 
 
@@ -20,10 +22,13 @@ class Reconstructor{
     Reconstructor(const std::shared_ptr<SystemConfig> &sys_config);
     void pipeline(CameraFrame &camera_frame);
 
-    std::shared_ptr<SystemConfig> sys_config_;
+
 
 
     protected:
+    std::shared_ptr<SystemConfig> sys_config_;
+
+
     std::shared_ptr<TwoViewReconstructor> two_view_reconstructor_;
 
 };
