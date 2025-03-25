@@ -50,7 +50,7 @@ void CameraConfig::calculateExtrinsicsAndProjectionMatrixBetweenCameras(){
  
 
 
-Eigen::Matrix4d CameraConfig::getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j){
+Eigen::Matrix<double, 4, 4> CameraConfig::getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j){
 
     return this->map_extrinsics_between_cameras_[{sensor_id_i, sensor_id_j}];
 
@@ -61,7 +61,7 @@ Eigen::Matrix<double, 3, 4> CameraConfig::getProjectionMatrixBetweenCamerasBySen
 
     Eigen::Matrix3d K_j = sensor_j_params_ptr->getIntrinsicsMatrix();
 
-    Eigen::Matrix4d T_cam_j_cam_i = getExtrinsicsBetweenCamerasBySensorID(sensor_id_j, sensor_id_i);
+    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i = getExtrinsicsBetweenCamerasBySensorID(sensor_id_j, sensor_id_i);
 
     Eigen::Matrix<double, 3, 4> projection_matrix_cam_j_world = K_j * (T_cam_j_cam_i *T_cam_i_world).topRows(3);
 

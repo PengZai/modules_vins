@@ -10,6 +10,7 @@
 
 #include "../data/camera.h"
 #include "system_config.h"
+#include "../init/initializer.h"
 #include "../frontend/visual_frontend.h"
 #include "../visualization/visualizer.h"
 
@@ -22,6 +23,7 @@ class System {
 
         void setConfig(const std::shared_ptr<SystemConfig> &config);
         void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
+        void setInitializer(const std::shared_ptr<Initializer> &initializer);
         void setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_frontend);
         void setVisualizer(const std::shared_ptr<Visualizer> &visualizer);
         void setMap(const std::shared_ptr<Map> &map);
@@ -40,7 +42,7 @@ class System {
 
 
     protected:
-
+        std::shared_ptr<Initializer> initializer_;
         std::shared_ptr<VisualFrontend> visual_frontend_;
         std::shared_ptr<Visualizer> visualizer_;
         std::deque<CameraFrame> camera_frame_deque_;
@@ -48,6 +50,8 @@ class System {
         std::shared_ptr<ros::NodeHandle> nh_;
 
         std::shared_ptr<Map> map_;
+
+        bool is_initialized_;
 
 
 

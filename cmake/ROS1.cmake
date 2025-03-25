@@ -67,6 +67,7 @@ include_directories(
 # whenever creating a new .cc file, add it in .cmake in that subdirectory
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/system/system.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/log/log.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/init/init.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/data/data.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/frontend.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/visualization.cmake)

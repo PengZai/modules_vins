@@ -23,16 +23,28 @@ namespace modules_vins{
 int Image::id_counter_ = -1;
 
 Image::Image(double timestamp, int sensor_id, cv::Mat data):
-id_(++Image::id_counter_), timestamp_(timestamp), sensor_id_(sensor_id), data_(data)
+id_(++Image::id_counter_), 
+timestamp_(timestamp), 
+sensor_id_(sensor_id), 
+data_(data), 
+is_pose_estimated_(false)
 {
 
+}
+
+void Image::initPose(){
+
+
+    this->rotation_ = Eigen::Matrix<double, 3, 3>::Identity();
+    this->position_ = Eigen::Vector3d::Zero();
+    this->is_pose_estimated_ = true;
 }
 
 
 std::vector<cv::Point3f> Image::getMapPoints() const {
     
     std::vector<cv::Point3f> map_points;
-    for(int i = 0;i<this->keypoint_vector_.size(); i++){
+    for(int i = 0;i< (int)this->keypoint_vector_.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = keypoint_vector_.at(i);
         if(kp->map_point_ptr_ != nullptr){
             map_points.push_back(kp->map_point_ptr_->pt_);

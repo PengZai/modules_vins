@@ -2,6 +2,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <memory>
+#include <Eigen/Dense>
 
 #include "point.h"
 #include "map.h"
@@ -17,6 +18,7 @@ class Image{
 
         Image(double timestamp, int sensor_id, cv::Mat data);
         std::vector<cv::Point3f> getMapPoints() const;
+        void initPose();
 
     public:
         static int id_counter_;
@@ -39,6 +41,9 @@ class Image{
         // matches in frame
         std::vector<cv::DMatch> matches_in_frame_;
 
+        bool is_pose_estimated_;
+        Eigen::Matrix<double, 3, 3> rotation_;
+        Eigen::Vector3d position_;
 
 
 

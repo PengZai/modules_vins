@@ -32,9 +32,9 @@ void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
     this->trakcer_->pipeline(camera_frame);
 
-    this->reconstructor_->pipeline(camera_frame);
-
     this->pose_estimator_->pipeline(camera_frame);
+
+    this->reconstructor_->pipeline(camera_frame);
 
     this->map_->update(camera_frame);
 

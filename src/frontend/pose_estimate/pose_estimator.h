@@ -2,6 +2,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <Eigen/Core>               
+#include <opencv2/core/eigen.hpp>
 
 #include "../../data/camera.h"
 #include "../../system/system_config.h"

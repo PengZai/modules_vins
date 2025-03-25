@@ -8,8 +8,8 @@ system:
 
 
   num_feature_points: 200
-  threshold_for_tracking_descriptor_in_time:25.0 # for tracking cross time
-  threshold_for_tracking_descriptor_in_frame:35.0 # for tracking cross images in same frame
+  threshold_for_tracking_descriptor_in_time:40.0 # for tracking cross time
+  threshold_for_tracking_descriptor_in_frame:50.0 # for tracking cross images in same frame
 
 
   # relative config file name

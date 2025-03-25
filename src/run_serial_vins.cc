@@ -60,6 +60,9 @@ int main(int argc, char* argv[]) {
 
     sys.setConfig(sys_config);
 
+    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::Initializer>(sys_config);
+    sys.setInitializer(initializer);
+
     std::shared_ptr<modules_vins::Map> map = std::make_shared<modules_vins::Map>();
 
     std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::VisualFrontend>(sys_config);

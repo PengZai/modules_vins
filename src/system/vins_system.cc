@@ -4,7 +4,9 @@
 namespace modules_vins
 {
 
-System::System(){
+System::System():
+is_initialized_(false)
+{
     
     this->is_thread_running_.store(false, std::memory_order_relaxed);
     VLOG(KEY) << GREEN << "System has being initialized" << RESET;
@@ -23,6 +25,10 @@ void System::setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh){
 void System::setVisualizer(const std::shared_ptr<Visualizer> &visualizer){
 
     this->visualizer_ = visualizer;
+}
+
+void System::setInitializer(const std::shared_ptr<Initializer> &initializer){
+    this->initializer_ = initializer;
 }
 
 void System::setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_frontend){
@@ -164,11 +170,17 @@ void System::callbackVisualNavigation(){
 
         CameraFrame &camera_frame = this->camera_frame_deque_.front();
         
+        if(this->is_initialized_ == false){
+            this->is_initialized_ = this->initializer_->initialize(camera_frame);
+        }
 
-        this->visual_frontend_->pipeline(camera_frame);
+        if(this->is_initialized_ == true){
+
+            this->visual_frontend_->pipeline(camera_frame);
+
+        }
 
         this->visualizer_->publish(camera_frame);
-
 
         this->camera_frame_deque_.pop_front();
 
