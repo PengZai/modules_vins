@@ -2,6 +2,7 @@
 
 #include<vector>
 #include<memory>
+#include <Eigen/Dense>
 #include<opencv2/opencv.hpp>
 
 #include "../system/system_config.h"

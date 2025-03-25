@@ -35,6 +35,10 @@ class SystemParameters: public Parameters{
         bool use_opencv_vis_;
         bool use_rviz_vis_;
 
+        std::string output_pose_rostopic_; 
+        std::string output_trajectory_rostopic_;
+        std::string output_tracked_map_points_rostopic_; 
+
     public:
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
 

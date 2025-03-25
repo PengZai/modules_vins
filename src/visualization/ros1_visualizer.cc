@@ -11,9 +11,21 @@ namespace modules_vins{
     {
 
         for(int i=0; i < config->params_->max_cameras_; i++){
-            this->output_image_pub_vector_.push_back(it_.advertise(config->camera_config_->params_vector_.at(i)->output_rostopic_, 1));
+            this->output_image_pub_vector_.push_back(this->it_.advertise(config->camera_config_->params_vector_.at(i)->output_rostopic_, 1));
         }
 
+
+
+        this->output_pose_pub_ = this->nh_->advertise<geometry_msgs::PoseStamped>(config->params_->output_pose_rostopic_, 1);
+        this->output_trajectory_pub_ = this->nh_->advertise<nav_msgs::Path>(config->params_->output_trajectory_rostopic_, 1);
+        this->output_tracked_map_points_pub_ = this->nh_->advertise<sensor_msgs::PointCloud2>(config->params_->output_tracked_map_points_rostopic_, 1);
+
+        // just for test
+        this->R_.setIdentity();  // Rotation matrix
+        this->t_.setZero();  // Translation vector
+
+        nav_msgs::Path path_msg_;
+        
 
     }
 
@@ -23,6 +35,20 @@ namespace modules_vins{
 
     void ROS1Visualizer::publish(const CameraFrame &camera_frame){
         
+
+
+        if(ros::ok()){
+            publish_images(camera_frame);
+            // publish_poses(camera_frame);
+            publish_trajectory(camera_frame);
+        }
+
+ 
+
+    }
+
+    void ROS1Visualizer::publish_images(const CameraFrame &camera_frame){
+
         std_msgs::Header header;
 
         for(int i=0; i < this->config_->params_->max_cameras_; i++){
@@ -34,9 +60,64 @@ namespace modules_vins{
         
         }
 
-        
 
     }
+
+
+    void ROS1Visualizer::publish_poses(const CameraFrame &camera_frame){
+
+        const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+
+        geometry_msgs::PoseStamped pose_msg;
+        pose_msg.header.stamp = ros::Time::now();
+        pose_msg.header.frame_id = "map";
+
+        // Example translation and rotation
+        Eigen::Quaterniond q(img_0->rotation_);
+
+        pose_msg.pose.position.x = img_0->position_.x();
+        pose_msg.pose.position.y = img_0->position_.y();
+        pose_msg.pose.position.z = img_0->position_.z();
+
+        pose_msg.pose.orientation.x = q.x();
+        pose_msg.pose.orientation.y = q.y();
+        pose_msg.pose.orientation.z = q.z();
+        pose_msg.pose.orientation.w = q.w();
+
+        this->output_pose_pub_.publish(pose_msg);
+
+    }
+
+
+    void ROS1Visualizer::publish_trajectory(const CameraFrame &camera_frame){
+
+        const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+        
+        path_msg_.header.stamp = ros::Time::now();
+        path_msg_.header.frame_id = "map";
+
+        geometry_msgs::PoseStamped pose_msg;
+        pose_msg.header.stamp = ros::Time::now();
+        pose_msg.header.frame_id = "map";
+
+        Eigen::Quaterniond q(img_0->rotation_);
+
+        pose_msg.pose.position.x = img_0->position_.x();
+        pose_msg.pose.position.y = img_0->position_.y();
+        pose_msg.pose.position.z = img_0->position_.z();
+
+        pose_msg.pose.orientation.x = q.x();
+        pose_msg.pose.orientation.y = q.y();
+        pose_msg.pose.orientation.z = q.z();
+        pose_msg.pose.orientation.w = q.w();
+
+        this->path_msg_.poses.push_back(pose_msg);
+
+        this->output_trajectory_pub_.publish(this->path_msg_);
+
+    }
+
+
 
     
 

@@ -52,7 +52,7 @@ void Detector::pipeline(CameraFrame &camera_frame){
 
         computeDescriptor(img);
 
-        VLOG(VERBOSE) << *img;
+        // VLOG(VERBOSE) << *img;
 
     }
 

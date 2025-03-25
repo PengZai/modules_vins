@@ -27,7 +27,6 @@ namespace modules_vins{
 
     void Visualizer::publish(const CameraFrame &camera_frame){
 
-
         if(this->config_->params_->use_opencv_vis_){
             this->opencv_visualizer_->publish(camera_frame);
         }

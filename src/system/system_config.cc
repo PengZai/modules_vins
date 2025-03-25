@@ -84,6 +84,10 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("use_rviz_vis", this->use_rviz_vis_);
 
 
+    parse("output_pose_rostopic", this->output_pose_rostopic_);
+    parse("output_trajectory_rostopic", this->output_trajectory_rostopic_);
+    parse("output_tracked_map_points_rostopic", this->output_tracked_map_points_rostopic_);
+
 
    
     VLOG(VERBOSE) << "config file loaded";

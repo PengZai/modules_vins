@@ -52,7 +52,7 @@ void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msg
 
     for(int cam_id=0; cam_id < (int)msgs.size(); cam_id++){
 
-        VLOG(VERBOSE) <<  "cam_id: " << cam_id <<  " : " <<msgs.at(cam_id).getTopic();
+        // VLOG(VERBOSE) <<  "cam_id: " << cam_id <<  " : " <<msgs.at(cam_id).getTopic();
         
         sensor_msgs::Image::ConstPtr img_msg = msgs.at(cam_id).instantiate<sensor_msgs::Image>();
         if (img_msg == nullptr) {

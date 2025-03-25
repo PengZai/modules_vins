@@ -20,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   sensor_msgs 
+  geometry_msgs
+  nav_msgs
   image_transport 
   cv_bridge
 )
@@ -30,6 +32,8 @@ catkin_package(
     rospy
     std_msgs
     sensor_msgs 
+    geometry_msgs
+    nav_msgs
     image_transport 
     cv_bridge
     LIBRARIES ${LIB_PROJECT_NAME} 

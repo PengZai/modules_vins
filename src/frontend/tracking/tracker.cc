@@ -50,7 +50,7 @@ void Tracker::trackInFrame(CameraFrame &camera_frame){
 }
 
 void Tracker::trackInTime(CameraFrame &camera_frame){
-
+    
     this->camera_frame_deque_.push_back(camera_frame);
 
     std::shared_ptr<Image> &img0_from_current_frame = camera_frame.image_vector_.at(0);

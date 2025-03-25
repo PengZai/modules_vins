@@ -23,6 +23,9 @@ void VisualFrontend::setMap(const std::shared_ptr<Map> &map){
 
 void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
+    VLOG(VERBOSE) << "VisualFrontend Start";
+
+    std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
 
     size_t previos_mappoints_size = this->map_->getMapPoints().size();
 
@@ -34,14 +37,21 @@ void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
     this->pose_estimator_->pipeline(camera_frame);
 
+    Eigen::Quaterniond q(img_0->rotation_);
+    VLOG(VERBOSE) << GREEN << "current position p: [ " << img_0->position_.x() << " " << img_0->position_.y() << " " << img_0->position_.z() << " ]" << RESET;
+    VLOG(VERBOSE) << GREEN << "current Quaternion q: [ " <<  q.w() << " " << q.x() << " " << q.y() << " " << q.z() <<  " ]" << RESET;
+
+
     this->reconstructor_->pipeline(camera_frame);
 
     this->map_->update(camera_frame);
 
-
     size_t mappoints_size = this->map_->getMapPoints().size();
+    
     VLOG(VERBOSE) << GREEN << mappoints_size - previos_mappoints_size << " map points were tracked in frame" << RESET;
     VLOG(VERBOSE) << GREEN << mappoints_size << " map points were tracked in map in total" << RESET;
+
+    VLOG(VERBOSE) << "VisualFrontend End";
     
 
 

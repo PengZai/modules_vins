@@ -26,18 +26,14 @@ Image::Image(double timestamp, int sensor_id, cv::Mat data):
 id_(++Image::id_counter_), 
 timestamp_(timestamp), 
 sensor_id_(sensor_id), 
-data_(data), 
-is_pose_estimated_(false)
+data_(data)
 {
 
 }
 
 void Image::initPose(){
-
-
     this->rotation_ = Eigen::Matrix<double, 3, 3>::Identity();
     this->position_ = Eigen::Vector3d::Zero();
-    this->is_pose_estimated_ = true;
 }
 
 
