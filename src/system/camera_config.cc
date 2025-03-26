@@ -34,8 +34,7 @@ void CameraConfig::calculateExtrinsicsAndProjectionMatrixBetweenCameras(){
 
         for(int sensor_id_j=0;sensor_id_j<(int)this->params_vector_.size(); sensor_id_j++){
 
-            std::shared_ptr<CameraParameters> &sensor_j_params_ptr = this->params_vector_.at(sensor_id_j);
-            Eigen::Matrix4d &T_imu_cam_j = sensor_j_params_ptr->T_imu_cam_;
+            Eigen::Matrix4d &T_imu_cam_j = this->params_vector_.at(sensor_id_j)->T_imu_cam_;
             
             Eigen::Matrix4d T_cam_i_cam_j = T_imu_cam_i.inverse() * T_imu_cam_j;
 

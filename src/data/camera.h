@@ -20,6 +20,11 @@ class Image{
         std::vector<cv::Point3f> getMapPoints() const;
         void initPose();
 
+        void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
+
+        Eigen::Matrix3d getRotation();
+        Eigen::Vector3d getPosition();
+
     public:
         static int id_counter_;
         int id_;
@@ -41,8 +46,7 @@ class Image{
         // matches in frame
         std::vector<cv::DMatch> matches_in_frame_;
 
-        Eigen::Matrix<double, 3, 3> rotation_;
-        Eigen::Vector3d position_;
+        Eigen::Matrix<double, 4, 4> T_c_w_;
 
 
 

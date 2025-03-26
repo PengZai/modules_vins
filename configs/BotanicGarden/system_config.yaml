@@ -7,7 +7,7 @@ system:
   max_stereo_time_offset: 0.02 # max time offset for stereo image pair (unit: second)
 
 
-  num_feature_points: 1000
+  num_feature_points: 500
   threshold_for_tracking_descriptor_in_time:40.0 # for tracking cross time
   threshold_for_tracking_descriptor_in_frame:50.0 # for tracking cross images in same frame
 

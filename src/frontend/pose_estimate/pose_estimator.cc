@@ -37,6 +37,10 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
                 continue;
             }
 
+            if(kp_from_previous_frame->pt3_.z <= 0){
+                continue;
+            }
+
             keypoints.push_back(kp_from_previous_frame->next_keypoint_in_time_->pt2_);
             map_points.push_back(kp_from_previous_frame->pt3_);
 
@@ -92,8 +96,17 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
         cv::cv2eigen(translation_vec, estimated_position);
 
 
-        img_0_from_current_frame->rotation_ = estimated_rotation * img_0_from_previous_frame->rotation_;
-        img_0_from_current_frame->position_ = estimated_position + img_0_from_previous_frame->position_;
+  
+
+
+        Eigen::Matrix4d estimated_T_c_w = Eigen::Matrix4d::Identity();
+        estimated_T_c_w.block<3,3>(0,0) = estimated_rotation;
+        estimated_T_c_w.block<3,1>(0,3) = estimated_position;
+
+
+        VLOG(VERBOSE) << "estimated_T_c_w: \n" << estimated_T_c_w.inverse();
+        
+        img_0_from_current_frame->T_c_w_ = estimated_T_c_w.inverse() * img_0_from_previous_frame->T_c_w_;
 
         
 

@@ -37,10 +37,7 @@ void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
     this->pose_estimator_->pipeline(camera_frame);
 
-    Eigen::Quaterniond q(img_0->rotation_);
-    VLOG(VERBOSE) << GREEN << "current position p: [ " << img_0->position_.x() << " " << img_0->position_.y() << " " << img_0->position_.z() << " ]" << RESET;
-    VLOG(VERBOSE) << GREEN << "current Quaternion q: [ " <<  q.w() << " " << q.x() << " " << q.y() << " " << q.z() <<  " ]" << RESET;
-
+    VLOG(VERBOSE) << "current_T_c_w: \n" << img_0->T_c_w_;
 
     this->reconstructor_->pipeline(camera_frame);
 

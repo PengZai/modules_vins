@@ -96,7 +96,7 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
     cv::Mat points4D;
 
 
-    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i = this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_i->sensor_id_, img_j->sensor_id_);
+    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_j->sensor_id_, img_i->sensor_id_);
     Eigen::Matrix<double, 3, 4> Tj = T_cam_j_cam_i.topRows(3);
 
     // we triangluate 3d point according to image from the zero camera(left camera)
@@ -117,6 +117,7 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
         cv::Mat col = points4D.col(i);
+
         col /= col.at<float>(3, 0);  // Normalize by last coordinate
         cv::Point3f img_i_pt3 = cv::Point3f(col.at<float>(0, 0), col.at<float>(1, 0), col.at<float>(2, 0));
 
@@ -129,7 +130,8 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
     
         }
       
-        img_i->keypoint_vector_[match.queryIdx]->set3DKeyPoint(img_i_pt3);
+        // img_i->keypoint_vector_[match.queryIdx]->set3DKeyPoint(img_i_pt3);
+        img_i->keypoint_vector_[match.queryIdx]->pt3_ = img_i_pt3;
     }
 
    

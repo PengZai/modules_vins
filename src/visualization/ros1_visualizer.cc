@@ -72,12 +72,15 @@ namespace modules_vins{
         pose_msg.header.stamp = ros::Time::now();
         pose_msg.header.frame_id = "map";
 
-        // Example translation and rotation
-        Eigen::Quaterniond q(img_0->rotation_);
+        Eigen::Matrix3d rotation = img_0->getRotation();
+        Eigen::Vector3d position = img_0->getPosition();
 
-        pose_msg.pose.position.x = img_0->position_.x();
-        pose_msg.pose.position.y = img_0->position_.y();
-        pose_msg.pose.position.z = img_0->position_.z();
+        // Example translation and rotation
+        Eigen::Quaterniond q(rotation);
+
+        pose_msg.pose.position.x = position.x();
+        pose_msg.pose.position.y = position.y();
+        pose_msg.pose.position.z = position.z();
 
         pose_msg.pose.orientation.x = q.x();
         pose_msg.pose.orientation.y = q.y();
@@ -100,11 +103,14 @@ namespace modules_vins{
         pose_msg.header.stamp = ros::Time::now();
         pose_msg.header.frame_id = "map";
 
-        Eigen::Quaterniond q(img_0->rotation_);
+        Eigen::Matrix3d rotation = img_0->getRotation();
+        Eigen::Vector3d position = img_0->getPosition();
 
-        pose_msg.pose.position.x = img_0->position_.x();
-        pose_msg.pose.position.y = img_0->position_.y();
-        pose_msg.pose.position.z = img_0->position_.z();
+        Eigen::Quaterniond q(rotation);
+
+        pose_msg.pose.position.x = position.x();
+        pose_msg.pose.position.y = position.y();
+        pose_msg.pose.position.z = position.z();
 
         pose_msg.pose.orientation.x = q.x();
         pose_msg.pose.orientation.y = q.y();

@@ -32,8 +32,8 @@ data_(data)
 }
 
 void Image::initPose(){
-    this->rotation_ = Eigen::Matrix<double, 3, 3>::Identity();
-    this->position_ = Eigen::Vector3d::Zero();
+    this->T_c_w_.setIdentity();
+
 }
 
 
@@ -48,6 +48,24 @@ std::vector<cv::Point3f> Image::getMapPoints() const {
     }
 
     return map_points;
+}
+
+
+void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
+
+    T_c_w_.block<3,3>(0,0) = rotation;
+    T_c_w_.block<3,1>(0,3) = position;
+
+
+}
+
+Eigen::Matrix3d Image::getRotation(){
+
+    return T_c_w_.block<3,3>(0,0);
+}
+Eigen::Vector3d Image::getPosition(){
+
+    return T_c_w_.block<3,1>(0,3);
 }
 
 
