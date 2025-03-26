@@ -7,9 +7,9 @@ system:
   max_stereo_time_offset: 0.02 # max time offset for stereo image pair (unit: second)
 
 
-  num_feature_points: 500
-  threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
-  threshold_for_tracking_descriptor_in_frame:45.0 # for tracking cross images in same frame
+  num_feature_points: 1000
+  threshold_for_tracking_descriptor_in_time:40.0 # for tracking cross time
+  threshold_for_tracking_descriptor_in_frame:50.0 # for tracking cross images in same frame
 
 
   # relative config file name
@@ -22,6 +22,9 @@ system:
   output_pose_rostopic: /output/camera_pose
   output_trajectory_rostopic: /output/trajectory
   output_tracked_map_points_rostopic: /output/tracked_points
+
+  # debug
+  check_triangulation: 0
 
 
   

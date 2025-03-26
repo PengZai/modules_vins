@@ -35,7 +35,10 @@ class KeyPoint{
     KeyPoint(const cv::KeyPoint kp);
 
     void setCVKeyPoint(const cv::KeyPoint &kp);
-    void setKeyPointPosition(const double x, const double y);
+    void set2DKeyPoint(const cv::Point2f &pt2);
+    void set2DKeyPoint(const double x, const double y);
+    void set3DKeyPoint(const cv::Point3f &pt3);
+    void set3DKeyPoint(const double x, const double y, const double z);
     void setMatchInTime(const cv::DMatch &match_in_time);
     void setMatchInFrame(const cv::DMatch &match_in_frame);
 
@@ -51,7 +54,10 @@ class KeyPoint{
     static int id_counter_;
     int id_ = -1;
 
-    cv::Point2f pt_;
+    
+    cv::Point2f pt2_; // keypoint in pixel plane
+    cv::Point3f pt3_; // 3d keypoint in camera coordinate
+
     cv::KeyPoint cv_keypoint_;
 
     std::shared_ptr<MapPoint> map_point_ptr_;

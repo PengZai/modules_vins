@@ -88,6 +88,8 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("output_trajectory_rostopic", this->output_trajectory_rostopic_);
     parse("output_tracked_map_points_rostopic", this->output_tracked_map_points_rostopic_);
 
+    
+    parse("check_triangulation", this->check_triangulation_);
 
    
     VLOG(VERBOSE) << "config file loaded";

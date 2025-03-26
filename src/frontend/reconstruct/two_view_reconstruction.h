@@ -2,8 +2,9 @@
 
 #include <iostream>
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/opencv.hpp>
 
 
 #include "../../system/system_config.h"
@@ -23,8 +24,9 @@ class TwoViewReconstructor{
     public:
     TwoViewReconstructor(const std::shared_ptr<SystemConfig> &sys_config);    
     void reconstruct(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1);
-    std::vector<cv::Point2f> pixel2cam (const std::vector<cv::Point2f> &pts, const Eigen::Matrix3d & K );
-
+    cv::Point2f pixel2norm (const cv::Point2f &pt, const cv::Mat &K );  
+    void checkTriangulatedPointsWithReprojection(const cv::Point2f &pt2, const cv::Point3f &pt3, const cv::Mat &T, const cv::Mat &K);
+    
     std::shared_ptr<SystemConfig> sys_config_;
 
 };

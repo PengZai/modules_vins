@@ -43,7 +43,7 @@ prev_keypoint_in_time_(nullptr)
 
 KeyPoint::KeyPoint(const cv::KeyPoint kp):
 id_(++KeyPoint::id_counter_), 
-pt_(kp.pt), 
+pt2_(kp.pt), 
 cv_keypoint_(kp), 
 map_point_ptr_(nullptr), 
 next_keypoint_in_time_(nullptr), 
@@ -59,7 +59,7 @@ prev_keypoint_in_time_(nullptr)
 
 void KeyPoint::setCVKeyPoint(const cv::KeyPoint &kp){
     this->cv_keypoint_ = kp;
-    this->pt_ = kp.pt;
+    this->pt2_ = kp.pt;
 
 }
 
@@ -94,10 +94,30 @@ void KeyPoint::setMapPointPtrBackward(const std::shared_ptr<MapPoint> &map_point
     }
 }
 
-void KeyPoint::setKeyPointPosition(const double x, const double y){
-    this->pt_.x = x;
-    this->pt_.y = y;
+
+
+void KeyPoint::set2DKeyPoint(const double x, const double y){
+    this->pt2_.x = x;
+    this->pt2_.y = y;
 }
+
+
+void KeyPoint::set2DKeyPoint(const cv::Point2f &pt2){
+    this->pt2_.x = pt2.x;
+    this->pt2_.y = pt2.y;
+}
+
+void KeyPoint::set3DKeyPoint(const double x, const double y, const double z){
+    this->pt3_.x = x;
+    this->pt3_.y = y;
+    this->pt3_.z = z;
+}
+void KeyPoint::set3DKeyPoint(const cv::Point3f &pt3){
+    this->pt3_.x = pt3.x;
+    this->pt3_.y = pt3.y;
+    this->pt3_.z = pt3.z;
+}
+
 
 void KeyPoint::setMatchInTime(const cv::DMatch &match_in_time){
     this->match_in_time_ = match_in_time;

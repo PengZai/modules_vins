@@ -18,10 +18,10 @@ namespace modules_vins
         const float r = 5;
         cv::Point2f pt1,pt2;
         
-        pt1.x=keypoint->pt_.x-r;
-        pt1.y=keypoint->pt_.y-r;
-        pt2.x=keypoint->pt_.x+r;
-        pt2.y=keypoint->pt_.y+r;
+        pt1.x=keypoint->pt2_.x-r;
+        pt1.y=keypoint->pt2_.y-r;
+        pt2.x=keypoint->pt2_.x+r;
+        pt2.y=keypoint->pt2_.y+r;
 
         cv::rectangle(img, pt1, pt2, color);
         cv::circle(img, keypoint->cv_keypoint_.pt, 2, color, -1);

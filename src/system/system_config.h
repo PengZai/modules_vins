@@ -39,6 +39,8 @@ class SystemParameters: public Parameters{
         std::string output_trajectory_rostopic_;
         std::string output_tracked_map_points_rostopic_; 
 
+        bool check_triangulation_;
+
     public:
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
 
