@@ -1,0 +1,90 @@
+#include "../log/logging.h"
+
+#include <memory>
+
+
+#include "config.h"
+
+namespace modules_vins{
+
+
+class OpenCVParameters: public Parameters{
+
+    public:
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+
+    public:
+    bool show_projected_mappoint_;
+    bool show_matching_in_frame_;
+    bool show_matching_in_time_;
+    bool show_tracking_in_time_;
+    bool show_depth_;
+
+
+};
+
+
+class RVisParameters: public Parameters{
+
+    public:
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+
+    public:
+
+    std::string output_pose_rostopic_; 
+    std::string output_trajectory_rostopic_;
+    std::string output_tracked_map_points_rostopic_; 
+    
+};
+
+class PangolinParameters: public Parameters{
+
+    public:
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+
+    public:
+    double frame_size_;
+    double point_size_;
+    double viewer_eye_positionX_;
+    double viewer_eye_positionY_;
+    double viewer_eye_positionZ_;
+};
+
+
+class VisualizerParameters : public Parameters{
+
+
+    public:
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+
+    public:
+
+    bool use_opencv_vis_;
+    bool use_pangolin_vis_;
+    bool use_rviz_vis_;
+
+
+};
+
+class VisualizerConfig : public Config{
+
+
+    
+    public:
+
+    std::shared_ptr<VisualizerParameters> params_;
+
+    std::shared_ptr<OpenCVParameters> opencv_params_;
+    std::shared_ptr<RVisParameters> rviz_params_;
+    std::shared_ptr<PangolinParameters> pangolin_params_;
+
+
+
+
+};
+    
+    
+} //modules_vins
+
+
+

@@ -1,25 +1,17 @@
 #pragma once
 
 #include <iostream>
+#include <Eigen/Dense>
+#include <opencv2/opencv.hpp>
+
+
 
 namespace modules_vins{
 
-struct pair_hash {
-    std::size_t operator()(const std::pair<int, int>& p) const {
-        return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
-    }
-};
 
-
-struct tuple_for_three_hash {
-    template <typename T>
-    std::size_t operator()(const T& t) const {
-        return std::hash<int>()(std::get<0>(t)) ^
-                (std::hash<int>()(std::get<1>(t)) << 1) ^
-                (std::hash<int>()(std::get<2>(t)) << 2);
-    }
-};
-
+cv::Point2d pixel2norm(const cv::Point2d &pt, const cv::Mat &K );
+cv::Point3d pixel2camera(const cv::Point2d &pt, double depth, cv::Mat &K);
+cv::Point2d camera2pixel(const cv::Point3d &pt3d, cv::Mat &K);
 
 } //namespace modules_vins
 

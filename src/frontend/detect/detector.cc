@@ -14,14 +14,14 @@ sys_config_(sys_config)
 
 void Detector::detect(const std::shared_ptr<Image> &img){
     
-    if(img->data_.channels() == 3){
-        cv::cvtColor(img->data_, img->gray_data_, cv::COLOR_BGR2GRAY);
+    if(img->color_data_.channels() == 3){
+        cv::cvtColor(img->color_data_, img->gray_data_, cv::COLOR_BGR2GRAY);
     }
-    else if(img->data_.channels() == 1){
-        img->gray_data_ = img->data_;
+    else if(img->color_data_.channels() == 1){
+        img->gray_data_ = img->color_data_;
     }
     else{
-        VLOG(VERBOSE) << "img is neither the rgb image nor gray image";
+        VLOG(VERBOSE) << "img is neither the bgr image nor gray image";
         std::exit(EXIT_FAILURE);
     }
 

@@ -12,7 +12,7 @@ ORBFeature::ORBFeature(int num_features){
 
 void ORBFeature::detect(const std::shared_ptr<Image> &img){
 
-    this->orb->detect(img->data_, img->cv_keypoint_vector_);
+    this->orb->detect(img->color_data_, img->cv_keypoint_vector_);
     for(int i=0; i < (int)img->cv_keypoint_vector_.size(); i++){
         std::shared_ptr<KeyPoint> kp = std::make_shared<KeyPoint>(img->cv_keypoint_vector_[i]);
         img->keypoint_vector_.emplace_back(kp);
@@ -24,7 +24,7 @@ void ORBFeature::detect(const std::shared_ptr<Image> &img){
 void ORBFeature::compute(const std::shared_ptr<Image> &img){
 
     std::vector<cv::KeyPoint> cvKeypoints;
-    this->orb->compute(img->data_, img->cv_keypoint_vector_, img->descriptors_);
+    this->orb->compute(img->color_data_, img->cv_keypoint_vector_, img->descriptors_);
 
     
 }

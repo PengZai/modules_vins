@@ -45,7 +45,10 @@ catkin_package(
 list(APPEND LIBRARY_THIRDPARTY
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
+    Sophus::Sophus
     glog::glog
+    ${Pangolin_LIBRARIES}
+    ${PCL_LIBRARY_DIRS}
     ${catkin_LIBRARIES}
 )
 
@@ -55,6 +58,8 @@ list(APPEND DIRS_HEADER_THIRDPARTY
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
+    ${Pangolin_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
 )
 
@@ -66,6 +71,8 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${DIRS_HEADER_THIRDPARTY}
 )
+
+add_definitions(${PCL_DEFINITIONS})
 
 
 # whenever creating a new .cc file, add it in .cmake in that subdirectory

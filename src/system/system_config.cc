@@ -13,9 +13,7 @@ SystemConfig::SystemConfig(){
 void SystemConfig::loadFromPath(const std::string &config_path){
 
     loadConfigFromPath(config_path);
-    std::string node_name;
-    node_name = (*this->file_storage_->root().begin()).name();
-    this->params_->loadFromNode(std::make_shared<cv::FileNode>((*this->file_storage_)[node_name]));
+    this->params_->loadFromNode(std::make_shared<cv::FileNode>((*this->file_storage_)["system"]));
 
     std::string relative_folder = this->path_.substr(0, this->path_.find_last_of('/')) + "/";
 
@@ -34,7 +32,7 @@ void SystemConfig::loadFromPath(const std::string &config_path){
     for(int i = 0; i < this->params_->max_cameras_; i++, it++){
         
         std::shared_ptr<CameraParameters> camera_params = std::make_shared<CameraParameters>();
-        node_name = (*it).name();
+        std::string node_name = (*it).name();
         camera_params->loadFromNode(std::make_shared<cv::FileNode>((*camera_config->file_storage_)[node_name]));
         camera_config->params_vector_.emplace_back(camera_params);
         
@@ -42,6 +40,34 @@ void SystemConfig::loadFromPath(const std::string &config_path){
 
 
     camera_config->calculateExtrinsicsAndProjectionMatrixBetweenCameras();
+
+    // load visualizer configs and their parameters
+    std::string visualizer_config_path = relative_folder + this->params_->visualizer_config_name_;
+    std::shared_ptr<VisualizerConfig> visualizer_config = std::make_shared<VisualizerConfig>();
+    setVisualizerConfig(visualizer_config);
+    visualizer_config->loadConfigFromPath(visualizer_config_path);
+
+    std::shared_ptr<VisualizerParameters> visualizer_params = std::make_shared<VisualizerParameters>();
+    visualizer_params->loadFromNode(std::make_shared<cv::FileNode>((*visualizer_config->file_storage_)["visualizer"]));
+    visualizer_config->params_ = visualizer_params;
+
+    // load opencv parameters
+    std::shared_ptr<OpenCVParameters> opencv_params = std::make_shared<OpenCVParameters>();
+    opencv_params->loadFromNode(std::make_shared<cv::FileNode>((*visualizer_config->file_storage_)["opencv_visualizer"]));
+    visualizer_config->opencv_params_ = opencv_params;
+
+    // load rviz parameters
+    std::shared_ptr<RVisParameters> rviz_params = std::make_shared<RVisParameters>();
+    rviz_params->loadFromNode(std::make_shared<cv::FileNode>((*visualizer_config->file_storage_)["rviz_visualizer"]));
+    visualizer_config->rviz_params_ = rviz_params;
+
+    // load pangolin parameters
+    std::shared_ptr<PangolinParameters> pangolin_params = std::make_shared<PangolinParameters>();
+    pangolin_params->loadFromNode(std::make_shared<cv::FileNode>((*visualizer_config->file_storage_)["pangolin_visualizer"]));
+    visualizer_config->pangolin_params_ = pangolin_params;
+
+
+
 }
 
 
@@ -49,19 +75,10 @@ void SystemConfig::setCameraConfig(const std::shared_ptr<CameraConfig> &camera_c
     this->camera_config_ = camera_config;
 }
 
-void SystemConfig::loadConfigFromPath(const std::string &config_path){
-    
-    std::shared_ptr<cv::FileStorage> file_storage = std::make_shared<cv::FileStorage>(config_path, cv::FileStorage::READ);
-    if (!file_storage->isOpened()) {
-        VLOG(KEY) << config_path << " not couldn't be open";
-        std::exit(EXIT_FAILURE);
-    }
-    this->file_storage_ = file_storage;
-    this->path_ = config_path;
-
-
-
+void SystemConfig::setVisualizerConfig(const std::shared_ptr<VisualizerConfig> &visualizer_config){
+    this->visualizer_config_ = visualizer_config;
 }
+
 
 void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     
@@ -72,23 +89,17 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("max_imus", this->max_imus_);
     
     parse("max_stereo_time_offset", this->max_stereo_time_offset_);
+    parse("max_color_sensor_depth_pair_time_offset", this->max_color_sensor_depth_pair_time_offset_);
+
     parse("num_feature_points", this->num_feature_points_);
     parse("threshold_for_tracking_descriptor_in_time", this->threshold_for_tracking_descriptor_in_time_);
     parse("threshold_for_tracking_descriptor_in_frame", this->threshold_for_tracking_descriptor_in_frame_);
 
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);
-    
+    parse("visualizer_config_name", this->visualizer_config_name_);
 
-    parse("use_opencv_vis", this->use_opencv_vis_);
-    parse("use_rviz_vis", this->use_rviz_vis_);
-
-
-    parse("output_pose_rostopic", this->output_pose_rostopic_);
-    parse("output_trajectory_rostopic", this->output_trajectory_rostopic_);
-    parse("output_tracked_map_points_rostopic", this->output_tracked_map_points_rostopic_);
-
-    
+        
     parse("check_triangulation", this->check_triangulation_);
 
    

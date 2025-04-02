@@ -27,7 +27,8 @@ RUN apt-get update && apt-get install -y libatlas-base-dev gfortran \
     cmake \
     python3-pip \
     libopencv-contrib-dev \
-    libopencv-dev && \
+    libopencv-dev \
+    libpcl-dev && \
     rm -rf /var/lib/apt/lists/*
 
 
@@ -132,6 +133,28 @@ RUN git clone https://github.com/google/glog.git
 WORKDIR /root/glog
 RUN git checkout tags/v0.6.0
 RUN cmake -S . -B build -G "Unix Makefiles" && cmake --build build --target install
+
+
+
+# Sophus
+WORKDIR /root
+RUN git clone https://github.com/strasdat/Sophus.git
+RUN cd Sophus && git checkout tags/1.22.4 && mkdir build
+WORKDIR /root/Sophus/build
+RUN cmake .. && make -j$(NPROC) && make install
+
+
+RUN apt-get update &&  apt install -y \
+        libgl1-mesa-dev \
+        libglew-dev 
+
+
+#Pangolin
+WORKDIR /root
+RUN git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
+RUN cd Pangolin && git checkout tags/v0.6 && mkdir build
+WORKDIR /root/Pangolin/build
+RUN cmake .. && make -j$(NPROC) && make install
 
 
 WORKDIR /root

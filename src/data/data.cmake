@@ -9,6 +9,7 @@ include_directories(
 
 
 list(APPEND LIBRARY_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/data/dataloader.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/data/camera.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/data/point.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/data/map.cc

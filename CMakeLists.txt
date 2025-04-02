@@ -6,7 +6,10 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV 4 QUIET)
 find_package(Boost REQUIRED COMPONENTS system filesystem thread date_time)
 find_package(Ceres REQUIRED)
+find_package(Sophus REQUIRED)
 find_package(glog 0.6.0 REQUIRED)
+find_package(Pangolin 0.6 REQUIRED)
+find_package(PCL REQUIRED)
 
 
 message(STATUS "OPENCV: " ${OpenCV_VERSION} " | BOOST: " ${Boost_VERSION} " | CERES: " ${Ceres_VERSION})

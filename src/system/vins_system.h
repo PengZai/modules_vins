@@ -27,10 +27,12 @@ class System {
         void setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_frontend);
         void setVisualizer(const std::shared_ptr<Visualizer> &visualizer);
         void setMap(const std::shared_ptr<Map> &map);
-
+        void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr, const std::string &to_cv_dtype);
+        void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr);
+        
         // msg0 and msg1 come from camera 0 and camera 1 respectively, 
         // in which msg0 and msg1 have been software synchronized
-        void addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msgs);
+        void addCameraFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups);
 
         void callbackVisualNavigation();
 

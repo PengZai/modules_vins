@@ -42,34 +42,63 @@ void System::setMap(const std::shared_ptr<Map> &map){
     this->map_ = map;
 }
 
+void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr, const std::string &to_cv_dtype){
 
 
-void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msgs){
+    const sensor_msgs::ImageConstPtr &image_msg_ptr = msg_ptr->instantiate<sensor_msgs::Image>();
+    if (image_msg_ptr == nullptr) {
+        VLOG(VERBOSE) << YELLOW << "message coming from camera is empty" << RESET;
+        return;        
+    }
+
+    try {
+        cv_ptr = cv_bridge::toCvShare(image_msg_ptr, to_cv_dtype);
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+    }
+
+}
+
+
+void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr){
+
+
+    const sensor_msgs::ImageConstPtr &image_msg_ptr = msg_ptr->instantiate<sensor_msgs::Image>();
+    if (image_msg_ptr == nullptr) {
+        VLOG(VERBOSE) << YELLOW << "message coming from camera is empty" << RESET;
+        return;        
+    }
+
+    try {
+        cv_ptr = cv_bridge::toCvShare(image_msg_ptr, image_msg_ptr->encoding);
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+    }
+
+}
+
+
+void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups){
 
 
  
     std::vector<std::shared_ptr<Image>> image_vector;
 
-    for(int cam_id=0; cam_id < (int)msgs.size(); cam_id++){
+    for(int cam_id=0; cam_id < (int)msg_groups.size(); cam_id++){
 
         // VLOG(VERBOSE) <<  "cam_id: " << cam_id <<  " : " <<msgs.at(cam_id).getTopic();
         
-        sensor_msgs::Image::ConstPtr img_msg = msgs.at(cam_id).instantiate<sensor_msgs::Image>();
-        if (img_msg == nullptr) {
-            VLOG(VERBOSE) << YELLOW << "message coming from camera " << cam_id << " is empty" << RESET;
-            return;        
-        }
+        std::map<std::string, std::shared_ptr<rosbag::MessageInstance>> dtype_to_msg_ptr_map = msg_groups.at(cam_id);
 
-        // cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(img_msg, "bgr8");
         cv_bridge::CvImageConstPtr cv_ptr;
-        try {
-            cv_ptr = cv_bridge::toCvShare(img_msg, "bgr8");
-        } catch (cv_bridge::Exception& e) {
-            ROS_ERROR("cv_bridge exception: %s", e.what());
+        RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["bgr"], cv_ptr, "bgr8");
+        std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
+
+        if(this->config_->camera_config_->params_vector_.at(cam_id)->use_sensor_depth_){
+            RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["depth"], cv_ptr);
+            img->setSensorDepth(cv_ptr->image.clone());
         }
 
-
-        std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
         image_vector.emplace_back(img);
         
     }
@@ -83,57 +112,7 @@ void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msg
 }
 
 
-// void System::addCameraFrameDeque(const std::vector<rosbag::MessageInstance> &msgs){
 
-
- 
-//     std::vector<Image> image_vector;
-//     cv_bridge::CvImageConstPtr cv_ptr0;
-//     cv_bridge::CvImageConstPtr cv_ptr1;
-
-
-//     for(int cam_id=0; cam_id < (int)msgs.size(); cam_id++){
-
-//         sensor_msgs::Image::ConstPtr img_msg = msgs.at(cam_id).instantiate<sensor_msgs::Image>();
-//         if (img_msg == nullptr) {
-//             VLOG(VERBOSE) << YELLOW << "message coming from camera " << cam_id << " is empty" << RESET;
-//             return;        
-//         }
-//         if(cam_id==0){
-//             cv_ptr0 = cv_bridge::toCvShare(img_msg, "bgr8");
-//             try {
-//                 cv_ptr0 = cv_bridge::toCvShare(img_msg, "bgr8");
-//             } catch (cv_bridge::Exception& e) {
-//                 ROS_ERROR("cv_bridge exception: %s", e.what());
-//             }
-//             Image img(cv_ptr0->header.stamp.toSec(), cam_id, cv_ptr0->image.clone());
-//             image_vector.emplace_back(img);
-
-//         }
-//         else{
-//             cv_ptr1 = cv_bridge::toCvShare(img_msg, "bgr8");
-//             try {
-//                 cv_ptr1 = cv_bridge::toCvShare(img_msg, "bgr8");
-//             } catch (cv_bridge::Exception& e) {
-//                 ROS_ERROR("cv_bridge exception: %s", e.what());
-//             }
-//             Image img(cv_ptr1->header.stamp.toSec(), cam_id, cv_ptr1->image.clone());
-//             image_vector.emplace_back(img);
-
-//         }
-//         // cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(img_msg, "bgr8");
-        
-
-        
-        
-//     }
-
-
-//     CameraFrame camera_frame(image_vector);
-//     this->camera_frame_deque_.push_back(camera_frame);
-
-
-// }
 
 void System::callbackVisualNavigation(){
 

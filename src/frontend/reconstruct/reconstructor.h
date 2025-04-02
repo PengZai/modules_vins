@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "two_view_reconstruction.h"
+#include "sensor_depth_reconstruction.h"
 #include "../../data/camera.h"
 #include "../../system/system_config.h"
 #include "../../data/camera.h"
@@ -30,6 +31,8 @@ class Reconstructor{
 
 
     std::shared_ptr<TwoViewReconstructor> two_view_reconstructor_;
+    std::shared_ptr<SensorDepthReconstruction> sensor_depth_reconstructor_;
+    
 
 };
     

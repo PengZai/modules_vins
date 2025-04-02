@@ -16,7 +16,7 @@ docker build -t $IMAGE_NAME -f "${HOME}/vscode_projects/${PROJECT_NAME}/catkin_w
 xhost +local:root
 
 docker run \
-    -e DISPLAY \
+    -e DISPLAY=$DISPLAY \
     -v ~/.Xauthority:/root/.Xauthority:rw \
     --network host \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
@@ -26,6 +26,8 @@ docker run \
     --cap-add sys_ptrace \
     --runtime=nvidia \
     --gpus all \
+    --env NVIDIA_VISIBLE_DEVICES=all \
+    --env NVIDIA_DRIVER_CAPABILITIES=all \
     -it --name $PROJECT_NAME $IMAGE_NAME /bin/bash
 
 # docker run --rm -it --name $PROJECT_NAME $IMAGE_NAME /bin/bash

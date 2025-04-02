@@ -3,8 +3,10 @@
 
 #include <memory>
 #include <Eigen/Dense>
-#include "config.h"
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/opencv.hpp>
 
+#include "config.h"
 #include "../utils/utils.h"
 
 
@@ -19,8 +21,10 @@ class CameraParameters : public Parameters
         CameraParameters();
 
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
-        Eigen::Matrix3d getIntrinsicsMatrix();
-        Eigen::VectorXd getDistortionCoeffs();
+        const Eigen::Matrix3d getIntrinsicsMatrix();
+        const cv::Mat getCVIntrinsicsMatrix();
+        const Eigen::VectorXd getDistortionCoeffs();
+        const cv::Mat getCVDistortionCoeffs();
 
 
     public:
@@ -30,7 +34,11 @@ class CameraParameters : public Parameters
         Eigen::VectorXd intrinsics_;
 
 
-        std::string rostopic_;
+        std::string rgb_rostopic_;
+
+        bool use_sensor_depth_;
+        std::string sensor_depth_rostopic_;
+     
         std::string output_rostopic_;
         std::string camera_model_;
         std::string distortion_model_;
@@ -44,7 +52,6 @@ class CameraConfig : public Config
 {
     public:
 
-        void loadConfigFromPath(const std::string &config_path) override;
 
         void calculateExtrinsicsAndProjectionMatrixBetweenCameras();
 

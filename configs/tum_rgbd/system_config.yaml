@@ -1,0 +1,26 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+system:
+  log_verbosity: "VERBOSE" # VERBOSE, KEY, QUIET
+  max_cameras: 1 # number of cameras, 2 for stereo, 1 for monocular
+  max_imus: 1 # number of IMUs
+  max_stereo_time_offset: 0.02 # max time offset for stereo image pair (unit: second)
+
+  # max time offset for image pair for bgr and depth (unit: second), by my observation, it could even reach 0.6s timeoffset
+  max_color_sensor_depth_pair_time_offset: 0.02
+
+  num_feature_points: 1000
+  threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
+  threshold_for_tracking_descriptor_in_frame:40.0 # for tracking cross images in same frame
+
+
+  # relative config file name
+  imu_config_name: "imu_config.yaml"
+  camera_config_name: "camera_config.yaml"
+  visualizer_config_name: "visualizer_config.yaml"
+
+  # debug
+  check_triangulation: 0
+
+
+  

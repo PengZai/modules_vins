@@ -7,6 +7,9 @@
 #include "point.h"
 #include "map.h"
 
+#include <sophus/se3.hpp>
+#include <sophus/so3.hpp>
+
 
 namespace modules_vins {
 
@@ -17,13 +20,20 @@ class Image{
     public:
 
         Image(double timestamp, int sensor_id, cv::Mat data);
-        std::vector<cv::Point3f> getMapPoints() const;
+        std::vector<Eigen::Vector3d> getMapPoints() const;
         void initPose();
 
+        void setSensorDepth(const cv::Mat &sensor_depth);
+        void setTcw(const Sophus::SE3<double> T_c_w);
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
+
+        double getPointDepthFromSensor(const cv::Point2d &pt);
 
         Eigen::Matrix3d getRotation();
         Eigen::Vector3d getPosition();
+        
+        bool isInImage(const cv::Point2d &pixel);
+        
 
     public:
         static int id_counter_;
@@ -32,8 +42,10 @@ class Image{
 
         //which camera this image belong to
         int sensor_id_; 
-        cv::Mat data_;
+        cv::Mat color_data_;
         cv::Mat gray_data_;
+        cv::Mat depth_;
+        cv::Mat sensor_depth_;
         std::vector<cv::KeyPoint> cv_keypoint_vector_;
         cv::Mat descriptors_;
 
@@ -46,7 +58,8 @@ class Image{
         // matches in frame
         std::vector<cv::DMatch> matches_in_frame_;
 
-        Eigen::Matrix<double, 4, 4> T_c_w_;
+        // Eigen::Matrix<double, 4, 4> T_c_w_;
+        Sophus::SE3<double> T_c_w_;
 
 
 
@@ -56,20 +69,7 @@ class Image{
 
 };
 
-// class CameraData{
 
-
-//     public:
-
-//         CameraData();
-//         CameraData(const std::vector<double> &timestamp_vector, const std::vector<int> &sensor_id_vector, const std::vector<cv::Mat> &image_vector);
-
-//         std::vector<Image> image_vector_;
-
-      
-
-
-// };
 
 
 class CameraFrame {
@@ -79,17 +79,20 @@ class CameraFrame {
     CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
     
     void setMap(const std::shared_ptr<Map> &map);
+    const std::shared_ptr<Map> &getMap() const;
+
+
     // CameraFrame(const CameraFrame &camera_frame);
 
     std::vector<std::shared_ptr<Image>> image_vector_;
     static int id_counter_;
     int id_;
-
+    std::vector<std::shared_ptr<MapPoint>> map_point_vector_;
 
     protected:
     std::shared_ptr<Map> map_;
 
-    // Sophus::SE3<float> Tcw;
+    // Sophus::SE3<double> Tcw;
 
 
 

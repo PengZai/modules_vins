@@ -11,8 +11,8 @@ cam0:
   distortion_coeffs: [-0.060164620903866,0.094005180631043,0,0]
   distortion_model: radtan
   intrinsics: [642.9165664800531, 641.9171825800378, 460.1840658156501, 308.5846449100310] #fu, fv, cu, cv
-  resolution: [960, 600]
-  rostopic: /dalsa_rgb/left/image_raw
+  resolution: [960, 600] # width x height
+  rgb_rostopic: /dalsa_rgb/left/image_raw
   output_rostopic: /output/left/image
 cam1:
   T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
@@ -26,5 +26,5 @@ cam1:
   distortion_model: radtan
   intrinsics: [644.4385505412966, 643.5879520187435, 455.1775919513420, 304.1616226347153] #fu, fv, cu, cv
   resolution: [960, 600]
-  rostopic: /dalsa_rgb/right/image_raw
+  rgb_rostopic: /dalsa_rgb/right/image_raw
   output_rostopic: /output/right/image

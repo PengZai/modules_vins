@@ -25,7 +25,6 @@ class Map{
     const std::map<unsigned int, std::shared_ptr<MapPoint>>& getMapPoints() const;
 
 
-
     protected:
 
     std::map<unsigned int, std::shared_ptr<MapPoint>> mappoints_;

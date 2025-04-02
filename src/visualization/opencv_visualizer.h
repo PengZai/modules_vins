@@ -1,3 +1,7 @@
+
+
+#include <Eigen/Dense>
+#include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "../log/logging.h"
@@ -15,8 +19,11 @@ class OpenCVVisualizer{
     OpenCVVisualizer(const std::shared_ptr<SystemConfig> &config);
     void publish(const CameraFrame &camera_frame);
     void drawTrackingPointPattern(cv::Mat &img, const std::shared_ptr<KeyPoint> &keypoint, const cv::Scalar &color);
-    void publish_cross_frame(CameraFrame camera_frame);
-    void publish_cross_time(CameraFrame camera_frame);
+    void publishMatchingInFrame(CameraFrame camera_frame);
+    void publishMatchingInTime(CameraFrame camera_frame);
+    void publishProjectedMapPoint(const CameraFrame &camera_frame);
+    void publishDepth(const CameraFrame &camera_frame);
+    void publishTrackingInTime(const CameraFrame &camera_frame);
 
 
     public:

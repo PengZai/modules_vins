@@ -37,15 +37,13 @@ void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
     this->pose_estimator_->pipeline(camera_frame);
 
-    VLOG(VERBOSE) << "current_T_c_w: \n" << img_0->T_c_w_;
-
     this->reconstructor_->pipeline(camera_frame);
 
     this->map_->update(camera_frame);
 
     size_t mappoints_size = this->map_->getMapPoints().size();
     
-    VLOG(VERBOSE) << GREEN << mappoints_size - previos_mappoints_size << " map points were tracked in frame" << RESET;
+    VLOG(VERBOSE) << GREEN << mappoints_size - previos_mappoints_size << " map points were tracked in this frame" << RESET;
     VLOG(VERBOSE) << GREEN << mappoints_size << " map points were tracked in map in total" << RESET;
 
     VLOG(VERBOSE) << "VisualFrontend End";

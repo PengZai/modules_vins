@@ -13,7 +13,6 @@ namespace modules_vins
 class ImuConfig : public Config 
 {
     public:
-        void loadConfigFromPath(const std::string &config_path) override;
 
     public:
         Eigen::Matrix2d T_i_b_;

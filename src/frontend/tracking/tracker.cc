@@ -39,8 +39,16 @@ void Tracker::trackInFrame(CameraFrame &camera_frame){
             img_j->keypoint_vector_[match.trainIdx]->setMatchInFrame(match_for_img_j);
             img_j->matches_in_frame_.push_back(match_for_img_j);
 
-        
+            std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
+            std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_j = img_j->keypoint_vector_[match.trainIdx];
+
+
+            tracked_keypoint_from_img_0->setRightKeyPointInFrame(tracked_keypoint_from_img_j);
+            tracked_keypoint_from_img_j->setLeftKeyPointInFrame(tracked_keypoint_from_img_0);
+            
         }
+        VLOG(VERBOSE) << GREEN << img_j->matches_in_frame_.size() << " points were trakced in frame between " << img_0->sensor_id_  << " and " << img_j->sensor_id_ << RESET; 
+
     }
 
 
@@ -83,7 +91,10 @@ void Tracker::trackInTime(CameraFrame &camera_frame){
             tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_previous_frame);
             tracked_keypoint_from_previous_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
             
+            tracked_keypoint_from_previous_frame->propagateMapPointPtr();
         }   
+
+        VLOG(VERBOSE) << GREEN << img0_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
 
         this->camera_frame_deque_.pop_front();
     }
@@ -100,9 +111,6 @@ void Tracker::pipeline(CameraFrame &camera_frame){
 
     // track cross cameras (typically stereo trakcing)
     trackInFrame(camera_frame);
-
-    VLOG(VERBOSE) << GREEN << camera_frame.image_vector_.at(0)->matches_in_time_.size() << " points were trakced in time" << RESET;
-    VLOG(VERBOSE) << GREEN << camera_frame.image_vector_.at(0)->matches_in_frame_.size() << " points were trakced in frame" << RESET; 
 
 
 }

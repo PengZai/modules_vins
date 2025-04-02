@@ -7,6 +7,7 @@
 #include "config.h"
 #include "camera_config.h"
 #include "imu_config.h"
+#include "visualizer_config.h"
 
 namespace modules_vins
 {   
@@ -25,19 +26,11 @@ class SystemParameters: public Parameters{
         double threshold_for_tracking_descriptor_in_time_;
         double threshold_for_tracking_descriptor_in_frame_;
         double max_stereo_time_offset_;
-
+        double max_color_sensor_depth_pair_time_offset_;
 
         std::string imu_config_name_;
         std::string camera_config_name_;
-
-        // std::shared_ptr<ImuParameters> vector_imu_params_;
-
-        bool use_opencv_vis_;
-        bool use_rviz_vis_;
-
-        std::string output_pose_rostopic_; 
-        std::string output_trajectory_rostopic_;
-        std::string output_tracked_map_points_rostopic_; 
+        std::string visualizer_config_name_;
 
         bool check_triangulation_;
 
@@ -55,15 +48,16 @@ class SystemConfig: public Config
         SystemConfig();
         
         void loadFromPath(const std::string &config_path);
-        void loadConfigFromPath(const std::string &config_path) override;
 
         void setCameraConfig(const std::shared_ptr<CameraConfig> &camera_config);
+        void setVisualizerConfig(const std::shared_ptr<VisualizerConfig> &visualizer_config);
 
     
     public:
 
         std::shared_ptr<SystemParameters> params_ = nullptr;
         std::shared_ptr<CameraConfig> camera_config_ = nullptr;
+        std::shared_ptr<VisualizerConfig> visualizer_config_ = nullptr;
 
     
 

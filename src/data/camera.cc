@@ -7,7 +7,7 @@ namespace modules_vins{
 // CameraData::CameraData(){};
 
 // CameraData::CameraData(
-//     const std::vector<double> &timestamp_vector, 
+//     const std::vector<float> &timestamp_vector, 
 //     const std::vector<int> &sensor_id_vector, 
 //     const std::vector<cv::Mat> &image_vector) : 
 //     timestamp_vector_(timestamp_vector),
@@ -26,24 +26,62 @@ Image::Image(double timestamp, int sensor_id, cv::Mat data):
 id_(++Image::id_counter_), 
 timestamp_(timestamp), 
 sensor_id_(sensor_id), 
-data_(data)
+color_data_(data)
 {
+
+    this->depth_.create(this->color_data_.rows, this->color_data_.cols, CV_64FC1);
+    this->depth_.setTo(-1);
 
 }
 
 void Image::initPose(){
-    this->T_c_w_.setIdentity();
+    this->T_c_w_ = Sophus::SE3<double>();
 
 }
 
 
-std::vector<cv::Point3f> Image::getMapPoints() const {
+double Image::getPointDepthFromSensor(const cv::Point2d &pt){
+
+    int x = cvRound(pt.x);
+    int y = cvRound(pt.y);
+
+    double depth_scale = 1.0;
+
+
+    if(sensor_depth_.empty()){
+        return -1;
+    }
+
+    double d = sensor_depth_.ptr<float>(y)[x];
+    if ( d!=0 )
+    {
+        return double(d)/depth_scale;
+    }
+    else 
+    {
+        // check the nearby points 
+        int dx[4] = {-1,0,1,0};
+        int dy[4] = {0,-1,0,1};
+        for ( int i=0; i<4; i++ )
+        {
+            d = sensor_depth_.ptr<ushort>( y+dy[i] )[x+dx[i]];
+            if ( d!=0 )
+            {
+                return double(d)/depth_scale;
+            }
+        }
+    }
+    return -1.0;
+}
+
+
+std::vector<Eigen::Vector3d> Image::getMapPoints() const {
     
-    std::vector<cv::Point3f> map_points;
+    std::vector<Eigen::Vector3d> map_points;
     for(int i = 0;i< (int)this->keypoint_vector_.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = keypoint_vector_.at(i);
         if(kp->map_point_ptr_ != nullptr){
-            map_points.push_back(kp->map_point_ptr_->pt_);
+            map_points.push_back(kp->map_point_ptr_->pt3d_);
         }
     }
 
@@ -51,21 +89,38 @@ std::vector<cv::Point3f> Image::getMapPoints() const {
 }
 
 
+void Image::setSensorDepth(const cv::Mat &sensor_depth){
+
+    this->sensor_depth_ = sensor_depth.clone();
+}
+
+
+void Image::setTcw(const Sophus::SE3<double> T_c_w){
+
+    this->T_c_w_ = T_c_w;
+
+
+}
+
 void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
 
-    T_c_w_.block<3,3>(0,0) = rotation;
-    T_c_w_.block<3,1>(0,3) = position;
-
-
+    this->T_c_w_ = Sophus::SE3<double>(Sophus::SO3<double>(rotation), position);
 }
 
 Eigen::Matrix3d Image::getRotation(){
 
-    return T_c_w_.block<3,3>(0,0);
+    return T_c_w_.rotationMatrix();
 }
 Eigen::Vector3d Image::getPosition(){
 
-    return T_c_w_.block<3,1>(0,3);
+    return T_c_w_.translation();
+}
+
+
+bool Image::isInImage(const cv::Point2d &pixel){
+
+    return pixel.x > 0 && pixel.x < this->color_data_.cols && pixel.y >0 && pixel.y < this->color_data_.rows;
+
 }
 
 
@@ -92,13 +147,9 @@ void CameraFrame::setMap(const std::shared_ptr<Map> &map){
     this->map_ = map;
 }
 
-// CameraFrame::CameraFrame(const CameraFrame &camera_frame):
-// image_vector_(camera_frame.image_vector_), id_(camera_frame.id_)
-// {
-//     CameraFrame::id_counter_++;
-//     this->id_ = id_counter_;
-// }
-
+const std::shared_ptr<Map> &CameraFrame::getMap() const{
+    return this->map_;
+}
 
 
 // Overload operator<< for logging
@@ -106,7 +157,7 @@ std::ostream& operator<<(std::ostream& os, const Image &img) {
     os << "Image Info: \n" 
     << "Timestamp: " << img.timestamp_ << "\n" 
     << "Sensor ID: " << img.sensor_id_ << "\n"
-    << "Data Size: " << img.data_.rows << "x" << img.data_.cols << "\n"
+    << "Data Size: " << img.color_data_.rows << "x" << img.color_data_.cols << "\n"
     << "Keypoints Count: " << img.keypoint_vector_.size() << "\n"
     << "Descriptor Size: " << img.descriptors_.rows << "x" << img.descriptors_.cols << "\n";
     return os;

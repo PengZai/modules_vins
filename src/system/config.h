@@ -22,11 +22,9 @@ class Config
 {
     public:
 
-        virtual ~Config() = default;
 
-        virtual void loadConfigFromPath(const std::string &config_path) = 0;
-
-        
+        void loadConfigFromPath(const std::string &config_path);
+    
     public:
         std::shared_ptr<cv::FileStorage> file_storage_ = nullptr;
         std::string path_;

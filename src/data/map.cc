@@ -40,19 +40,15 @@ void Map::update(const CameraFrame &camera_frame){
         std::exit(EXIT_FAILURE);
     }
 
-    for(int i=0; i<(int)camera_frame.image_vector_.at(0)->keypoint_vector_.size();i++){
-
-        const std::shared_ptr<KeyPoint> &kp = camera_frame.image_vector_.at(0)->keypoint_vector_.at(i);
+    for(int i=0; i<(int)camera_frame.map_point_vector_.size();i++){
         
-        if(kp->map_point_ptr_ != nullptr){
-
-            const std::shared_ptr<MapPoint> &mp = kp->map_point_ptr_;
+            const std::shared_ptr<MapPoint> &mp = camera_frame.map_point_vector_.at(i);
             
             if(!this->isExistedMapPoint(mp)){
                 this->insertMapPoint(mp);
             }
 
-        }
+        
 
     }
     

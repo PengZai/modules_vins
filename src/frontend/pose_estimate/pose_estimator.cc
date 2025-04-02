@@ -25,37 +25,28 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
         CameraFrame &previous_camera_frame = this->camera_frame_deque_.front();
         std::shared_ptr<Image> &img_0_from_previous_frame = previous_camera_frame.image_vector_.at(0);
 
-        std::vector<cv::Point2f> keypoints;
-        std::vector<cv::Point3f> map_points;
+        std::vector<cv::Point2d> pt2ds;
+        std::vector<cv::Point3d> pt3ds;
 
 
-        for(int i=0; i < (int)img_0_from_previous_frame->matches_in_frame_.size();i++){
+        for(int i=0; i < (int)img_0_from_current_frame->matches_in_time_.size();i++){
 
-            cv::DMatch &match_in_frame = img_0_from_previous_frame->matches_in_frame_.at(i);
-            const std::shared_ptr<KeyPoint> &kp_from_previous_frame = img_0_from_previous_frame->keypoint_vector_.at(match_in_frame.queryIdx);
-            if(kp_from_previous_frame->next_keypoint_in_time_ == nullptr){
+            cv::DMatch &match_in_time = img_0_from_current_frame->matches_in_time_.at(i);
+            const std::shared_ptr<KeyPoint> &kp_from_previous_frame = img_0_from_previous_frame->keypoint_vector_.at(match_in_time.trainIdx);
+            const std::shared_ptr<KeyPoint> &kp_from_current_frame = img_0_from_current_frame->keypoint_vector_.at(match_in_time.queryIdx);
+
+            if(kp_from_previous_frame->pt3d_.z <= 0){
                 continue;
             }
 
-            if(kp_from_previous_frame->pt3_.z <= 0){
-                continue;
-            }
-
-            keypoints.push_back(kp_from_previous_frame->next_keypoint_in_time_->pt2_);
-            map_points.push_back(kp_from_previous_frame->pt3_);
+            pt2ds.push_back(kp_from_current_frame->pt2i_);
+            pt3ds.push_back(kp_from_previous_frame->pt3d_);
 
         }
 
 
-        Eigen::Matrix3d K = this->sys_config_->camera_config_->params_vector_.at(0)->getIntrinsicsMatrix();
-        Eigen::VectorXd distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(0)->getDistortionCoeffs();
-
-
-        cv::Mat cv_K;
-        cv::eigen2cv(K, cv_K); 
-         
-        cv::Mat cv_distortion_coeffs;
-        cv::eigen2cv(distortion_coeffs, cv_distortion_coeffs); 
+        cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(0)->getCVIntrinsicsMatrix();         
+        cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(0)->getCVDistortionCoeffs();
  
 
         cv::Mat rortation_vec, translation_vec;
@@ -70,15 +61,15 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
         //         cv::SOLVEPNP_EPNP);
 
         bool success = cv::solvePnPRansac(
-            map_points,                 // std::vector<cv::Point3f>
-            keypoints,                  // std::vector<cv::Point2f>
+            pt3ds,                 // std::vector<cv::Point3d>
+            pt2ds,                  // std::vector<cv::Point2d>
             cv_K,                       // Intrinsic matrix
             cv_distortion_coeffs,       // Distortion coefficients
             rortation_vec,                          // Output: rotation vector
             translation_vec,                          // Output: translation vector
             false,                         // Use extrinsic guess? Usually false
             100,                           // RANSAC iterations
-            8.0,                           // Reprojection error threshold (pixels)
+            4.0,                           // Reprojection error threshold (pixels)
             0.99,                          // Confidence
             inliers                       // Output: inlier indices
         );
@@ -96,17 +87,20 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
         cv::cv2eigen(translation_vec, estimated_position);
 
 
-  
+        Sophus::SE3<double> estimated_T_current_cam_previous_cam = Sophus::SE3<double>(
+            Sophus::SO3<double>(estimated_rotation), estimated_position
+        );
+
+        Sophus::Vector6d d = estimated_T_current_cam_previous_cam.log();
 
 
-        Eigen::Matrix4d estimated_T_c_w = Eigen::Matrix4d::Identity();
-        estimated_T_c_w.block<3,3>(0,0) = estimated_rotation;
-        estimated_T_c_w.block<3,1>(0,3) = estimated_position;
-
-
-        VLOG(VERBOSE) << "estimated_T_c_w: \n" << estimated_T_c_w.inverse();
+        VLOG(VERBOSE) << "estimated_T_current_cam_previous_cam: \n" << estimated_T_current_cam_previous_cam.matrix();
+        VLOG(VERBOSE) << "the norm of relative T.log() " << d.norm();
         
-        img_0_from_current_frame->T_c_w_ = estimated_T_c_w.inverse() * img_0_from_previous_frame->T_c_w_;
+        
+        img_0_from_current_frame->setTcw(estimated_T_current_cam_previous_cam * img_0_from_previous_frame->T_c_w_);
+
+        VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
         
 

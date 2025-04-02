@@ -23,6 +23,7 @@ list(APPEND LIBRARY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/tracking/tracking_descriptor.cc
 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/reconstruct/reconstructor.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/reconstruct/sensor_depth_reconstruction.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/reconstruct/two_view_reconstruction.cc
 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/pose_estimate/pose_estimator.cc

@@ -11,6 +11,7 @@ include_directories(
 list(APPEND LIBRARY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/opencv_visualizer.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/ros1_visualizer.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/pangolin_visualizer.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/visualizer.cc
 )
 
