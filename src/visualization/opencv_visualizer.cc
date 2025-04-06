@@ -8,9 +8,14 @@ OpenCVVisualizer::OpenCVVisualizer(const std::shared_ptr<SystemConfig> &sys_conf
 sys_config_(sys_config), GreenColor_(cv::Scalar(0,255,0)), RedColor_(cv::Scalar(0,0,255)), BlueColor_(cv::Scalar(255,0,0))
 {
 
-    // for(int i=0; i < config->params_->max_cameras_; i++){
-    //     cv::namedWindow("Image"+std::to_string(i), cv::WINDOW_AUTOSIZE);
-    // }
+    // Note that in this example the classes are hard-coded
+    this->classes_ = {"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant",
+        "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra",
+        "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+        "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife",
+        "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair",
+        "couch", "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
+        "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"};
 }
 
 void OpenCVVisualizer::drawTrackingPointPattern(cv::Mat &img, const std::shared_ptr<KeyPoint> &keypoint, const cv::Scalar &color){
@@ -83,9 +88,6 @@ void OpenCVVisualizer::publishMatchingInTime(CameraFrame camera_frame){
     const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->color_data_.clone();
 
-    this->camera_frame_deque_.push_back(camera_frame);
-    this->img_deque_.push_back(img_0_color_data);
-
 
     for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
 
@@ -104,18 +106,15 @@ void OpenCVVisualizer::publishMatchingInTime(CameraFrame camera_frame){
     if(camera_frame_deque_.size()>1){
 
         CameraFrame &previous_camera_frame = this->camera_frame_deque_.front();
-        cv::Mat img_0_color_data_from_previous_camera_frame = this->img_deque_.front();
 
         const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame.image_vector_.at(0);
-    
+        cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->color_data_.clone();
 
         cv::Mat img_0_matches_in_time;
         cv::drawMatches(img_0_color_data, img_0->cv_keypoint_vector_, img_0_color_data_from_previous_camera_frame, img_0_from_previous_camera_frame->cv_keypoint_vector_, img_0->matches_in_time_, img_0_matches_in_time,
             cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
         );
 
-        this->camera_frame_deque_.pop_front();
-        this->img_deque_.pop_front();
 
         cv::imshow("img 0 matches in time", img_0_matches_in_time);
 
@@ -141,7 +140,7 @@ void OpenCVVisualizer::publishProjectedMapPoint(const CameraFrame &camera_frame)
        const Eigen::Vector3d pt3d_in_cam = img_0->T_c_w_ * map_point->pt3d_;
        cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
        if(img_0->isInImage(reprojected_pixel)){
-        cv::circle (img_0_color_data, reprojected_pixel, 5, cv::Scalar (0,255,0), 2);
+        cv::circle (img_0_color_data, reprojected_pixel, 2, cv::Scalar (0,255,0), -1);
        }
 
     }
@@ -155,16 +154,114 @@ void OpenCVVisualizer::publishProjectedMapPoint(const CameraFrame &camera_frame)
 }
 
 
-void OpenCVVisualizer::publishDepth(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publishSensorDepth(const CameraFrame &camera_frame){
 
 
     for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
         const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
 
-        cv::Mat img_i_sensor_detph = img_i->sensor_depth_.clone();
+        cv::Mat img_i_sensor_detph = img_i->sensor_depth_;
         cv::imshow("sensor depth in frame for image "+std::to_string(i), img_i_sensor_detph);
     }
 
+}
+
+void OpenCVVisualizer::publishLearnedDepth(const CameraFrame &camera_frame){
+
+
+    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
+        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+
+        if(img_i->learned_depth_.empty()){
+            continue;
+        }
+
+        cv::Mat img_i_learned_detph = img_i->learned_depth_.clone();
+
+        // visualize depth
+        double min_val, max_val;
+        cv::Mat depth_visual;
+        cv::minMaxLoc(img_i_learned_detph, &min_val, &max_val);
+        img_i_learned_detph = 255 * (img_i_learned_detph - min_val) / (max_val - min_val);
+        img_i_learned_detph.convertTo(depth_visual, CV_8U);
+        cv::applyColorMap(depth_visual, depth_visual, cv::COLORMAP_JET); //COLORMAP_HOT, COLORMAP_JET
+
+        // Stack the image and depth map
+        cv::Mat mixed_depth_color;
+
+         // Blend images (alpha blending)
+        double alpha = 0.80;  // depth overlay transparency (0 = invisible, 1 = fully depth)
+        double beta = 1.0 - alpha;
+        cv::addWeighted(depth_visual, alpha, img_i->color_data_, beta, 0.0, mixed_depth_color);
+
+        cv::imshow("learned depth in frame for image " + std::to_string(i), mixed_depth_color);
+    }
+
+}
+
+
+
+void OpenCVVisualizer::publishObjectDetection(const CameraFrame &camera_frame){
+
+    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
+
+        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_object_detection_){
+
+
+            cv::Mat img_i_color_data = img_i->color_data_.clone();
+
+            // Show the results
+            for (const BoxOutput& box_output : img_i->box_outputs_) {
+
+                // Draw bounding box on image
+                cv::rectangle(img_i_color_data, box_output.box_, cv::Scalar(0, 255, 0), 2);
+
+                // Label
+                std::string label = "ID: " + this->classes_[box_output.class_id_];
+                cv::putText(img_i_color_data, label, cv::Point(box_output.box_.x, box_output.box_.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+            }
+
+            cv::imshow("YOLO detections for image " + std::to_string(i), img_i_color_data);
+        }
+
+        
+
+    }
+    
+}
+
+void OpenCVVisualizer::publishSemanticSegmentation(const CameraFrame &camera_frame){
+
+    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
+
+        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+
+        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_semantic_segmentation_){
+
+        
+
+            cv::Mat img_i_color_data = img_i->color_data_;
+            cv::Mat mask = img_i->color_data_.clone();
+            for (const SegmentOutput& segment_output : img_i->segment_outputs_) {
+                cv::rectangle(mask, segment_output.box_, cv::Scalar(0, 255, 0), 2, 8);
+                mask(segment_output.box_).setTo(cv::Scalar(0, 0, 255), segment_output.boxMask_);
+
+                std::string label = "ID: " + this->classes_[segment_output.class_id_];
+                cv::putText(mask, label, cv::Point(segment_output.box_.x, segment_output.box_.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+            }
+
+            cv::Mat mixed_segment_color;
+            // Blend images (alpha blending)
+            double alpha = 0.80;  // depth overlay transparency (0 = invisible, 1 = fully depth)
+            double beta = 1.0 - alpha;
+            cv::addWeighted(mask, alpha, img_i_color_data, beta, 0.0, mixed_segment_color);  
+
+            cv::imshow("YOLO semantic segmentation for image " + std::to_string(i), mixed_segment_color);
+        }
+
+        
+    }
 }
 
 
@@ -173,9 +270,6 @@ void OpenCVVisualizer::publishTrackingInTime(const CameraFrame &camera_frame){
 
     const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->color_data_.clone();
-
-    this->camera_frame_deque_.push_back(camera_frame);
-    this->img_deque_.push_back(img_0_color_data);
 
 
     for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
@@ -199,6 +293,9 @@ void OpenCVVisualizer::publishTrackingInTime(const CameraFrame &camera_frame){
 
 void OpenCVVisualizer::publish(const CameraFrame &camera_frame){
 
+
+    this->camera_frame_deque_.push_back(camera_frame);
+
     if(this->sys_config_->visualizer_config_->opencv_params_->show_matching_in_frame_){
         publishMatchingInFrame(camera_frame);
 
@@ -211,17 +308,39 @@ void OpenCVVisualizer::publish(const CameraFrame &camera_frame){
         publishProjectedMapPoint(camera_frame);
     }
 
-    if(this->sys_config_->visualizer_config_->opencv_params_->show_depth_){
+    if(this->sys_config_->visualizer_config_->opencv_params_->show_sensor_depth_){
 
-        publishDepth(camera_frame);
+        publishSensorDepth(camera_frame);
     }
+
+   
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_tracking_in_time_){
 
         publishTrackingInTime(camera_frame);
     }
 
+    #ifdef USE_LIBTORCH
+    if(this->sys_config_->visualizer_config_->opencv_params_->show_learned_depth_){
+        publishLearnedDepth(camera_frame);
+    }
+   
+    if(this->sys_config_->visualizer_config_->opencv_params_->show_object_detection_){
 
+        publishObjectDetection(camera_frame);
+    }    
+
+    if(this->sys_config_->visualizer_config_->opencv_params_->show_semantic_segmentation_){
+
+        publishSemanticSegmentation(camera_frame);
+    }
+    #endif
+
+    if(this->camera_frame_deque_.size()>1){
+
+        this->camera_frame_deque_.pop_front();
+
+    }
 
     cv::waitKey(1);
 

@@ -1,6 +1,6 @@
 <launch>
-<!-- 
-    <arg name="config"      default="BotanicGarden" /> 
+
+    <!-- <arg name="config"      default="BotanicGarden" /> 
     <arg name="config_path" default="$(find modules_vins)/configs/$(arg config)/system_config.yaml" />
 
     <arg name="dataset" default="1018_00_img10hz600p"/>

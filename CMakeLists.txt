@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.3)
 project(modules_vins)
 
 
+
+# It tells CMake where to look for install prefixes of libraries or packages. 
+# This is especially useful if your dependencies are installed in non-standard locations (not in /usr or /usr/local on Linux, for example).
+
+option(USE_LIBTORCH "Enable libtorch" ON)
+
+
+list(APPEND CMAKE_PREFIX_PATH "/opt/ros/noetic")
+
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV 4 QUIET)
 find_package(Boost REQUIRED COMPONENTS system filesystem thread date_time)
@@ -9,6 +18,12 @@ find_package(Ceres REQUIRED)
 find_package(Sophus REQUIRED)
 find_package(glog 0.6.0 REQUIRED)
 find_package(Pangolin 0.6 REQUIRED)
+if(USE_LIBTORCH)
+    list(APPEND CMAKE_PREFIX_PATH "/root/libtorch")
+    find_package(Torch REQUIRED)
+    add_definitions(-DUSE_LIBTORCH)
+endif()
+
 find_package(PCL REQUIRED)
 
 
@@ -21,10 +36,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # Setting CMAKE_CXX_EXTENSIONS to OFF ensures strict compliance with the selected C++ standard.
 
+
 option(ENABLE_CMAKE_DEBUG "Enable detailed debug messages" ON)
 
-# Debug or Release
-set(CMAKE_BUILD_TYPE "Debug")
+if(ENABLE_CMAKE_DEBUG)
+    # Debug or Release
+    set(CMAKE_BUILD_TYPE "Debug")
+else()
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 # Enable compile optimizations
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsee -fomit-frame-pointer -fno-signed-zeros -fno-math-errno -funroll-loops")

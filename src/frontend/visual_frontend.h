@@ -2,16 +2,19 @@
 
 #include<vector>
 #include<memory>
-#include <Eigen/Dense>
+#include<Eigen/Dense>
 #include<opencv2/opencv.hpp>
 
+#include "reconstruct/reconstructor.h"
+#include "detect/detector.h"
 #include "../system/system_config.h"
 #include "../data/camera.h"
 #include "../data/map.h"
-#include "detect/detector.h"
 #include "tracking/tracker.h"
-#include "reconstruct/reconstructor.h"
 #include "pose_estimate/pose_estimator.h"
+#include "../log/logging.h"
+
+
 
 
 

@@ -1,5 +1,4 @@
 #include "system_config.h"
-#include <typeinfo>
 
 namespace modules_vins
 {
@@ -47,6 +46,7 @@ void SystemConfig::loadFromPath(const std::string &config_path){
     setVisualizerConfig(visualizer_config);
     visualizer_config->loadConfigFromPath(visualizer_config_path);
 
+
     std::shared_ptr<VisualizerParameters> visualizer_params = std::make_shared<VisualizerParameters>();
     visualizer_params->loadFromNode(std::make_shared<cv::FileNode>((*visualizer_config->file_storage_)["visualizer"]));
     visualizer_config->params_ = visualizer_params;
@@ -92,14 +92,28 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("max_color_sensor_depth_pair_time_offset", this->max_color_sensor_depth_pair_time_offset_);
 
     parse("num_feature_points", this->num_feature_points_);
+    parse("scale_factor", this->scale_factor_);
+    parse("level_pyramid", this->level_pyramid_);
+
     parse("threshold_for_tracking_descriptor_in_time", this->threshold_for_tracking_descriptor_in_time_);
     parse("threshold_for_tracking_descriptor_in_frame", this->threshold_for_tracking_descriptor_in_frame_);
+    parse("matching_ratio", this->matching_ratio_);
+
+
+    parse("threshold_for_pnp_pose_log_norm", this->threshold_for_pnp_pose_log_norm_);
+    parse("min_inliers", this->min_inliers_);
+    parse("max_num_fail", this->max_num_fail_);
+    parse("max_num_backward_reference", this->max_num_backward_reference_);
+
+    
+
 
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);
     parse("visualizer_config_name", this->visualizer_config_name_);
 
-        
+    parse("model_path", this->model_path_);
+
     parse("check_triangulation", this->check_triangulation_);
 
    

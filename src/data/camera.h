@@ -3,17 +3,32 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 #include <Eigen/Dense>
+#include <sophus/se3.hpp>
+#include <sophus/so3.hpp>
+
 
 #include "point.h"
 #include "map.h"
 
-#include <sophus/se3.hpp>
-#include <sophus/so3.hpp>
 
 
 namespace modules_vins {
 
 class Map;
+
+
+struct SegmentOutput {
+    int class_id_; // class id
+    float confidence_; // confidence score
+    cv::Rect2i box_; // bounding box
+    cv::Mat boxMask_; // mask in bounding box
+};
+
+struct BoxOutput {
+    int class_id_; // class id
+    float confidence_; // confidence score
+    cv::Rect2f box_; // bounding box
+};
 
 class Image{
 
@@ -45,11 +60,17 @@ class Image{
         cv::Mat color_data_;
         cv::Mat gray_data_;
         cv::Mat depth_;
+        cv::Mat learned_depth_;
         cv::Mat sensor_depth_;
         std::vector<cv::KeyPoint> cv_keypoint_vector_;
         cv::Mat descriptors_;
 
         std::vector<std::shared_ptr<KeyPoint>> keypoint_vector_;
+
+        // for yolo object detection
+        std::vector<BoxOutput> box_outputs_;
+        // for yolo semantic segmentation
+        std::vector<SegmentOutput> segment_outputs_;
         
     
         // matches for previous
@@ -89,8 +110,18 @@ class CameraFrame {
     int id_;
     std::vector<std::shared_ptr<MapPoint>> map_point_vector_;
 
+    enum CameraFrameStatus{
+        NOT_INITIALIZED=-1,
+        NORMAL=0,
+        FAIL
+    };
+
+    CameraFrameStatus status_;
+
     protected:
     std::shared_ptr<Map> map_;
+
+
 
     // Sophus::SE3<double> Tcw;
 

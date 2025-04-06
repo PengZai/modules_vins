@@ -9,12 +9,20 @@ Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
     this->two_view_reconstructor_ = std::make_shared<TwoViewReconstructor>(sys_config);
     this->sensor_depth_reconstructor_ = std::make_shared<SensorDepthReconstruction>(sys_config);
 
+    #ifdef USE_LIBTORCH
+    this->midas_reconstructor_ = std::make_shared<MiDas>(sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_depth_);
+    #endif
 }
 
 
 
 
 void Reconstructor::pipeline(CameraFrame &camera_frame){
+
+
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        return;
+    }
 
     std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
 
@@ -26,8 +34,16 @@ void Reconstructor::pipeline(CameraFrame &camera_frame){
         if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_sensor_depth_){
             this->sensor_depth_reconstructor_->reconstruct(img_i);
         }
+
+        #ifdef USE_LIBTORCH
+        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_depth_){
+            this->midas_reconstructor_->reconstruct(img_i);
+        }
+        #endif
     
     }
+
+    
 
     // two view reconstruction
     for(int i=1;i<(int)camera_frame.image_vector_.size();i++){

@@ -24,9 +24,9 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
     for(int i=0; i < (int)img->keypoint_vector_.size(); i++){
 
         cv::Point2i &tracked_pt2i_from_img = img->keypoint_vector_[i]->pt2i_;
-
-        double depth = img->getPointDepthFromSensor(tracked_pt2i_from_img);
         
+        double depth = img->getPointDepthFromSensor(tracked_pt2i_from_img);
+
         cv::Point3d img_pt3d = pixel2camera(tracked_pt2i_from_img, depth, cv_K);
 
         img->keypoint_vector_[i]->pt3d_ = img_pt3d;

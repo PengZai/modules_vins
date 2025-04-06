@@ -18,8 +18,10 @@ class OpenCVParameters: public Parameters{
     bool show_matching_in_frame_;
     bool show_matching_in_time_;
     bool show_tracking_in_time_;
-    bool show_depth_;
-
+    bool show_sensor_depth_;
+    bool show_learned_depth_;
+    bool show_object_detection_;
+    bool show_semantic_segmentation_;
 
 };
 
@@ -45,6 +47,7 @@ class PangolinParameters: public Parameters{
     public:
     double frame_size_;
     double point_size_;
+    double trajectory_line_size_;
     double viewer_eye_positionX_;
     double viewer_eye_positionY_;
     double viewer_eye_positionZ_;

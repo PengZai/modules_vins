@@ -34,6 +34,10 @@ void Map::insertMapPoint(const std::shared_ptr<MapPoint> &mappoint){
 
 void Map::update(const CameraFrame &camera_frame){
 
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        return;
+    }
+
     if(camera_frame.image_vector_.size()==0){
 
         VLOG(VERBOSE) << RED << "size of image vector equal to 0" << RESET;

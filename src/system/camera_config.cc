@@ -89,6 +89,21 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("use_sensor_detph", this->use_sensor_depth_);
     parse("sensor_depth_rostopic", this->sensor_depth_rostopic_);
     
+    parse("use_learned_depth", this->use_learned_depth_);
+    parse("model_name_learned_depth", this->model_name_learned_depth_);
+    parse("output_learned_depth_rostopic", this->output_learned_depth_rostopic_);
+
+    parse("use_learned_object_detection", this->use_learned_object_detection_);
+    parse("model_name_learned_object_detection", this->model_name_learned_object_detection_);
+    parse("learned_object_detection_rostopic", this->learned_object_detection_rostopic_);
+
+    parse("use_learned_semantic_segmentation", this->use_learned_semantic_segmentation_);
+    parse("model_name_learned_semantic_segmentation", this->model_name_learned_semantic_segmentation_);
+    parse("learned_semantic_segmentation_rostopic", this->learned_semantic_segmentation_rostopic_);
+
+
+  
+
     parse("output_rostopic", this->output_rostopic_);
     parse("camera_model", this->camera_model_);
     parse("distortion_model_", this->distortion_model_);

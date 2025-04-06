@@ -8,14 +8,14 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
-#include <glog/logging.h>
+// #include <glog/logging.h>
 #include <sensor_msgs/Image.h>
 #include <limits>
 
 
-#include "log/logging.h"
-#include "system/system_config.h"
-#include "data/map.h"
+#include "../log/logging.h"
+#include "../system/system_config.h"
+#include "map.h"
 
 
 namespace modules_vins

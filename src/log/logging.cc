@@ -1,6 +1,9 @@
 #include "logging.h"
 
 
+namespace modules_vins{
+    
+
 std::unordered_map<std::string, int> Logger::LOG_LEVEL_MAP_ = {
     {"QUIET", QUIET},
     {"KEY", KEY},
@@ -28,12 +31,7 @@ void Logger::setLogger(const char* const *argv, const std::string &log_verbosity
 }
 
 
-void Logger::setLogVerbosity(const std::string &log_verbosity){
 
-    FLAGS_v = LOG_LEVEL_MAP_[log_verbosity];
-    LOG(INFO) << "the level of log verbosity is set to " << log_verbosity;
-
-}
-
+}  // namespace modules_vins
 
 

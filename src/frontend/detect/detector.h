@@ -3,9 +3,17 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 
+#ifdef USE_LIBTORCH
+#include "object_detections/yolo_detector.h"
+#include "semantic_segmentations/yolo_segmentor.h"
+#endif
+
 #include "../../data/camera.h"
 #include "../../system/system_config.h"
 #include "features/feature_points.h"
+
+
+
 
 
 namespace modules_vins
@@ -22,6 +30,12 @@ class Detector{
 
     protected:
     std::shared_ptr<ORBFeature> orb_feature_;
+
+    #ifdef USE_LIBTORCH
+    std::shared_ptr<YOLODetector> yolo_detector_;
+    std::shared_ptr<YOLOSegmentor> yolo_segmentor_;
+    #endif
+    
     std::shared_ptr<SystemConfig> sys_config_;
 
 };

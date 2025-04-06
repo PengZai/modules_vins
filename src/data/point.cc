@@ -16,7 +16,7 @@ id_(++MapPoint::id_counter_), timestamp_(-1)
 };
 
 MapPoint::MapPoint(const Eigen::Vector3d &pt3d):
-id_(++MapPoint::id_counter_), pt3d_(pt3d), timestamp_(-1)
+id_(++MapPoint::id_counter_), timestamp_(-1), pt3d_(pt3d)
 {
 
 };

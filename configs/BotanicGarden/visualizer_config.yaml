@@ -7,11 +7,11 @@ visualizer:
   use_rviz_vis: 1
 
 opencv_visualizer:
-  show_projected_mappoint: 1
+  show_projected_mappoint: 0
   show_matching_in_frame: 0
   show_matching_in_time: 0
   show_tracking_in_time: 1
-  show_sensor_depth: 1
+  show_sensor_depth: 0
   show_learned_depth: 1
   show_object_detection: 1
   show_semantic_segmentation: 0

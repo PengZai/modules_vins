@@ -20,9 +20,12 @@ void Tracker::trackInFrame(CameraFrame &camera_frame){
         std::shared_ptr<Image> &img_j = camera_frame.image_vector_.at(j);
         std::vector<cv::DMatch> matches;
         this->bf_->matching(img_0, img_j, matches);
+
+        double min_distance = matches.front().distance;
+
         for (int i=0; i < (int)matches.size(); i++) {
             cv::DMatch &match = matches[i];
-            if(match.distance > this->sys_config_->params_->threshold_for_tracking_descriptor_in_frame_){
+            if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_frame_)){
                 // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
                 break;
             }
@@ -71,11 +74,11 @@ void Tracker::trackInTime(CameraFrame &camera_frame){
 
         std::vector<cv::DMatch> matches;
         this->bf_->matching(img0_from_current_frame, img0_from_previous_frame, matches);
-
+        double min_distance = matches.front().distance;
 
         for (int i=0; i < (int)matches.size(); i++) {
             cv::DMatch &match = matches[i];
-            if(match.distance > this->sys_config_->params_->threshold_for_tracking_descriptor_in_time_){
+            if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_time_)){
                 // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
                 break;
             }
@@ -96,7 +99,6 @@ void Tracker::trackInTime(CameraFrame &camera_frame){
 
         VLOG(VERBOSE) << GREEN << img0_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
 
-        this->camera_frame_deque_.pop_front();
     }
 
     
@@ -105,6 +107,9 @@ void Tracker::trackInTime(CameraFrame &camera_frame){
     
 void Tracker::pipeline(CameraFrame &camera_frame){
 
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        return;
+    }
 
     // we track feature according to the feature in camera 0(left camera)
     trackInTime(camera_frame);

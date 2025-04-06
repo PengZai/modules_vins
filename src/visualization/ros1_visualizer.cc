@@ -37,15 +37,15 @@ void ROS1Visualizer::setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh){
     this->nh_ = nh;
 }
 
-void ROS1Visualizer::publish(const CameraFrame &camera_frame){
+void ROS1Visualizer::publish(const CameraFrame &camera_frame, const State &state){
     
 
 
     if(ros::ok()){
         publishImages(camera_frame);
-        publishPoses(camera_frame);
-        publishTrajectory(camera_frame);
-        publishMapPoint(camera_frame);
+        publishPoses(state);
+        publishTrajectory(state);
+        publishMapPoint(state);
 
 
         // ros::spinOnce();
@@ -73,19 +73,19 @@ void ROS1Visualizer::publishImages(const CameraFrame &camera_frame){
 }
 
 
-void ROS1Visualizer::publishPoses(const CameraFrame &camera_frame){
+void ROS1Visualizer::publishPoses(const State &state){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+    const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back().inverse(); // the vector of pose of robot in world coordinate
 
     geometry_msgs::PoseStamped pose_msg;
     pose_msg.header.stamp = ros::Time::now();
     pose_msg.header.frame_id = "map";
 
-    Eigen::Matrix3d rotation = img_0->getRotation();
-    Eigen::Vector3d position = img_0->getPosition();
+    const Eigen::Matrix3d &rotation = T_c_w.rotationMatrix();
+    const Eigen::Vector3d &position = T_c_w.translation();
 
     // Example translation and rotation
-    Eigen::Quaterniond q(rotation);
+    const Eigen::Quaterniond q(rotation);
 
     pose_msg.pose.position.x = position.x();
     pose_msg.pose.position.y = position.y();
@@ -97,72 +97,58 @@ void ROS1Visualizer::publishPoses(const CameraFrame &camera_frame){
     pose_msg.pose.orientation.w = q.w();
 
     this->output_pose_pub_.publish(pose_msg);
+    
 
 }
 
 
-void ROS1Visualizer::publishTrajectory(const CameraFrame &camera_frame){
+void ROS1Visualizer::publishTrajectory(const State &state){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
-    
-    path_msg_.header.stamp = ros::Time::now();
-    path_msg_.header.frame_id = "map";
+    this->path_msg_.poses.clear();
 
-    geometry_msgs::PoseStamped pose_msg;
-    pose_msg.header.stamp = ros::Time::now();
-    pose_msg.header.frame_id = "map";
+    for(int i=0; i < (int)state.T_c_w_vector_.size();i++){
 
-    Eigen::Matrix3d rotation = img_0->getRotation();
-    Eigen::Vector3d position = img_0->getPosition();
 
-    Eigen::Quaterniond q(rotation);
+        const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.at(i).inverse(); // the vector of pose of robot in world coordinate
 
-    pose_msg.pose.position.x = position.x();
-    pose_msg.pose.position.y = position.y();
-    pose_msg.pose.position.z = position.z();
+        path_msg_.header.stamp = ros::Time::now();
+        path_msg_.header.frame_id = "map";
 
-    pose_msg.pose.orientation.x = q.x();
-    pose_msg.pose.orientation.y = q.y();
-    pose_msg.pose.orientation.z = q.z();
-    pose_msg.pose.orientation.w = q.w();
+        geometry_msgs::PoseStamped pose_msg;
+        pose_msg.header.stamp = ros::Time::now();
+        pose_msg.header.frame_id = "map";
 
-    this->path_msg_.poses.push_back(pose_msg);
+        const Eigen::Matrix3d &rotation = T_c_w.rotationMatrix();
+        const Eigen::Vector3d &position = T_c_w.translation();
+
+        const Eigen::Quaterniond q(rotation);
+
+        pose_msg.pose.position.x = position.x();
+        pose_msg.pose.position.y = position.y();
+        pose_msg.pose.position.z = position.z();
+
+        pose_msg.pose.orientation.x = q.x();
+        pose_msg.pose.orientation.y = q.y();
+        pose_msg.pose.orientation.z = q.z();
+        pose_msg.pose.orientation.w = q.w();
+
+        this->path_msg_.poses.push_back(pose_msg);
+    }
 
     this->output_trajectory_pub_.publish(this->path_msg_);
 
 }
 
 
-void ROS1Visualizer::publishMapPoint(const CameraFrame &camera_frame){
+void ROS1Visualizer::publishMapPoint(const State &state){
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr map_point_collection_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
-    std::shared_ptr<Image> img_0 = camera_frame.image_vector_.at(0);
 
-    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
-
-    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = camera_frame.getMap()->getMapPoints();
+    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = state.map_->getMapPoints();
 
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
         pcl::PointXYZRGB rgb_map_point;
         const std::shared_ptr<MapPoint> &map_point = item_pair.second;
-
- 
-        // const Eigen::Vector3d pt3d_in_cam = img_0->T_c_w_ * map_point->pt3d_;
-        // cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
-        // if(img_0->isInImage(reprojected_pixel)){
-        //     cv::Vec3b rgb = img_0->color_data_.at<cv::Vec3b>(reprojected_pixel);
-
-        //     rgb_map_point.x = map_point->pt3d_[0]; // from depth
-        //     rgb_map_point.y = map_point->pt3d_[1];
-        //     rgb_map_point.z = map_point->pt3d_[2];
-        
-        //     rgb_map_point.r = rgb[0];  // from color image
-        //     rgb_map_point.g = rgb[1];
-        //     rgb_map_point.b = rgb[2];
-        
-        //     map_point_collection_ptr->points.push_back(rgb_map_point);
-
-        // }
 
         rgb_map_point.x = map_point->pt3d_[0]; // from depth
         rgb_map_point.y = map_point->pt3d_[1];

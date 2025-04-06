@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d.hpp>
 #include "../../../data/camera.h"
+#include "../../../system/system_config.h"
 
 
 namespace modules_vins{
@@ -11,13 +12,15 @@ namespace modules_vins{
 class ORBFeature{
 
     public:
-    ORBFeature(int num_features);
+    ORBFeature(const std::shared_ptr<SystemConfig> &sys_config);
 
     void detect(const std::shared_ptr<Image> &img);
     void compute(const std::shared_ptr<Image> &img);
 
     protected:
     int num_features_;
+    double scale_factor_;
+    int level_pyramid_;
     cv::Ptr<cv::ORB> orb;
 
 

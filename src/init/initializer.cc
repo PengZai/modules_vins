@@ -16,6 +16,7 @@ bool Initializer::initialize(CameraFrame &camera_frame){
         img_i->initPose();
     }
 
+
     return true;
 }
     

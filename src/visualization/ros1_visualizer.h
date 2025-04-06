@@ -12,9 +12,10 @@
 #include <pcl_conversions/pcl_conversions.h> // for pcl::toROSMsg
 
 
-#include "../log/logging.h"
+#include "../system/state.h"
 #include "../system/system_config.h"
 #include "../data/camera.h"
+#include "../log/logging.h"
 
 
 
@@ -31,11 +32,11 @@ class ROS1Visualizer{
     ROS1Visualizer(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh);
 
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
-    void publish(const CameraFrame &camera_frame);
+    void publish(const CameraFrame &camera_frame, const State &state);
     void publishImages(const CameraFrame &camera_frame);
-    void publishPoses(const CameraFrame &camera_frame);
-    void publishTrajectory(const CameraFrame &camera_frame);
-    void publishMapPoint(const CameraFrame &camera_frame);
+    void publishPoses(const State &state);
+    void publishTrajectory(const State &state);
+    void publishMapPoint(const State &state);
 
 
     protected:

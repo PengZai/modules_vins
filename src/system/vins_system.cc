@@ -39,7 +39,7 @@ void System::setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_fro
 
 
 void System::setMap(const std::shared_ptr<Map> &map){
-    this->map_ = map;
+    this->state_.map_ = map;
 }
 
 void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr, const std::string &to_cv_dtype){
@@ -87,6 +87,7 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
     for(int cam_id=0; cam_id < (int)msg_groups.size(); cam_id++){
 
         // VLOG(VERBOSE) <<  "cam_id: " << cam_id <<  " : " <<msgs.at(cam_id).getTopic();
+
         
         std::map<std::string, std::shared_ptr<rosbag::MessageInstance>> dtype_to_msg_ptr_map = msg_groups.at(cam_id);
 
@@ -104,14 +105,32 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
     }
 
     
+    const State &state = getState();
+
     CameraFrame camera_frame(image_vector);
-    camera_frame.setMap(this->map_);
+    camera_frame.setMap(state.map_);
     this->camera_frame_deque_.push_back(camera_frame);
 
 
 }
 
 
+void System::updateState(const CameraFrame &camera_frame){
+
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        return;
+    }
+
+
+    this->state_.T_c_w_vector_.emplace_back(camera_frame.image_vector_.at(0)->T_c_w_);
+    VLOG(VERBOSE) << GREEN << "new state has been added to system" << RESET;
+
+}
+
+
+const State &System::getState() const{
+    return this->state_;
+}
 
 
 void System::callbackVisualNavigation(){
@@ -146,6 +165,7 @@ void System::callbackVisualNavigation(){
     // thread.join();
 
     while(!this->camera_frame_deque_.empty()){
+        
 
         CameraFrame &camera_frame = this->camera_frame_deque_.front();
         
@@ -153,17 +173,35 @@ void System::callbackVisualNavigation(){
             this->is_initialized_ = this->initializer_->initialize(camera_frame);
         }
 
+
         if(this->is_initialized_ == true){
+
+            camera_frame.status_ = CameraFrame::NORMAL;
+
+            size_t previos_mappoints_size = this->state_.map_->getMapPoints().size();
 
             this->visual_frontend_->pipeline(camera_frame);
 
+            this->state_.map_->update(camera_frame);
+
+            size_t mappoints_size = this->state_.map_->getMapPoints().size();
+            
+            VLOG(VERBOSE) << GREEN << mappoints_size - previos_mappoints_size << " map points were tracked in this frame" << RESET;
+            VLOG(VERBOSE) << GREEN << mappoints_size << " map points were tracked in map in total" << RESET;    
+
+            updateState(camera_frame);
+
         }
 
-        this->visualizer_->publish(camera_frame);
-
-        this->camera_frame_deque_.pop_front();
+        this->visualizer_->publish(camera_frame, this->state_);
 
 
+        if(camera_frame.status_ != CameraFrame::NORMAL){
+            this->camera_frame_deque_.pop_back();
+        }
+        else{
+            this->camera_frame_deque_.pop_front();
+        }
 
     }
 

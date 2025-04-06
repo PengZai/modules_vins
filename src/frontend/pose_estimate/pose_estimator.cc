@@ -13,8 +13,38 @@ sys_config_(sys_config)
 }
 
 
+bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation,const int num_inliers){
+
+    Sophus::Vector6d d = Transformation.log();
+    double d_norm = d.norm();
+
+    VLOG(VERBOSE) << "number of inliers: " << num_inliers;
+    VLOG(VERBOSE) << "estimated_Transformation: \n" << Transformation.matrix();
+    VLOG(VERBOSE) << "the norm of estimated_Transformation.log(): " << d_norm;
+    
+    
+
+    if(num_inliers < this->sys_config_->params_->min_inliers_)
+    {
+        VLOG(VERBOSE) << "reject because inlier is too small: " << num_inliers;
+        return false;
+    }
+
+    if(d_norm > this->sys_config_->params_->threshold_for_pnp_pose_log_norm_){
+
+        VLOG(VERBOSE) <<"reject because motion is too large: " << d_norm;
+        return false;
+    }
+
+    return true;
+    
+}
+
 void PoseEstimator::pipeline(CameraFrame &camera_frame){
 
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        return;
+    }
 
     this->camera_frame_deque_.push_back(camera_frame);
 
@@ -74,7 +104,6 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
             inliers                       // Output: inlier indices
         );
 
-        VLOG(VERBOSE) << "number of inliers for PnP " << inliers.rows;
 
         
         cv::Rodrigues(rortation_vec, R_cv);
@@ -91,20 +120,19 @@ void PoseEstimator::pipeline(CameraFrame &camera_frame){
             Sophus::SO3<double>(estimated_rotation), estimated_position
         );
 
-        Sophus::Vector6d d = estimated_T_current_cam_previous_cam.log();
+        if(checkEstimatedPose(estimated_T_current_cam_previous_cam, inliers.rows) == true){
 
+            img_0_from_current_frame->setTcw(estimated_T_current_cam_previous_cam * img_0_from_previous_frame->T_c_w_);
+            VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
-        VLOG(VERBOSE) << "estimated_T_current_cam_previous_cam: \n" << estimated_T_current_cam_previous_cam.matrix();
-        VLOG(VERBOSE) << "the norm of relative T.log() " << d.norm();
+        }
+        else{
+            camera_frame.status_ = CameraFrame::FAIL;
+            return;
+        }
+
         
-        
-        img_0_from_current_frame->setTcw(estimated_T_current_cam_previous_cam * img_0_from_previous_frame->T_c_w_);
 
-        VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
-
-        
-
-        camera_frame_deque_.pop_front();
     }
 
     

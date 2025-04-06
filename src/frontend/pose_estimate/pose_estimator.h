@@ -19,7 +19,7 @@ class PoseEstimator{
     public:
 
     PoseEstimator(const std::shared_ptr<SystemConfig> &sys_config);
-
+    bool checkEstimatedPose(const Sophus::SE3<double> &Transformation,const int num_inliers);
 
     std::shared_ptr<SystemConfig> sys_config_;
     std::deque<CameraFrame> camera_frame_deque_;

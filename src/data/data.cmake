@@ -2,9 +2,11 @@
 
 
 
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/data
-)
+
+# target_include_directories(run_serial_vins
+#     PUBLIC
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/data
+# )
 
 
 

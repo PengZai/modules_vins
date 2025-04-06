@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../system/state.h"
 #include "opencv_visualizer.h"
 #include "pangolin_visualizer.h"
 #include "ros1_visualizer.h"
@@ -18,7 +19,7 @@ class Visualizer{
     Visualizer(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh);
     ~Visualizer();
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
-    void publish(const CameraFrame &camera_frame);
+    void publish(const CameraFrame &camera_frame,  const State &state);
 
     public:
     std::shared_ptr<SystemConfig> sys_config_;

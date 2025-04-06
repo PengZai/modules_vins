@@ -5,19 +5,31 @@ system:
   max_cameras: 1 # number of cameras, 2 for stereo, 1 for monocular
   max_imus: 1 # number of IMUs
   max_stereo_time_offset: 0.02 # max time offset for stereo image pair (unit: second)
+  max_color_sensor_depth_pair_time_offset: 0.02 # max time offset for image pair for bgr and depth (unit: second)
 
-  # max time offset for image pair for bgr and depth (unit: second), by my observation, it could even reach 0.6s timeoffset
-  max_color_sensor_depth_pair_time_offset: 0.02
-
-  num_feature_points: 1000
+  # feature detect and tracking
+  num_feature_points: 500
+  scale_factor: 1.2
+  level_pyramid: 8
   threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
   threshold_for_tracking_descriptor_in_frame:40.0 # for tracking cross images in same frame
+  matching_ratio: 2.0 # distance of matching point < min_distance * matching_ratio
+
+  # initialized pose estimation
+  threshold_for_pnp_pose_log_norm: 2.0 # estimated pose can't too large
+  min_inliers: 20
+  max_num_fail: 5 # when number of fail of pose estimation  reach this, state turn to get lost.
+  max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward
+
 
 
   # relative config file name
   imu_config_name: "imu_config.yaml"
   camera_config_name: "camera_config.yaml"
   visualizer_config_name: "visualizer_config.yaml"
+
+  # model
+  model_path: /root/catkin_ws/src/modules_vins/models
 
   # debug
   check_triangulation: 0

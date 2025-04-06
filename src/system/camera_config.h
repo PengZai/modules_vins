@@ -38,6 +38,19 @@ class CameraParameters : public Parameters
 
         bool use_sensor_depth_;
         std::string sensor_depth_rostopic_;
+
+        bool use_learned_depth_;
+        std::string model_name_learned_depth_;
+        std::string output_learned_depth_rostopic_;
+
+        bool use_learned_object_detection_;
+        std::string model_name_learned_object_detection_;
+        std::string learned_object_detection_rostopic_;
+
+        bool use_learned_semantic_segmentation_;
+        std::string model_name_learned_semantic_segmentation_;
+        std::string learned_semantic_segmentation_rostopic_;
+
      
         std::string output_rostopic_;
         std::string camera_model_;

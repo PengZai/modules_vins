@@ -22,7 +22,10 @@ class OpenCVVisualizer{
     void publishMatchingInFrame(CameraFrame camera_frame);
     void publishMatchingInTime(CameraFrame camera_frame);
     void publishProjectedMapPoint(const CameraFrame &camera_frame);
-    void publishDepth(const CameraFrame &camera_frame);
+    void publishSensorDepth(const CameraFrame &camera_frame);
+    void publishLearnedDepth(const CameraFrame &camera_frame);
+    void publishObjectDetection(const CameraFrame &camera_frame);
+    void publishSemanticSegmentation(const CameraFrame &camera_frame);
     void publishTrackingInTime(const CameraFrame &camera_frame);
 
 
@@ -31,12 +34,13 @@ class OpenCVVisualizer{
     
     protected:
     std::deque<CameraFrame> camera_frame_deque_;
-    std::deque<cv::Mat> img_deque_;
 
 
     cv::Scalar GreenColor_; // green
     cv::Scalar RedColor_; // red
     cv::Scalar BlueColor_; // blue
+ 
+    std::vector<std::string> classes_;
 
 };
     

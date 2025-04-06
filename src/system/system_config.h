@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <opencv2/opencv.hpp>
+#include <typeinfo>
 
 #include "config.h"
 #include "camera_config.h"
@@ -23,14 +24,26 @@ class SystemParameters: public Parameters{
         int max_imus_; // number of IMUs
 
         int num_feature_points_;
+        double scale_factor_;
+        int level_pyramid_;
+
+
         double threshold_for_tracking_descriptor_in_time_;
         double threshold_for_tracking_descriptor_in_frame_;
+        double matching_ratio_;
         double max_stereo_time_offset_;
         double max_color_sensor_depth_pair_time_offset_;
+
+        double threshold_for_pnp_pose_log_norm_;
+        int min_inliers_;
+        int max_num_fail_;
+        int max_num_backward_reference_;
 
         std::string imu_config_name_;
         std::string camera_config_name_;
         std::string visualizer_config_name_;
+
+        std::string model_path_;
 
         bool check_triangulation_;
 

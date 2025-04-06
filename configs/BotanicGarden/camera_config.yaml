@@ -14,6 +14,23 @@ cam0:
   resolution: [960, 600] # width x height
   rgb_rostopic: /dalsa_rgb/left/image_raw
   output_rostopic: /output/left/image
+
+  use_sensor_detph: 0
+  sensor_depth_rostopic: ""
+
+  use_learned_depth: 1
+  model_name_learned_depth: model-v21-small-traced.pt
+  learned_depth_rostopic: /camera/learned_depth/image
+
+  use_learned_object_detection: 1
+  model_name_learned_object_detection: yolov8n.cuda.torchscript
+  learned_object_detection_rostopic: /camera/object_detection/image
+
+  use_learned_semantic_segmentation: 1
+  model_name_learned_semantic_segmentation: yolov8s-seg.torchscript
+  learned_semantic_segmentation_rostopic: /camera/semantic_segmentation/image
+
+
 cam1:
   T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
     - [-0.00120822,-0.00094742,0.99999882,0.18313715]
@@ -28,3 +45,18 @@ cam1:
   resolution: [960, 600]
   rgb_rostopic: /dalsa_rgb/right/image_raw
   output_rostopic: /output/right/image
+
+  use_sensor_detph: 0
+  sensor_depth_rostopic: ""
+
+  use_learned_depth: 1
+  model_name_learned_depth: model-v21-small-traced.pt
+  learned_depth_rostopic: /camera/learned_depth/image
+
+  use_learned_object_detection: 1
+  model_name_learned_object_detection: yolov8n.cuda.torchscript
+  learned_object_detection_rostopic: /camera/object_detection/image
+
+  use_learned_semantic_segmentation: 1
+  model_name_learned_semantic_segmentation: yolov8s-seg.torchscript
+  learned_semantic_segmentation_rostopic: /camera/semantic_segmentation/image

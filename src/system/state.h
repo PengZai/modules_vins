@@ -12,17 +12,8 @@ namespace modules_vins{
 class State{
 
     public:
-    State(std::shared_ptr<SystemConfig> sys_config);
-    
-    std::shared_ptr<SystemConfig> sys_config_;
-
-
-
-    protected:
-    Eigen::Matrix<double, 3, 3> rotation_;
-    Eigen::Vector3d position_;
-
-
+        std::vector<Sophus::SE3<double>> T_c_w_vector_; // the vector of pose of robot in world coordinate
+        std::shared_ptr<Map> map_;
 
 };
 

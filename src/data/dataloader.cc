@@ -58,7 +58,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
             
     }
 
-    VLOG(VERBOSE) << "Total of " << loaded_msgs_.size() << " messages!";
+    VLOG(VERBOSE) << GREEN << "Total of " << loaded_msgs_.size() << " messages!" << RESET;
 
 
 

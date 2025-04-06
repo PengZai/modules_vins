@@ -6,13 +6,6 @@ set(LIB_PROJECT_NAME "${PROJECT_NAME}")
 
 
 
-
-# file(GLOB_RECURSE HEADERS_LIBRARY "src/*.h")
-
-# message(STATUS "HEADERS_LIBRARY: " ${HEADERS_LIBRARY})
-
-
-
 # ==============================ros================================= 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -36,11 +29,13 @@ catkin_package(
     nav_msgs
     image_transport 
     cv_bridge
-    LIBRARIES ${LIB_PROJECT_NAME} 
-
 )
 # ==============================ros=================================
 
+
+add_executable(run_serial_vins
+    src/run_serial_vins.cc
+)
 
 list(APPEND LIBRARY_THIRDPARTY
     ${OpenCV_LIBS}
@@ -53,22 +48,34 @@ list(APPEND LIBRARY_THIRDPARTY
 )
 
 
+if(USE_LIBTORCH)
+    list(APPEND LIBRARY_THIRDPARTY
+        ${TORCH_LIBRARIES}
+    )
+endif()
+
+
 
 list(APPEND DIRS_HEADER_THIRDPARTY
     ${OpenCV_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
     ${Pangolin_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
 )
 
 list(APPEND LIBRARY_SOURCES
 
 )
 
+# seems ros1 packages only are supported include_directories 
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${catkin_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
+)
+
+
+target_include_directories(run_serial_vins
+    PRIVATE
     ${DIRS_HEADER_THIRDPARTY}
 )
 
@@ -98,35 +105,30 @@ target_link_libraries(${LIB_PROJECT_NAME}
 )
 
 
-
-add_executable(run_serial_vins
-    src/run_serial_vins.cc
-)
-
 target_link_libraries(run_serial_vins
     PUBLIC
     ${LIB_PROJECT_NAME}
 )
 
 
-if(ENABLE_CMAKE_DEBUG)
-    get_property(INCLUDE_DIRS DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-    message(STATUS "Include Directories: ${INCLUDE_DIRS}")
+# if(ENABLE_CMAKE_DEBUG)
+#     get_property(INCLUDE_DIRS DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+#     message(STATUS "Include Directories: ${INCLUDE_DIRS}")
 
-    get_property(TARGETS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+#     get_property(TARGETS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
 
-    foreach(target IN LISTS TARGETS)
-        get_target_property(SOURCE_FILES ${target} SOURCES)
-        if(SOURCE_FILES)
-            message(STATUS "Target: ${target}")
-            foreach(file IN LISTS SOURCE_FILES)
-                message(STATUS "  Linked Source: ${file}")
-            endforeach()
-        endif()
-    endforeach()
-else()
+#     foreach(target IN LISTS TARGETS)
+#         get_target_property(SOURCE_FILES ${target} SOURCES)
+#         if(SOURCE_FILES)
+#             message(STATUS "Target: ${target}")
+#             foreach(file IN LISTS SOURCE_FILES)
+#                 message(STATUS "  Linked Source: ${file}")
+#             endforeach()
+#         endif()
+#     endforeach()
+# else()
 
-endif()
+# endif()
 
 
 # install(TARGETS run_serial_slam

@@ -14,6 +14,7 @@ sys_config_(sys_config)
 
     this->frame_size_ = sys_config->visualizer_config_->pangolin_params_->frame_size_;
     this->point_size_ = sys_config->visualizer_config_->pangolin_params_->point_size_;
+    this->trajectory_line_size_ = sys_config->visualizer_config_->pangolin_params_->trajectory_line_size_;
     this->viewer_eye_positionX_ = sys_config->visualizer_config_->pangolin_params_->viewer_eye_positionX_;
     this->viewer_eye_positionY_ = sys_config->visualizer_config_->pangolin_params_->viewer_eye_positionY_;
     this->viewer_eye_positionZ_ = sys_config->visualizer_config_->pangolin_params_->viewer_eye_positionZ_;
@@ -23,6 +24,17 @@ sys_config_(sys_config)
     const double window_height = 720.0;
 
 
+    // // visualization
+    // vis = new cv::viz::Viz3d("Visual Odometry");
+    // cv::viz::WCoordinateSystem world_coor(1.0), camera_coor(0.5);
+    // cv::Point3d cam_pos( 0, -1.0, -1.0 ), cam_focal_point(0,0,0), cam_y_dir(0,1,0);
+    // cv::Affine3d cam_pose = cv::viz::makeCameraPose( cam_pos, cam_focal_point, cam_y_dir );
+    // vis->setViewerPose( cam_pose );
+    
+    // world_coor.setRenderingProperty(cv::viz::LINE_WIDTH, 2.0);
+    // camera_coor.setRenderingProperty(cv::viz::LINE_WIDTH, 1.0);
+    // vis->showWidget( "World", world_coor );
+    // vis->showWidget( "Camera", camera_coor );
 
 
 
@@ -58,14 +70,12 @@ sys_config_(sys_config)
 }
 
 
-void PangolinVisualizer::publish(const CameraFrame &camera_frame){
+void PangolinVisualizer::publish(const State &state){
 
-    
 
     if(!pangolin::ShouldQuit()){
     
-        const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
-
+        const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         this->d_cam_.Activate(this->s_cam_);
@@ -74,30 +84,45 @@ void PangolinVisualizer::publish(const CameraFrame &camera_frame){
         // Draw something
         pangolin::glDrawAxis(2.0);
 
-        drawFrame(img_0->T_c_w_.matrix());
+        drawFrame(T_c_w.inverse().matrix());
 
         if(*is_follow_camera_){
-            s_cam_.Follow(img_0->T_c_w_.matrix());
+            s_cam_.Follow(T_c_w.matrix());
         }
 
-        drawMapPoints(camera_frame);
-
-        std::cout << "is_follow_camera_: " << pangolin::Var<bool>("menu.Follow Camera") << std::endl;
+        drawMapPoints(state);
+        drawTrajectory(state);
 
         pangolin::FinishFrame();
     }
 }
 
+void PangolinVisualizer::drawTrajectory(const State &state){
+
+    ref_translation_ = state.T_c_w_vector_.at(0).translation();
+    for(int i=1; i < (int)state.T_c_w_vector_.size();i++){
+
+        const Sophus::SE3<double> &T_c_W = state.T_c_w_vector_.at(i).inverse();
+
+        glLineWidth(this->trajectory_line_size_);
+        glColor4f(0.0f,1.0f,0.0f,0.6f);
+        glBegin(GL_LINES);
+        Eigen::Vector3d translation = T_c_W.translation();
+        glVertex3d(ref_translation_.x(),ref_translation_.y(),ref_translation_.z());
+        glVertex3d(translation.x(),translation.y(),translation.z());
+        glEnd();
+        ref_translation_ = translation;        
+    } 
+
+}
+
 void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c){
 
-    Eigen::Matrix4d tmp = Eigen::Matrix4d::Identity();
+
     const float w = this->frame_size_;
     const float h = w;
     const float z = 2*w;
     const float frame_line_width = 2.0;
-
-
-    tmp.setIdentity();
 
 
     glPushMatrix();
@@ -140,13 +165,28 @@ void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c){
     glEnd();
 
 
+    // cv::Affine3d M(
+    //     cv::Affine3d::Mat3( 
+    //         T_w_c(0,0), T_w_c(0,1), T_w_c(0,2),
+    //         T_w_c(1,0), T_w_c(1,1), T_w_c(1,2),
+    //         T_w_c(2,0), T_w_c(2,1), T_w_c(2,2)
+    //     ), 
+    //     cv::Affine3d::Vec3(
+    //         T_w_c(0,3), T_w_c(1,3), T_w_c(2,3)
+    //     )
+    // );
+
+    // vis->setWidgetPose( "Camera", M);
+    // vis->spinOnce(1, false);
+
+
 }
 
 
-void PangolinVisualizer::drawMapPoints(const CameraFrame &camera_frame){
+void PangolinVisualizer::drawMapPoints(const State &state){
 
 
-    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = camera_frame.getMap()->getMapPoints();
+    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = state.map_->getMapPoints();
 
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;

@@ -21,14 +21,17 @@ void VisualFrontend::setMap(const std::shared_ptr<Map> &map){
 
 
 
+
+
 void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
-    VLOG(VERBOSE) << "VisualFrontend Start";
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        return;
+    }
+
+    VLOG(VERBOSE) << "VisualFrontend Start with camera frame id: " << camera_frame.id_;
 
     std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
-
-    size_t previos_mappoints_size = this->map_->getMapPoints().size();
-
 
     this->detector_->pipeline(camera_frame);
     
@@ -39,14 +42,28 @@ void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
     this->reconstructor_->pipeline(camera_frame);
 
-    this->map_->update(camera_frame);
+  
+    if(camera_frame.status_ != CameraFrame::NORMAL){
+        if(this->trakcer_->camera_frame_deque_.size()>1){
+            this->trakcer_->camera_frame_deque_.pop_back();
+        }
+        if(this->pose_estimator_->camera_frame_deque_.size()>1){
+            this->pose_estimator_->camera_frame_deque_.pop_back();
+        }
+    }
+    else{
+        if(this->trakcer_->camera_frame_deque_.size()>1){
+            this->trakcer_->camera_frame_deque_.pop_front();
+        }
+        if(this->pose_estimator_->camera_frame_deque_.size()>1){
+            this->pose_estimator_->camera_frame_deque_.pop_front();
+        }
+    }
 
-    size_t mappoints_size = this->map_->getMapPoints().size();
+
     
-    VLOG(VERBOSE) << GREEN << mappoints_size - previos_mappoints_size << " map points were tracked in this frame" << RESET;
-    VLOG(VERBOSE) << GREEN << mappoints_size << " map points were tracked in map in total" << RESET;
 
-    VLOG(VERBOSE) << "VisualFrontend End";
+    VLOG(VERBOSE) << "VisualFrontend End with camera frame id: " << camera_frame.id_;
     
 
 

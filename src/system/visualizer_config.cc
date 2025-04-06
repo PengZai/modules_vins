@@ -8,11 +8,6 @@ void OpenCVParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
 
     this->node_ = node;
 
-    bool show_projected_mappoint_;
-    bool show_matching_in_frame_;
-    bool show_matching_in_time_;
-    bool show_tracking_in_time_;
-    bool show_depth_;
 
 
     parse("show_projected_mappoint", this->show_projected_mappoint_);
@@ -21,8 +16,12 @@ void OpenCVParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("show_matching_in_time", this->show_matching_in_time_);
     
     parse("show_tracking_in_time", this->show_tracking_in_time_);
-    parse("show_depth", this->show_depth_);
+    parse("show_sensor_depth", this->show_sensor_depth_);
+    parse("show_learned_depth", this->show_learned_depth_);
+    parse("show_object_detection", this->show_object_detection_);
+    parse("show_semantic_segmentation", this->show_semantic_segmentation_);
 
+    
 }
 
 
@@ -45,6 +44,7 @@ void PangolinParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
 
     parse("frame_size", this->frame_size_);
     parse("point_size", this->point_size_);
+    parse("trajectory_line_size", this->trajectory_line_size_);
     parse("viewer_eye_positionX", this->viewer_eye_positionX_);
     parse("viewer_eye_positionY", this->viewer_eye_positionY_);
     parse("viewer_eye_positionZ", this->viewer_eye_positionZ_);

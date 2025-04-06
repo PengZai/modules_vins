@@ -20,6 +20,12 @@
  */
 #pragma once
 
+
+
+namespace modules_vins{
+    
+
+
 #define RESET "\033[0m"
 #define BLACK "\033[30m"                /* Black */
 #define RED "\033[31m"                  /* Red */
@@ -40,3 +46,4 @@
 #define BOLDWHITE "\033[1m\033[37m"     /* Bold White */
 #define BOLDREDPURPLE "\033[1m\033[95m" /* Bold Red Purple */
 
+}// namespace modules_vins

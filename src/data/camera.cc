@@ -52,7 +52,9 @@ double Image::getPointDepthFromSensor(const cv::Point2d &pt){
         return -1;
     }
 
-    double d = sensor_depth_.ptr<float>(y)[x];
+    // here, depth was stored as 32FC1, so we read data with float type.
+    float d = sensor_depth_.ptr<float>(y)[x];
+
     if ( d!=0 )
     {
         return double(d)/depth_scale;

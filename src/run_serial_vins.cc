@@ -6,13 +6,13 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
-#include <glog/logging.h>
-#include "log/logging.h"
+
+// #include "log/logging.h"
 #include "frontend/visual_frontend.h"
 #include "system/vins_system.h"
 #include "system/system_config.h"
 #include "data/map.h"
-#include "dataloader.h"
+#include "data/dataloader.h"
 
 
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     }
     
     std::string log_verbosity = (*sys_config_file_storage)["system"]["log_verbosity"];
-    Logger::setLogger(argv, log_verbosity);
+    modules_vins::Logger::setLogger(argv, log_verbosity);
 
 
     std::shared_ptr<modules_vins::SystemConfig> sys_config = std::make_shared<modules_vins::SystemConfig>();
