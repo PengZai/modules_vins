@@ -39,11 +39,19 @@ class SystemParameters: public Parameters{
         int max_num_fail_;
         int max_num_backward_reference_;
 
+        int max_num_local_map_size_;
+
         std::string imu_config_name_;
         std::string camera_config_name_;
         std::string visualizer_config_name_;
 
         std::string model_path_;
+        std::string output_dir_;
+
+        double max_tolerant_gt_time_offset_;
+        std::string groundtruth_path_;
+        Eigen::Matrix4d T_cam_GT_;
+
 
         bool check_triangulation_;
 

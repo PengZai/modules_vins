@@ -154,6 +154,10 @@ void OpenCVVisualizer::publishProjectedMapPoint(const CameraFrame &camera_frame)
 }
 
 
+
+
+
+
 void OpenCVVisualizer::publishSensorDepth(const CameraFrame &camera_frame){
 
 
@@ -308,12 +312,18 @@ void OpenCVVisualizer::publish(const CameraFrame &camera_frame){
         publishProjectedMapPoint(camera_frame);
     }
 
+    if(this->sys_config_->params_->check_triangulation_){
+        
+    }
+   
+
     if(this->sys_config_->visualizer_config_->opencv_params_->show_sensor_depth_){
 
         publishSensorDepth(camera_frame);
     }
 
-   
+
+
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_tracking_in_time_){
 

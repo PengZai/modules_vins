@@ -34,6 +34,13 @@ void RVisParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("output_trajectory_rostopic", this->output_trajectory_rostopic_);
     parse("output_tracked_map_points_rostopic", this->output_tracked_map_points_rostopic_);
 
+    parse("show_groundtruth_trajectory", this->show_groundtruth_trajectory_);
+    parse("output_groundtruth_trajectory_rostopic", this->output_groundtruth_trajectory_rostopic_);
+    parse("show_groundtruth_pose", this->show_groundtruth_pose_);
+    parse("output_groundtruth_pose_rostopic", this->output_groundtruth_pose_rostopic_);
+
+  
+
 }
 
 

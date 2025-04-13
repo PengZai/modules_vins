@@ -16,7 +16,7 @@ class Initializer{
 
     Initializer(const std::shared_ptr<SystemConfig> config);
 
-    bool initialize(CameraFrame &camera_frame);
+    bool initialize(CameraFrame &camera_frame, State &state);
 
     std::shared_ptr<SystemConfig> sys_config_;
 

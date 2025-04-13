@@ -1,5 +1,6 @@
 #pragma once
 #include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -33,9 +34,13 @@ class ROS1Visualizer{
 
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
     void publish(const CameraFrame &camera_frame, const State &state);
+    void publishTF();
     void publishImages(const CameraFrame &camera_frame);
+    void constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::PoseStamped &pose_msg);
     void publishPoses(const State &state);
-    void publishTrajectory(const State &state);
+    void publishTrajectories(const State &state);
+    void publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub);
+    void publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub); 
     void publishMapPoint(const State &state);
 
 
@@ -43,14 +48,18 @@ class ROS1Visualizer{
     std::shared_ptr<SystemConfig> sys_config_;
     std::shared_ptr<ros::NodeHandle> nh_;
     image_transport::ImageTransport it_;
+    std::shared_ptr<tf::TransformBroadcaster> tf_broadcaster_;
     std::vector<image_transport::Publisher> output_image_pub_vector_;
     ros::Publisher output_pose_pub_;
+    ros::Publisher output_GT_pose_pub_;
     ros::Publisher output_tracked_map_points_pub_;
     ros::Publisher output_trajectory_pub_;
+    ros::Publisher output_GT_trajectory_pub_;
     ros::Publisher output_point_cloud_pub_;
     ros::Rate ros_rate_;
 
-    nav_msgs::Path path_msg_;
+
+    std::string pose_frame_id_;
 
 
     // just for test

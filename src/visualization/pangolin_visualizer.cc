@@ -75,7 +75,9 @@ void PangolinVisualizer::publish(const State &state){
 
     if(!pangolin::ShouldQuit()){
     
-        const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back();
+        auto it = state.timestamp_T_c_w_map_.rbegin();
+        const double newest_timestamp = it->first;
+        const Sophus::SE3<double> &newest_T_c_w = it->second;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         this->d_cam_.Activate(this->s_cam_);
@@ -84,10 +86,10 @@ void PangolinVisualizer::publish(const State &state){
         // Draw something
         pangolin::glDrawAxis(2.0);
 
-        drawFrame(T_c_w.inverse().matrix());
+        drawFrame(newest_T_c_w.inverse().matrix());
 
         if(*is_follow_camera_){
-            s_cam_.Follow(T_c_w.matrix());
+            s_cam_.Follow(newest_T_c_w.matrix());
         }
 
         drawMapPoints(state);
@@ -99,20 +101,20 @@ void PangolinVisualizer::publish(const State &state){
 
 void PangolinVisualizer::drawTrajectory(const State &state){
 
-    ref_translation_ = state.T_c_w_vector_.at(0).translation();
-    for(int i=1; i < (int)state.T_c_w_vector_.size();i++){
+    // ref_translation_ = state.T_c_w_vector_.at(0).translation();
+    // for(int i=1; i < (int)state.T_c_w_vector_.size();i++){
 
-        const Sophus::SE3<double> &T_c_W = state.T_c_w_vector_.at(i).inverse();
+    //     const Sophus::SE3<double> &T_c_W = state.T_c_w_vector_.at(i).inverse();
 
-        glLineWidth(this->trajectory_line_size_);
-        glColor4f(0.0f,1.0f,0.0f,0.6f);
-        glBegin(GL_LINES);
-        Eigen::Vector3d translation = T_c_W.translation();
-        glVertex3d(ref_translation_.x(),ref_translation_.y(),ref_translation_.z());
-        glVertex3d(translation.x(),translation.y(),translation.z());
-        glEnd();
-        ref_translation_ = translation;        
-    } 
+    //     glLineWidth(this->trajectory_line_size_);
+    //     glColor4f(0.0f,1.0f,0.0f,0.6f);
+    //     glBegin(GL_LINES);
+    //     Eigen::Vector3d translation = T_c_W.translation();
+    //     glVertex3d(ref_translation_.x(),ref_translation_.y(),ref_translation_.z());
+    //     glVertex3d(translation.x(),translation.y(),translation.z());
+    //     glEnd();
+    //     ref_translation_ = translation;        
+    // } 
 
 }
 

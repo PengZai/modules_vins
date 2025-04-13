@@ -13,6 +13,7 @@
 #include "system/system_config.h"
 #include "data/map.h"
 #include "data/dataloader.h"
+#include "log/evo_record.h"
 
 
 
@@ -63,8 +64,11 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::Initializer>(sys_config);
     sys.setInitializer(initializer);
 
-    std::shared_ptr<modules_vins::Map> map = std::make_shared<modules_vins::Map>();
+    std::shared_ptr<modules_vins::Map> map = std::make_shared<modules_vins::Map>(sys_config);
     sys.setMap(map);
+
+    std::shared_ptr<modules_vins::EVORecorder> evo_recorder = std::make_shared<modules_vins::EVORecorder>(sys_config);
+    sys.setRecorder(evo_recorder);
 
     std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::VisualFrontend>(sys_config);
     visual_frontend->setMap(map);
@@ -80,6 +84,12 @@ int main(int argc, char* argv[]) {
     std::vector<std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>>> msg_groups_ready_for_process;
     nh->param<std::string>("bag_path", path_to_bag, path_to_bag);
     ros_dataloader->load_data(path_to_bag, msg_groups_ready_for_process);
+
+    std::shared_ptr<modules_vins::FileDataLoader> file_dataloader = std::make_shared<modules_vins::FileDataLoader>(sys_config);
+
+    std::map<double, Sophus::SE3<double>> timestamp_GT_T_full_map;
+    file_dataloader->load_groundtruth(sys_config->params_->groundtruth_path_, timestamp_GT_T_full_map);
+    sys.setGTState(timestamp_GT_T_full_map);
 
     for(size_t i=0; i < msg_groups_ready_for_process.size(); i++){
 

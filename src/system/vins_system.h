@@ -14,6 +14,7 @@
 #include "system_config.h"
 #include "../init/initializer.h"
 #include "../log/logging.h"
+#include "../log/evo_record.h"
 #include "state.h"
 
 
@@ -34,6 +35,11 @@ class System {
         void setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_frontend);
         void setVisualizer(const std::shared_ptr<Visualizer> &visualizer);
         void setMap(const std::shared_ptr<Map> &map);
+        void setRecorder(const std::shared_ptr<EVORecorder> &evo_recorder);
+        void pushbackGTState(const Sophus::SE3<double> &GT_T_c_w);
+        void GT2CameraCoordinateAndSet(const std::map<double, Sophus::SE3<double>> &timestamp_GT_T_full_map);
+        void setGTState(const std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_map);
+
         void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr, const std::string &to_cv_dtype);
         void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr);
         
@@ -59,6 +65,7 @@ class System {
         std::deque<CameraFrame> camera_frame_deque_;
         std::atomic<bool> is_thread_running_;
         std::shared_ptr<ros::NodeHandle> nh_;
+        std::shared_ptr<EVORecorder> evo_recorder_;
 
         State state_;
 

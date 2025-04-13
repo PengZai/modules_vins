@@ -12,15 +12,17 @@ system:
   scale_factor: 1.2
   level_pyramid: 8
   threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
-  threshold_for_tracking_descriptor_in_frame:40.0 # for tracking cross images in same frame
   matching_ratio: 2.0 # distance of matching point < min_distance * matching_ratio
 
   # initialized pose estimation
   threshold_for_pnp_pose_log_norm: 2.0 # estimated pose can't too large
-  min_inliers: 20
+  min_inliers: 10
   max_num_fail: 5 # when number of fail of pose estimation  reach this, state turn to get lost.
   max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward
 
+
+  # map
+  max_num_local_map_size: 10000
 
 
   # relative config file name
@@ -30,6 +32,18 @@ system:
 
   # model
   model_path: /root/catkin_ws/src/modules_vins/models
+
+  #groundtruth path
+  max_tolerant_gt_time_offset:0.02
+  # please remember switch gt file
+  groundtruth_path: /root/datasets/tum/rgbd_dataset_freiburg1_desk/groundtruth.txt
+  T_cam_GT: #transformation from camera to GT, we only need rotation actually
+    - [1, 0, 0, 0]
+    - [0, 1, 0, 0]
+    - [0, 0, 1, 0]
+    - [0, 0, 0, 1]
+  #output
+  output_dir: /root/catkin_ws/src/modules_vins/evaluation_results
 
   # debug
   check_triangulation: 0

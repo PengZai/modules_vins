@@ -19,14 +19,19 @@ ros_rate_(40)
     }
 
 
+    this->tf_broadcaster_ = std::make_shared<tf::TransformBroadcaster>();
 
     this->output_pose_pub_ = this->nh_->advertise<geometry_msgs::PoseStamped>(this->sys_config_->visualizer_config_->rviz_params_->output_pose_rostopic_, 1);
+    this->output_GT_pose_pub_ = this->nh_->advertise<geometry_msgs::PoseStamped>(this->sys_config_->visualizer_config_->rviz_params_->output_groundtruth_pose_rostopic_, 1);
     this->output_trajectory_pub_ = this->nh_->advertise<nav_msgs::Path>(this->sys_config_->visualizer_config_->rviz_params_->output_trajectory_rostopic_, 1);
+    this->output_GT_trajectory_pub_ = this->nh_->advertise<nav_msgs::Path>(this->sys_config_->visualizer_config_->rviz_params_->output_groundtruth_trajectory_rostopic_, 1);
     this->output_tracked_map_points_pub_ = this->nh_->advertise<sensor_msgs::PointCloud2>(this->sys_config_->visualizer_config_->rviz_params_->output_tracked_map_points_rostopic_, 1);
 
     // just for test
     this->R_.setIdentity();  // Rotation matrix
     this->t_.setZero();  // Translation vector
+
+    pose_frame_id_ = "cam0";
 
     nav_msgs::Path path_msg_;
     
@@ -42,9 +47,10 @@ void ROS1Visualizer::publish(const CameraFrame &camera_frame, const State &state
 
 
     if(ros::ok()){
+        publishTF();
         publishImages(camera_frame);
         publishPoses(state);
-        publishTrajectory(state);
+        publishTrajectories(state);
         publishMapPoint(state);
 
 
@@ -72,17 +78,49 @@ void ROS1Visualizer::publishImages(const CameraFrame &camera_frame){
 
 }
 
+void ROS1Visualizer::publishTF(){
+    tf::StampedTransform global2cam0_trans;
+    global2cam0_trans.stamp_ = ros::Time::now();
+    global2cam0_trans.frame_id_ = "global";
+    global2cam0_trans.child_frame_id_ = "cam0";
+    tf::Quaternion global2cam0_quaternion;
+    // In ROS, use BGR-ZYX (yaw-pitch-roll) order. 
+    // this according to matrix
+    // 0,1,0
+    // 0,0,-1
+    // -1,0,0
+    global2cam0_quaternion.setRPY(-M_PI/2, 0, M_PI/2);
+    global2cam0_trans.setRotation(global2cam0_quaternion);
 
-void ROS1Visualizer::publishPoses(const State &state){
+    tf::Vector3 global2cam0_origin(-1, 0, 0);
+    global2cam0_trans.setOrigin(global2cam0_origin);
 
-    const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back().inverse(); // the vector of pose of robot in world coordinate
+    this->tf_broadcaster_->sendTransform(global2cam0_trans);
 
-    geometry_msgs::PoseStamped pose_msg;
+    tf::StampedTransform global2imu_trans;
+    global2imu_trans.stamp_ = ros::Time::now();
+    global2imu_trans.frame_id_ = "global";
+    global2imu_trans.child_frame_id_ = "imu";
+    tf::Quaternion global2imu_quaternion;
+    // In ROS, use BGR-ZYX (yaw-pitch-roll) order. 
+    global2imu_quaternion.setRPY(0, 0, 0);
+    global2imu_trans.setRotation(global2imu_quaternion);
+    tf::Vector3 global2imu_origin(0, 1, 0);
+    global2imu_trans.setOrigin(global2imu_origin);
+
+    this->tf_broadcaster_->sendTransform(global2imu_trans);
+
+
+}
+
+
+void ROS1Visualizer::constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::PoseStamped &pose_msg){
+
     pose_msg.header.stamp = ros::Time::now();
-    pose_msg.header.frame_id = "map";
+    pose_msg.header.frame_id = this->pose_frame_id_;
 
-    const Eigen::Matrix3d &rotation = T_c_w.rotationMatrix();
-    const Eigen::Vector3d &position = T_c_w.translation();
+    const Eigen::Matrix3d &rotation = pose.rotationMatrix();
+    const Eigen::Vector3d &position = pose.translation();
 
     // Example translation and rotation
     const Eigen::Quaterniond q(rotation);
@@ -95,47 +133,101 @@ void ROS1Visualizer::publishPoses(const State &state){
     pose_msg.pose.orientation.y = q.y();
     pose_msg.pose.orientation.z = q.z();
     pose_msg.pose.orientation.w = q.w();
+ 
 
+}
+
+
+
+void ROS1Visualizer::publishPoses(const State &state){
+
+    // const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back().inverse(); // the vector of pose of robot in world coordinate
+
+    auto it = state.timestamp_T_c_w_map_.rbegin();
+    const double newest_timestamp = it->first;
+    const Sophus::SE3<double> &newest_T_c_w = it->second;
+
+    geometry_msgs::PoseStamped pose_msg;
+    constructPoseMsg(newest_T_c_w.inverse(), pose_msg);
     this->output_pose_pub_.publish(pose_msg);
+
+
+    if(this->sys_config_->visualizer_config_->rviz_params_->show_groundtruth_pose_){
+
+        double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
+        if(synchronized_gt_timestamp == -1){
+            return;
+        }
+        const Sophus::SE3<double> &synchronized_GT_T_c_w = state.timestamp_GT_T_c_w_map_.at(synchronized_gt_timestamp);
+
+        constructPoseMsg(synchronized_GT_T_c_w, pose_msg);
+        this->output_GT_pose_pub_.publish(pose_msg);
+
+    }
     
 
 }
 
 
-void ROS1Visualizer::publishTrajectory(const State &state){
+void ROS1Visualizer::publishTrajectories(const State &state){
 
-    this->path_msg_.poses.clear();
+    nav_msgs::Path path_msgs;
+    publishTrajectory(state.timestamp_T_c_w_map_, path_msgs, this->output_trajectory_pub_);
+    if(this->sys_config_->visualizer_config_->rviz_params_->show_groundtruth_trajectory_){
 
-    for(int i=0; i < (int)state.T_c_w_vector_.size();i++){
+        auto it = state.timestamp_T_c_w_map_.rbegin();
+        const double newest_timestamp = it->first;
+        double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
+        if(synchronized_gt_timestamp == -1){
+            return;
+        }
 
+        auto it_end = state.timestamp_GT_T_c_w_map_.find(synchronized_gt_timestamp);
 
-        const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.at(i).inverse(); // the vector of pose of robot in world coordinate
+        std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_sub_map(state.timestamp_GT_T_c_w_map_.begin(), it_end);
 
-        path_msg_.header.stamp = ros::Time::now();
-        path_msg_.header.frame_id = "map";
-
-        geometry_msgs::PoseStamped pose_msg;
-        pose_msg.header.stamp = ros::Time::now();
-        pose_msg.header.frame_id = "map";
-
-        const Eigen::Matrix3d &rotation = T_c_w.rotationMatrix();
-        const Eigen::Vector3d &position = T_c_w.translation();
-
-        const Eigen::Quaterniond q(rotation);
-
-        pose_msg.pose.position.x = position.x();
-        pose_msg.pose.position.y = position.y();
-        pose_msg.pose.position.z = position.z();
-
-        pose_msg.pose.orientation.x = q.x();
-        pose_msg.pose.orientation.y = q.y();
-        pose_msg.pose.orientation.z = q.z();
-        pose_msg.pose.orientation.w = q.w();
-
-        this->path_msg_.poses.push_back(pose_msg);
+        publishGTTrajectory(timestamp_GT_T_c_w_sub_map, path_msgs, this->output_GT_trajectory_pub_);
     }
 
-    this->output_trajectory_pub_.publish(this->path_msg_);
+}
+
+
+
+void ROS1Visualizer::publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub){
+
+    path_msgs.poses.clear();
+    path_msgs.header.stamp = ros::Time::now();
+    path_msgs.header.frame_id = this->pose_frame_id_;
+
+    for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
+
+        geometry_msgs::PoseStamped pose_msg;
+        constructPoseMsg(T_c_w.inverse(), pose_msg);
+
+
+        path_msgs.poses.push_back(pose_msg);
+    }
+
+    output_trajectory_pub.publish(path_msgs);
+
+}
+
+void ROS1Visualizer::publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub){
+
+    path_msgs.poses.clear();
+    path_msgs.header.stamp = ros::Time::now();
+    path_msgs.header.frame_id = this->pose_frame_id_;
+
+    for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
+
+        geometry_msgs::PoseStamped pose_msg;
+        constructPoseMsg(T_c_w, pose_msg);
+
+
+        path_msgs.poses.push_back(pose_msg);
+    }
+
+    output_trajectory_pub.publish(path_msgs);
 
 }
 
@@ -166,7 +258,7 @@ void ROS1Visualizer::publishMapPoint(const State &state){
      sensor_msgs::PointCloud2 map_point_msgs;
      pcl::toROSMsg(*map_point_collection_ptr, map_point_msgs);
      map_point_msgs.header.stamp = ros::Time::now();
-     map_point_msgs.header.frame_id = "map";
+     map_point_msgs.header.frame_id = this->pose_frame_id_;
 
 
      this->output_tracked_map_points_pub_.publish(map_point_msgs);

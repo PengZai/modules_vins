@@ -107,6 +107,11 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
         cv::Mat col = points4D.col(i);
 
         col /= col.at<double>(3, 0);  // Normalize by last coordinate
+        if(col.at<double>(2, 0) <= 0){
+            VLOG(VERBOSE) << "keypoint " << match.queryIdx << " has negative z" << col;
+            continue;
+
+        }
         cv::Point3d img_i_pt3d = cv::Point3d(col.at<double>(0, 0), col.at<double>(1, 0), col.at<double>(2, 0));
 
         if(this->sys_config_->params_->check_triangulation_){

@@ -1,5 +1,6 @@
 list(APPEND LIBRARY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log/logging.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/log/evo_record.cc
 
 )
 

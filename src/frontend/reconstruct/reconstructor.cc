@@ -59,7 +59,7 @@ void Reconstructor::pipeline(CameraFrame &camera_frame){
         std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
 
 
-        if(kp->prev_keypoint_in_time_ == nullptr){
+        if(kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
 
             Eigen::Vector3d map_point = img_0->T_c_w_.inverse() * Eigen::Vector3d(kp->pt3d_.x, kp->pt3d_.y, kp->pt3d_.z);
             std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);

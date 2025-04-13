@@ -9,12 +9,13 @@ visualizer:
 opencv_visualizer:
   show_projected_mappoint: 1
   show_matching_in_frame: 0
-  show_matching_in_time: 0
+  show_matching_in_time: 1
   show_tracking_in_time: 1
   show_sensor_depth: 1
   show_learned_depth: 1
   show_object_detection: 1
-  show_semantic_segmentation: 0
+  show_semantic_segmentation: 1
+
 
 
 pangolin_visualizer:
@@ -30,7 +31,11 @@ rviz_visualizer:
   output_pose_rostopic: /output/camera_pose
   output_trajectory_rostopic: /output/trajectory
   output_tracked_map_points_rostopic: /output/tracked_points
-  
+  show_groundtruth_trajectory: 1
+  output_groundtruth_trajectory_rostopic: /output/groundtruth_trajectory
+  show_groundtruth_pose: 1
+  output_groundtruth_pose_rostopic: /output/groundtruth_pose
+
 
   
 

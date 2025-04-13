@@ -42,6 +42,11 @@ void System::setMap(const std::shared_ptr<Map> &map){
     this->state_.map_ = map;
 }
 
+void System::setRecorder(const std::shared_ptr<EVORecorder> &evo_recorder){
+
+    this->evo_recorder_ = evo_recorder;
+}
+
 void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr, const std::string &to_cv_dtype){
 
 
@@ -121,15 +126,29 @@ void System::updateState(const CameraFrame &camera_frame){
         return;
     }
 
+    const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
 
-    this->state_.T_c_w_vector_.emplace_back(camera_frame.image_vector_.at(0)->T_c_w_);
+    this->state_.timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
     VLOG(VERBOSE) << GREEN << "new state has been added to system" << RESET;
+
+    // T_w_c is actual position and orientation of camera in world, for visualization
+    Sophus::SE3<double> T_w_c_ = img_0->T_c_w_.inverse();
+    this->evo_recorder_->writeTrajectoryOnce(img_0->timestamp_, T_w_c_.translation(), T_w_c_.unit_quaternion());
+
 
 }
 
 
 const State &System::getState() const{
     return this->state_;
+}
+
+
+
+
+void System::setGTState(const std::map<double, Sophus::SE3<double>> timestamp_GT_T_map){
+    this->state_.timestamp_GT_T_full_map_ = timestamp_GT_T_map;
+
 }
 
 
@@ -170,7 +189,7 @@ void System::callbackVisualNavigation(){
         CameraFrame &camera_frame = this->camera_frame_deque_.front();
         
         if(this->is_initialized_ == false){
-            this->is_initialized_ = this->initializer_->initialize(camera_frame);
+            this->is_initialized_ = this->initializer_->initialize(camera_frame, this->state_);
         }
 
 
@@ -178,16 +197,11 @@ void System::callbackVisualNavigation(){
 
             camera_frame.status_ = CameraFrame::NORMAL;
 
-            size_t previos_mappoints_size = this->state_.map_->getMapPoints().size();
 
             this->visual_frontend_->pipeline(camera_frame);
 
             this->state_.map_->update(camera_frame);
 
-            size_t mappoints_size = this->state_.map_->getMapPoints().size();
-            
-            VLOG(VERBOSE) << GREEN << mappoints_size - previos_mappoints_size << " map points were tracked in this frame" << RESET;
-            VLOG(VERBOSE) << GREEN << mappoints_size << " map points were tracked in map in total" << RESET;    
 
             updateState(camera_frame);
 

@@ -6,7 +6,7 @@ project(modules_vins)
 # It tells CMake where to look for install prefixes of libraries or packages. 
 # This is especially useful if your dependencies are installed in non-standard locations (not in /usr or /usr/local on Linux, for example).
 
-option(USE_LIBTORCH "Enable libtorch" ON)
+option(USE_LIBTORCH "Enable libtorch" OFF)
 
 
 list(APPEND CMAKE_PREFIX_PATH "/opt/ros/noetic")

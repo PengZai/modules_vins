@@ -5,6 +5,45 @@ namespace modules_vins
 {
 
 
+FileDataLoader::FileDataLoader(const std::shared_ptr<SystemConfig> &sys_config):
+sys_config_(sys_config)
+{
+    
+}
+
+
+void FileDataLoader::load_groundtruth(const std::string &path_to_file, std::map<double, Sophus::SE3<double>> &timestamp_GT_T_map){
+
+
+
+    std::ifstream file_in(path_to_file);
+    if(!file_in){
+        VLOG(VERBOSE) << RED << "File not found: " << path_to_file <<  RESET;
+    }
+
+    std::string line;
+
+
+    while(std::getline(file_in, line)){
+        //Skip comments
+        if(line.empty() || line[0] == '#'){
+            continue;
+        } 
+        std::istringstream iss(line); 
+        double timestamp, tx, ty, tz, qx, qy, qz, qw;
+        iss >> timestamp >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
+
+        Eigen::Quaterniond q(qw, qx, qy, qz);
+        Eigen::Vector3d t(tx, ty, tz);
+
+        Sophus::SE3<double> T_c_w(q,t);
+        timestamp_GT_T_map[timestamp] = T_c_w;
+    }
+
+
+
+}
+
 ROSDataLoader::ROSDataLoader(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh):
 sys_config_(sys_config), 
 nh_(nh), 
@@ -157,7 +196,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
 
 
 // we assume our ros data are chronological
-int ROSDataLoader::findSynchronizedIndex(const std::string &target_rostopic, int m_source_index, double max_time_offset){
+int ROSDataLoader::findSynchronizedIndex(const std::string &target_rostopic, int m_source_index, double max_tolerant_time_offset){
 
     // mdi means index of base message(m) plus differentiate(d) index(i)
     int synchronized_idx = -1;
@@ -191,7 +230,7 @@ int ROSDataLoader::findSynchronizedIndex(const std::string &target_rostopic, int
         }
     }
 
-    if(smallest_time_offset < max_time_offset){
+    if(smallest_time_offset < max_tolerant_time_offset){
         synchronized_idx = smallest_time_offset_idx;
     }
     else{
@@ -204,6 +243,8 @@ int ROSDataLoader::findSynchronizedIndex(const std::string &target_rostopic, int
 
     return synchronized_idx;
 }
+
+
 
 
 

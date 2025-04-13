@@ -36,6 +36,10 @@ class RVisParameters: public Parameters{
     std::string output_pose_rostopic_; 
     std::string output_trajectory_rostopic_;
     std::string output_tracked_map_points_rostopic_; 
+    bool show_groundtruth_trajectory_;
+    std::string output_groundtruth_trajectory_rostopic_;
+    bool show_groundtruth_pose_;
+    std::string output_groundtruth_pose_rostopic_;
     
 };
 

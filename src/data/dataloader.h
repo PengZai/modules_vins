@@ -11,22 +11,35 @@
 // #include <glog/logging.h>
 #include <sensor_msgs/Image.h>
 #include <limits>
+#include <fstream>
 
 
 #include "../log/logging.h"
 #include "../system/system_config.h"
 #include "map.h"
+#include "../system/state.h"
 
 
 namespace modules_vins
 {
 
 
+class FileDataLoader{
+
+    public:
+    FileDataLoader(const std::shared_ptr<SystemConfig> &sys_config);
+    void load_groundtruth(const std::string &path_to_file, std::map<double, Sophus::SE3<double>> &timestamp_GT_T_map);
+
+    public:
+    std::shared_ptr<SystemConfig> sys_config_;
+};
+
+
 class ROSDataLoader{
 
     public:
     ROSDataLoader(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh);
-    int findSynchronizedIndex(const std::string &rostopic, int m_source_index, double max_time_offset);
+    int findSynchronizedIndex(const std::string &rostopic, int m_source_index, double max_tolerant_time_offset);
 
 
     public:

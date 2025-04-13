@@ -106,14 +106,22 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("max_num_backward_reference", this->max_num_backward_reference_);
 
     
+    parse("max_num_local_map_size", this->max_num_local_map_size_);
 
+    
 
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);
     parse("visualizer_config_name", this->visualizer_config_name_);
 
     parse("model_path", this->model_path_);
+    parse("output_dir", this->output_dir_);
 
+    parse("max_tolerant_gt_time_offset", this->max_tolerant_gt_time_offset_);
+    parse("groundtruth_path", this->groundtruth_path_);
+    parse("T_cam_GT", this->T_cam_GT_);
+
+    
     parse("check_triangulation", this->check_triangulation_);
 
    

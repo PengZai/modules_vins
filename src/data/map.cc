@@ -5,7 +5,8 @@ namespace modules_vins
 {
 
 
-Map::Map()
+Map::Map(const std::shared_ptr<SystemConfig> &sys_config)
+:sys_config_(sys_config)
 {
 
 }
@@ -44,18 +45,37 @@ void Map::update(const CameraFrame &camera_frame){
         std::exit(EXIT_FAILURE);
     }
 
+    int count_new_mappoint = 0;
+
     for(int i=0; i<(int)camera_frame.map_point_vector_.size();i++){
         
             const std::shared_ptr<MapPoint> &mp = camera_frame.map_point_vector_.at(i);
             
             if(!this->isExistedMapPoint(mp)){
                 this->insertMapPoint(mp);
+                count_new_mappoint++;
             }
-
         
 
     }
+
+    VLOG(VERBOSE) << GREEN << count_new_mappoint << " map points were added to local map" << RESET;
+
+    maintainSize();
     
+}
+
+
+void Map::maintainSize(){
+    
+    int mappoint_size = this->mappoints_.size();
+    int oversize = mappoint_size - this->sys_config_->params_->max_num_local_map_size_;
+    if(oversize > 0){
+        auto it = this->mappoints_.begin();
+        for (int i = 0; i < oversize && it != this->mappoints_.end(); ++i) {
+            it = this->mappoints_.erase(it);  // erase returns the next iterator
+        }
+    }
 }
 
     
