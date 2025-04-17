@@ -87,9 +87,18 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("log_verbosity", this->log_verbosity_);
     parse("max_cameras", this->max_cameras_);
     parse("max_imus", this->max_imus_);
+
     
     parse("max_stereo_time_offset", this->max_stereo_time_offset_);
     parse("max_color_sensor_depth_pair_time_offset", this->max_color_sensor_depth_pair_time_offset_);
+
+
+
+    int num_frame_in_slide_window_;
+    double min_pose_norm_between_frame_in_slide_window_;
+    parse("num_frame_in_slide_window", this->num_frame_in_slide_window_);
+    parse("min_pose_norm_between_frame_in_slide_window", this->min_pose_norm_between_frame_in_slide_window_);
+
 
     parse("num_feature_points", this->num_feature_points_);
     parse("scale_factor", this->scale_factor_);

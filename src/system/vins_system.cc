@@ -183,10 +183,10 @@ void System::callbackVisualNavigation(){
 
     // thread.join();
 
-    while(!this->camera_frame_deque_.empty()){
+    if(!this->camera_frame_deque_.empty()){
         
 
-        CameraFrame &camera_frame = this->camera_frame_deque_.front();
+        CameraFrame &camera_frame = this->camera_frame_deque_.back();
         
         if(this->is_initialized_ == false){
             this->is_initialized_ = this->initializer_->initialize(camera_frame, this->state_);
@@ -209,13 +209,6 @@ void System::callbackVisualNavigation(){
 
         this->visualizer_->publish(camera_frame, this->state_);
 
-
-        if(camera_frame.status_ != CameraFrame::NORMAL){
-            this->camera_frame_deque_.pop_back();
-        }
-        else{
-            this->camera_frame_deque_.pop_front();
-        }
 
     }
 

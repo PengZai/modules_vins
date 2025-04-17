@@ -27,6 +27,9 @@ class SystemParameters: public Parameters{
         double scale_factor_;
         int level_pyramid_;
 
+        int num_frame_in_slide_window_;
+        double min_pose_norm_between_frame_in_slide_window_;
+
 
         double threshold_for_tracking_descriptor_in_time_;
         double threshold_for_tracking_descriptor_in_frame_;
@@ -51,6 +54,8 @@ class SystemParameters: public Parameters{
         double max_tolerant_gt_time_offset_;
         std::string groundtruth_path_;
         Eigen::Matrix4d T_cam_GT_;
+
+
 
 
         bool check_triangulation_;
