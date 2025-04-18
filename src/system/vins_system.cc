@@ -112,21 +112,22 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
     
     const State &state = getState();
 
-    CameraFrame camera_frame(image_vector);
-    camera_frame.setMap(state.map_);
+    std::shared_ptr<CameraFrame>camera_frame = std::make_shared<CameraFrame>(image_vector);
+    camera_frame->setMap(state.map_);
     this->camera_frame_deque_.push_back(camera_frame);
+
 
 
 }
 
 
-void System::updateState(const CameraFrame &camera_frame){
+void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame.status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::NORMAL){
         return;
     }
 
-    const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     this->state_.timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
     VLOG(VERBOSE) << GREEN << "new state has been added to system" << RESET;
@@ -186,17 +187,26 @@ void System::callbackVisualNavigation(){
     if(!this->camera_frame_deque_.empty()){
         
 
-        CameraFrame &camera_frame = this->camera_frame_deque_.back();
+        std::shared_ptr<CameraFrame> &camera_frame = this->camera_frame_deque_.back();
         
-        if(this->is_initialized_ == false){
-            this->is_initialized_ = this->initializer_->initialize(camera_frame, this->state_);
+        if(this->status_== SystemStatus::NOT_INITIALIZED){
+
+            this->visual_frontend_->pipeline(camera_frame);
+            if(this->visual_frontend_->status_ == VisualFrontend::VisualFrontendStatus::NORMAL){
+                this->status_ = SystemStatus::NORMAL;
+            }
+            this->state_.map_->update(camera_frame);
+
         }
 
 
-        if(this->is_initialized_ == true){
+        if(this->status_== SystemStatus::NORMAL){
 
-            camera_frame.status_ = CameraFrame::NORMAL;
+            camera_frame->status_ = CameraFrame::NORMAL;
 
+            if(camera_frame->id_ == 0){
+                this->initializer_->initializeGTTcwWithCameraFrame(camera_frame, this->state_);
+            }
 
             this->visual_frontend_->pipeline(camera_frame);
 

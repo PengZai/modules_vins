@@ -28,16 +28,12 @@ timestamp_(timestamp),
 sensor_id_(sensor_id), 
 color_data_(data)
 {
-
+    this->T_c_w_ = Sophus::SE3<double>();
     this->depth_.create(this->color_data_.rows, this->color_data_.cols, CV_64FC1);
     this->depth_.setTo(-1);
 
 }
 
-void Image::initPose(){
-    this->T_c_w_ = Sophus::SE3<double>();
-
-}
 
 
 double Image::getPointDepthFromSensor(const cv::Point2d &pt){

@@ -17,19 +17,19 @@ Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
 
 
 
-void Reconstructor::pipeline(CameraFrame &camera_frame){
+void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    if(camera_frame.status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::NORMAL){
         return;
     }
 
-    std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     // sensor depth reconstruction
-    for(int i=0;i<(int)camera_frame.image_vector_.size();i++){
+    for(int i=0;i<(int)camera_frame->image_vector_.size();i++){
 
-        std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+        std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
 
         if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_sensor_depth_){
             this->sensor_depth_reconstructor_->reconstruct(img_i);
@@ -46,9 +46,9 @@ void Reconstructor::pipeline(CameraFrame &camera_frame){
     
 
     // two view reconstruction
-    for(int i=1;i<(int)camera_frame.image_vector_.size();i++){
+    for(int i=1;i<(int)camera_frame->image_vector_.size();i++){
 
-        std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(1);
+        std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(1);
         this->two_view_reconstructor_->reconstruct(img_0, img_i);
     }
 
@@ -67,7 +67,7 @@ void Reconstructor::pipeline(CameraFrame &camera_frame){
             map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
             kp->setMapPointPtr(map_point_ptr);
-            camera_frame.map_point_vector_.emplace_back(map_point_ptr);
+            camera_frame->map_point_vector_.emplace_back(map_point_ptr);
             
         }
         
@@ -104,7 +104,7 @@ void Reconstructor::pipeline(CameraFrame &camera_frame){
             std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);            
             cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(pt2i);
             map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
-            camera_frame.map_point_vector_.emplace_back(map_point_ptr);
+            camera_frame->map_point_vector_.emplace_back(map_point_ptr);
 
             
             

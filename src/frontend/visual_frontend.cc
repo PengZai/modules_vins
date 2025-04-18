@@ -23,47 +23,46 @@ void VisualFrontend::setMap(const std::shared_ptr<Map> &map){
 
 
 
-void VisualFrontend::pipeline(CameraFrame &camera_frame){
 
-    if(camera_frame.status_ != CameraFrame::NORMAL){
+void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
+
+    if(camera_frame->status_ != CameraFrame::NORMAL){
         return;
     }
 
-    VLOG(VERBOSE) << "VisualFrontend Start with camera frame id: " << camera_frame.id_;
+    this->camera_frame_deque_.push_back(camera_frame);
 
-    std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+    VLOG(VERBOSE) << "VisualFrontend Start with camera frame id: " << camera_frame->id_;
+
+    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     this->detector_->pipeline(camera_frame);
     
 
-    this->trakcer_->pipeline(camera_frame);
+    ref_camera_frame_ = this->camera_frame_deque_.front();
 
-    this->pose_estimator_->pipeline(camera_frame);
+    this->trakcer_->pipeline(ref_camera_frame_, camera_frame);
+
+    this->pose_estimator_->pipeline(ref_camera_frame_, camera_frame);
 
     this->reconstructor_->pipeline(camera_frame);
 
   
-    if(camera_frame.status_ != CameraFrame::NORMAL){
-        if(this->trakcer_->camera_frame_deque_.size()>1){
-            this->trakcer_->camera_frame_deque_.pop_back();
-        }
-        if(this->pose_estimator_->camera_frame_deque_.size()>1){
-            this->pose_estimator_->camera_frame_deque_.pop_back();
+    if(camera_frame->status_ != CameraFrame::NORMAL){
+        if(this->camera_frame_deque_.size()>1){
+            this->camera_frame_deque_.pop_back();
         }
     }
     else{
-        if(this->trakcer_->camera_frame_deque_.size()>1){
-            this->trakcer_->camera_frame_deque_.pop_front();
-        }
-        if(this->pose_estimator_->camera_frame_deque_.size()>1){
-            this->pose_estimator_->camera_frame_deque_.pop_front();
+        if(this->camera_frame_deque_.size()>1){
+            this->camera_frame_deque_.pop_front();
         }
     }
 
 
     
 
-    VLOG(VERBOSE) << "VisualFrontend End with camera frame id: " << camera_frame.id_;
+    VLOG(VERBOSE) << "VisualFrontend End with camera frame id: " << camera_frame->id_;
     
 
 

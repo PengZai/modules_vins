@@ -35,7 +35,7 @@ Visualizer::~Visualizer(){
 
 
 
-void Visualizer::publish(const CameraFrame &camera_frame, const State &state){
+void Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const State &state){
 
     
     if(this->sys_config_->visualizer_config_->params_->use_opencv_vis_){

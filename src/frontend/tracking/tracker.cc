@@ -11,13 +11,13 @@ Tracker::Tracker(const std::shared_ptr<SystemConfig> &sys_config){
 
 }
 
-void Tracker::trackInFrame(CameraFrame &camera_frame){
+void Tracker::trackInFrame(std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
-    for(int j=1;j<(int)camera_frame.image_vector_.size();j++){
+    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    for(int j=1;j<(int)camera_frame->image_vector_.size();j++){
 
-        std::shared_ptr<Image> &img_j = camera_frame.image_vector_.at(j);
+        std::shared_ptr<Image> &img_j = camera_frame->image_vector_.at(j);
         std::vector<cv::DMatch> matches;
         this->bf_->matching(img_0, img_j, matches);
 
@@ -60,62 +60,59 @@ void Tracker::trackInFrame(CameraFrame &camera_frame){
     
 }
 
-void Tracker::trackInTime(CameraFrame &camera_frame){
+void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::shared_ptr<Image> &img_from_current_frame){
     
-    this->camera_frame_deque_.push_back(camera_frame);
 
-    std::shared_ptr<Image> &img0_from_current_frame = camera_frame.image_vector_.at(0);
+   
 
-    // we only track between current frame and previous frame
-    if(this->camera_frame_deque_.size()>1){
+    std::vector<cv::DMatch> matches;
+    this->bf_->matching(img_from_current_frame, img_from_ref_frame, matches);
+    double min_distance = matches.front().distance;
 
-        CameraFrame &previous_camera_frame = this->camera_frame_deque_.front();
-        std::shared_ptr<Image> &img0_from_previous_frame = previous_camera_frame.image_vector_.at(0);
+    for (int i=0; i < (int)matches.size(); i++) {
+        cv::DMatch &match = matches[i];
+        if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_time_)){
+            // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
+            break;
+        }
+        // Manually assign `imgIdx`
+        match.imgIdx = img_from_ref_frame->sensor_id_; // Store index of the train image
 
-        std::vector<cv::DMatch> matches;
-        this->bf_->matching(img0_from_current_frame, img0_from_previous_frame, matches);
-        double min_distance = matches.front().distance;
+        std::shared_ptr<KeyPoint> &tracked_keypoint_from_current_frame = img_from_current_frame->keypoint_vector_[match.queryIdx];
+        std::shared_ptr<KeyPoint> &tracked_keypoint_from_ref_frame = img_from_current_frame->keypoint_vector_[match.trainIdx];
 
-        for (int i=0; i < (int)matches.size(); i++) {
-            cv::DMatch &match = matches[i];
-            if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_time_)){
-                // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
-                break;
-            }
-            // Manually assign `imgIdx`
-            match.imgIdx = img0_from_previous_frame->sensor_id_; // Store index of the train image
+        tracked_keypoint_from_current_frame->setMatchInTime(match);
+        img_from_current_frame->matches_in_time_.push_back(match);
 
-            std::shared_ptr<KeyPoint> &tracked_keypoint_from_current_frame = img0_from_current_frame->keypoint_vector_[match.queryIdx];
-            std::shared_ptr<KeyPoint> &tracked_keypoint_from_previous_frame = img0_from_previous_frame->keypoint_vector_[match.trainIdx];
+        tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_ref_frame);
+        tracked_keypoint_from_ref_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
+        
+        tracked_keypoint_from_ref_frame->propagateMapPointPtr();
+    }   
 
-            tracked_keypoint_from_current_frame->setMatchInTime(match);
-            img0_from_current_frame->matches_in_time_.push_back(match);
+    VLOG(VERBOSE) << GREEN << img_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
 
-            tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_previous_frame);
-            tracked_keypoint_from_previous_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
-            
-            tracked_keypoint_from_previous_frame->propagateMapPointPtr();
-        }   
-
-        VLOG(VERBOSE) << GREEN << img0_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
-
-    }
+    
 
     
 }
 
     
-void Tracker::pipeline(CameraFrame &camera_frame){
+void Tracker::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame.status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::NORMAL){
         return;
     }
 
-    // we track feature according to the feature in camera 0(left camera)
-    trackInTime(camera_frame);
+    std::shared_ptr<Image> &img0_from_current_frame = camera_frame->image_vector_.at(0);
 
-    // track cross cameras (typically stereo trakcing)
-    trackInFrame(camera_frame);
+    std::shared_ptr<Image> &img0_from_ref_frame = ref_camera_frame->image_vector_.at(0);
+    
+
+    // we track feature according to the feature in camera 0(left camera)
+    trackInTime(img0_from_ref_frame, img0_from_current_frame);
+
+
 
 
 }

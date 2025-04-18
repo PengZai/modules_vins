@@ -5,7 +5,7 @@ namespace modules_vins{
 
     
 
-bool State::SynchronizeAndTransformGTPoseWithTcw(const double base_timestamp, const double max_tolerant_time_offset, const Sophus::SE3<double> &T_cam_GT){
+bool State::SynchronizeAndTransformGTPoseToTcw(const double base_timestamp, const double max_tolerant_time_offset, const Sophus::SE3<double> &T_cam_GT){
 
     double synchronized_gt_timestamp = findSynchronizedPoseTimestamp(base_timestamp, max_tolerant_time_offset);
     if(synchronized_gt_timestamp == -1){
@@ -13,14 +13,13 @@ bool State::SynchronizeAndTransformGTPoseWithTcw(const double base_timestamp, co
     }
 
     Sophus::SE3<double> GT_frist_pose_ = this->timestamp_GT_T_full_map_.at(synchronized_gt_timestamp);
-    double GT_frist_timestamp_ = synchronized_gt_timestamp;
 
     auto it_start = this->timestamp_GT_T_full_map_.find(synchronized_gt_timestamp);
     auto it_end = this->timestamp_GT_T_full_map_.end();
 
     std::map<double, Sophus::SE3d> GT_T_sub_map(it_start, it_end);
 
-
+    this->timestamp_GT_T_c_w_map_.clear();
     for (const auto& [timestamp, GT_T] : GT_T_sub_map) {
 
         this->timestamp_GT_T_c_w_map_[timestamp] = T_cam_GT * GT_frist_pose_.inverse() * GT_T;

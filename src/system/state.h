@@ -14,7 +14,7 @@ class State{
     public:
 
         double findSynchronizedPoseTimestamp(const double base_timestamp, const double max_tolerant_time_offset) const;
-        bool SynchronizeAndTransformGTPoseWithTcw(const double base_timestamp, const double max_tolerant_time_offset, const Sophus::SE3<double> &T_cam_GT);
+        bool SynchronizeAndTransformGTPoseToTcw(const double base_timestamp, const double max_tolerant_time_offset, const Sophus::SE3<double> &T_cam_GT);
 
 
         std::map<double, Sophus::SE3<double>> timestamp_T_c_w_map_; // the map of pose of robot in world coordinate

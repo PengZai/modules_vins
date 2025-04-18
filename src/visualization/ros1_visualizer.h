@@ -33,9 +33,9 @@ class ROS1Visualizer{
     ROS1Visualizer(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh);
 
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
-    void publish(const CameraFrame &camera_frame, const State &state);
+    void publish(const std::shared_ptr<CameraFrame> &camera_frame, const State &state);
     void publishTF();
-    void publishImages(const CameraFrame &camera_frame);
+    void publishImages(const std::shared_ptr<CameraFrame> &camera_frame);
     void constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::PoseStamped &pose_msg);
     void publishPoses(const State &state);
     void publishTrajectories(const State &state);

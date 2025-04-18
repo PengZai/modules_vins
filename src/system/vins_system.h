@@ -44,7 +44,7 @@ class System {
         void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr);
         
         const State &getState() const;
-        void updateState(const CameraFrame &camera_frame);
+        void updateState(const std::shared_ptr<CameraFrame> &camera_frame);
         // msg0 and msg1 come from camera 0 and camera 1 respectively, 
         // in which msg0 and msg1 have been software synchronized
         void addCameraFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups);
@@ -62,14 +62,23 @@ class System {
         std::shared_ptr<Initializer> initializer_;
         std::shared_ptr<VisualFrontend> visual_frontend_;
         std::shared_ptr<Visualizer> visualizer_;
-        std::deque<CameraFrame> camera_frame_deque_;
+        std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
         std::atomic<bool> is_thread_running_;
         std::shared_ptr<ros::NodeHandle> nh_;
         std::shared_ptr<EVORecorder> evo_recorder_;
 
         State state_;
 
-        bool is_initialized_;
+
+        enum SystemStatus{
+            NOT_INITIALIZED=-1,
+            NORMAL=0,
+            LOST,
+        };
+    
+        SystemStatus status_;
+
+
 
 
 

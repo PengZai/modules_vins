@@ -59,14 +59,14 @@ void Detector::computeDescriptor(const std::shared_ptr<Image> &img){
 }
 
 
-void Detector::pipeline(CameraFrame &camera_frame){
+void Detector::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     
-    if(camera_frame.status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::NORMAL){
         return;
     }
 
-    for(int i=0; i < (int)camera_frame.image_vector_.size();i++){
-        std::shared_ptr<Image> &img = camera_frame.image_vector_.at(i);
+    for(int i=0; i < (int)camera_frame->image_vector_.size();i++){
+        std::shared_ptr<Image> &img = camera_frame->image_vector_.at(i);
 
         detect(img);
 

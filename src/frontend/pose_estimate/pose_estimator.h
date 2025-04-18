@@ -33,10 +33,9 @@ class PoseEstimator{
         const cv::Mat &cv_distortion_coeffs);
 
     std::shared_ptr<SystemConfig> sys_config_;
-    std::deque<CameraFrame> camera_frame_deque_;
 
    
-    void pipeline(CameraFrame &camera_frame);
+    void pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame);
 
 
 };

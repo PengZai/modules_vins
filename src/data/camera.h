@@ -36,7 +36,6 @@ class Image{
 
         Image(double timestamp, int sensor_id, cv::Mat data);
         std::vector<Eigen::Vector3d> getMapPoints() const;
-        void initPose();
 
         void setSensorDepth(const cv::Mat &sensor_depth);
         void setTcw(const Sophus::SE3<double> T_c_w);

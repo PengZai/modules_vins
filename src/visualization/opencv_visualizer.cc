@@ -34,16 +34,16 @@ void OpenCVVisualizer::drawTrackingPointPattern(cv::Mat &img, const std::shared_
     
 }
 
-void OpenCVVisualizer::publishMatchingInFrame(CameraFrame camera_frame){
+void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
     std::shared_ptr<Image> img_0;
     cv::Mat img_0_data;
 
-    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
+    for(int i=0; i<(int)camera_frame->image_vector_.size(); i++){
 
         
-        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
         cv::Mat img_i_data = img_i->color_data_.clone();
 
         if(i==0){
@@ -82,10 +82,10 @@ void OpenCVVisualizer::publishMatchingInFrame(CameraFrame camera_frame){
 
 }
 
-void OpenCVVisualizer::publishMatchingInTime(CameraFrame camera_frame){
+void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->color_data_.clone();
 
 
@@ -105,9 +105,9 @@ void OpenCVVisualizer::publishMatchingInTime(CameraFrame camera_frame){
 
     if(camera_frame_deque_.size()>1){
 
-        CameraFrame &previous_camera_frame = this->camera_frame_deque_.front();
+        const std::shared_ptr<CameraFrame> &previous_camera_frame = this->camera_frame_deque_.front();
 
-        const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame.image_vector_.at(0);
+        const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame->image_vector_.at(0);
         cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->color_data_.clone();
 
         cv::Mat img_0_matches_in_time;
@@ -123,16 +123,16 @@ void OpenCVVisualizer::publishMatchingInTime(CameraFrame camera_frame){
 }   
 
 
-void OpenCVVisualizer::publishProjectedMapPoint(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    const std::shared_ptr<Image> img_0 = camera_frame.image_vector_.at(0);
+    const std::shared_ptr<Image> img_0 = camera_frame->image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->color_data_.clone();
 
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
 
     // const std::shared_ptr<Map> &map = camera_frame.getMap();
-    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = camera_frame.getMap()->getMapPoints();
+    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = camera_frame->getMap()->getMapPoints();
 
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;
@@ -158,11 +158,11 @@ void OpenCVVisualizer::publishProjectedMapPoint(const CameraFrame &camera_frame)
 
 
 
-void OpenCVVisualizer::publishSensorDepth(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publishSensorDepth(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
-        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+    for(int i=0; i<(int)camera_frame->image_vector_.size(); i++){
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
 
         cv::Mat img_i_sensor_detph = img_i->sensor_depth_;
         cv::imshow("sensor depth in frame for image "+std::to_string(i), img_i_sensor_detph);
@@ -270,9 +270,9 @@ void OpenCVVisualizer::publishSemanticSegmentation(const CameraFrame &camera_fra
 
 
 
-void OpenCVVisualizer::publishTrackingInTime(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publishTrackingInTime(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame.image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->color_data_.clone();
 
 
@@ -295,7 +295,7 @@ void OpenCVVisualizer::publishTrackingInTime(const CameraFrame &camera_frame){
 
 
 
-void OpenCVVisualizer::publish(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
     this->camera_frame_deque_.push_back(camera_frame);

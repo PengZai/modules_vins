@@ -42,7 +42,7 @@ void ROS1Visualizer::setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh){
     this->nh_ = nh;
 }
 
-void ROS1Visualizer::publish(const CameraFrame &camera_frame, const State &state){
+void ROS1Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const State &state){
     
 
 
@@ -62,12 +62,12 @@ void ROS1Visualizer::publish(const CameraFrame &camera_frame, const State &state
 
 }
 
-void ROS1Visualizer::publishImages(const CameraFrame &camera_frame){
+void ROS1Visualizer::publishImages(const std::shared_ptr<CameraFrame> &camera_frame){
 
     std_msgs::Header header;
 
     for(int i=0; i < this->sys_config_->params_->max_cameras_; i++){
-        const std::shared_ptr<Image> &img = camera_frame.image_vector_.at(i);
+        const std::shared_ptr<Image> &img = camera_frame->image_vector_.at(i);
         header.stamp = ros::Time::now();
         header.frame_id = "cam" + img->sensor_id_;
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(header, "bgr8", img->color_data_).toImageMsg();

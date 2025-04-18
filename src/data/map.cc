@@ -33,13 +33,13 @@ void Map::insertMapPoint(const std::shared_ptr<MapPoint> &mappoint){
 
 
 
-void Map::update(const CameraFrame &camera_frame){
+void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame.status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::NORMAL){
         return;
     }
 
-    if(camera_frame.image_vector_.size()==0){
+    if(camera_frame->image_vector_.size()==0){
 
         VLOG(VERBOSE) << RED << "size of image vector equal to 0" << RESET;
         std::exit(EXIT_FAILURE);
@@ -47,9 +47,9 @@ void Map::update(const CameraFrame &camera_frame){
 
     int count_new_mappoint = 0;
 
-    for(int i=0; i<(int)camera_frame.map_point_vector_.size();i++){
+    for(int i=0; i<(int)camera_frame->map_point_vector_.size();i++){
         
-            const std::shared_ptr<MapPoint> &mp = camera_frame.map_point_vector_.at(i);
+            const std::shared_ptr<MapPoint> &mp = camera_frame->map_point_vector_.at(i);
             
             if(!this->isExistedMapPoint(mp)){
                 this->insertMapPoint(mp);

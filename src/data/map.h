@@ -22,7 +22,7 @@ class Map{
 
     void insertMapPoint(const std::shared_ptr<MapPoint> &mappoint);
     bool isExistedMapPoint(const std::shared_ptr<MapPoint> &mappoint);
-    void update(const CameraFrame &camera_frame);
+    void update(const std::shared_ptr<CameraFrame> &camera_frame);
     const std::map<unsigned int, std::shared_ptr<MapPoint>>& getMapPoints() const;
     void maintainSize();
 

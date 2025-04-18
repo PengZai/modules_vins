@@ -29,7 +29,7 @@ class Reconstructor{
     public:
 
     Reconstructor(const std::shared_ptr<SystemConfig> &sys_config);
-    void pipeline(CameraFrame &camera_frame);
+    void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
 
 
 
