@@ -16,9 +16,9 @@ id_(++MapPoint::id_counter_), timestamp_(-1)
 };
 
 MapPoint::MapPoint(const Eigen::Vector3d &pt3d):
-id_(++MapPoint::id_counter_), timestamp_(-1), pt3d_(pt3d)
+MapPoint()
 {
-
+    this->pt3d_ = pt3d;
 };
 
 void MapPoint::setPosition(const Eigen::Vector3d &pt3d){
@@ -64,19 +64,11 @@ right_keypoint_in_frame_(nullptr)
 }
 
 KeyPoint::KeyPoint(const cv::KeyPoint kp):
-id_(++KeyPoint::id_counter_), 
-timestamp_(-1),
-pt2i_(kp.pt), 
-cv_keypoint_(kp), 
-map_point_ptr_(nullptr), 
-next_keypoint_in_time_(nullptr), 
-prev_keypoint_in_time_(nullptr),
-left_keypoint_in_frame_(nullptr),
-right_keypoint_in_frame_(nullptr)
+KeyPoint()
 {
-    this->match_in_time_.trainIdx = -1;
-    this->match_in_time_.queryIdx = id_;
-    id_counter_++;
+
+    this->pt2i_ = kp.pt; 
+    this->cv_keypoint_ = kp; 
 
 }
 

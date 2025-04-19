@@ -3,8 +3,8 @@
 
 #include<memory>
 
-#include "../../data/camera.h"
-#include "../../system/system_config.h"
+#include "../data/camera.h"
+#include "../system/system_config.h"
 #include "tracking_descriptor.h"
 #include "../reconstruct/two_view_depths/two_view_reconstruction.h"
 

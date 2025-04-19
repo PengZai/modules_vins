@@ -109,13 +109,13 @@ class CameraFrame {
     int id_;
     std::vector<std::shared_ptr<MapPoint>> map_point_vector_;
 
-    enum CameraFrameStatus{
+    enum Status{
         NOT_INITIALIZED=-1,
         NORMAL=0,
         FAIL
     };
 
-    CameraFrameStatus status_;
+    Status status_;
 
     protected:
     std::shared_ptr<Map> map_;

@@ -2,8 +2,8 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d.hpp>
-#include "../../../data/camera.h"
-#include "../../../system/system_config.h"
+#include "../../data/camera.h"
+#include "../../system/system_config.h"
 
 
 namespace modules_vins{

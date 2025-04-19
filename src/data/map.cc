@@ -35,7 +35,7 @@ void Map::insertMapPoint(const std::shared_ptr<MapPoint> &mappoint){
 
 void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 

@@ -70,13 +70,13 @@ class System {
         State state_;
 
 
-        enum SystemStatus{
+        enum Status{
             NOT_INITIALIZED=-1,
             NORMAL=0,
             LOST,
         };
     
-        SystemStatus status_;
+        Status status_;
 
 
 

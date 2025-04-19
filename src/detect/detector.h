@@ -8,8 +8,8 @@
 #include "semantic_segmentations/yolo_segmentor.h"
 #endif
 
-#include "../../data/camera.h"
-#include "../../system/system_config.h"
+#include "../data/camera.h"
+#include "../system/system_config.h"
 #include "features/feature_points.h"
 
 

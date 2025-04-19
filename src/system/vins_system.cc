@@ -5,7 +5,7 @@ namespace modules_vins
 {
 
 System::System():
-is_initialized_(false)
+status_(Status::NOT_INITIALIZED)
 {
     
     this->is_thread_running_.store(false, std::memory_order_relaxed);
@@ -114,6 +114,7 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
 
     std::shared_ptr<CameraFrame>camera_frame = std::make_shared<CameraFrame>(image_vector);
     camera_frame->setMap(state.map_);
+    camera_frame->status_ = CameraFrame::Status::NORMAL;
     this->camera_frame_deque_.push_back(camera_frame);
 
 
@@ -123,7 +124,7 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
 
 void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 
@@ -189,35 +190,37 @@ void System::callbackVisualNavigation(){
 
         std::shared_ptr<CameraFrame> &camera_frame = this->camera_frame_deque_.back();
         
-        if(this->status_== SystemStatus::NOT_INITIALIZED){
+        if(this->status_== Status::NOT_INITIALIZED){
 
-            this->visual_frontend_->pipeline(camera_frame);
-            if(this->visual_frontend_->status_ == VisualFrontend::VisualFrontendStatus::NORMAL){
-                this->status_ = SystemStatus::NORMAL;
-            }
-            this->state_.map_->update(camera_frame);
+            this->initializer_->pipeline(camera_frame);
 
-        }
-
-
-        if(this->status_== SystemStatus::NORMAL){
-
-            camera_frame->status_ = CameraFrame::NORMAL;
-
-            if(camera_frame->id_ == 0){
-                this->initializer_->initializeGTTcwWithCameraFrame(camera_frame, this->state_);
-            }
-
-            this->visual_frontend_->pipeline(camera_frame);
-
-            this->state_.map_->update(camera_frame);
-
-
-            updateState(camera_frame);
+            Initializer::Status initializer_status = this->initializer_->getStatus();
+           
+            // this->state_.map_->update(camera_frame);
 
         }
 
-        this->visualizer_->publish(camera_frame, this->state_);
+
+        // if(this->status_== SystemStatus::NORMAL){
+
+        //     camera_frame->status_ = CameraFrame::Status::NORMAL;
+
+        //     if(camera_frame->id_ == 0){
+        //         this->initializer_->initializeGTTcwWithCameraFrame(camera_frame, this->state_);
+        //     }
+
+        //     this->visual_frontend_->pipeline(camera_frame);
+
+        //     VisualFrontend::Status visual_frontend_status = this->visual_frontend_->getStatus();
+            
+        //     this->state_.map_->update(camera_frame);
+
+
+        //     updateState(camera_frame);
+
+        // }
+
+        // this->visualizer_->publish(camera_frame, this->state_);
 
 
     }

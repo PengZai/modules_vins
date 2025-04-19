@@ -5,13 +5,13 @@
 #include<Eigen/Dense>
 #include<opencv2/opencv.hpp>
 
-#include "reconstruct/reconstructor.h"
-#include "detect/detector.h"
+#include "../reconstruct/reconstructor.h"
+#include "../detect/detector.h"
+#include "../tracking/tracker.h"
+#include "../pose_estimate/pose_estimator.h"
 #include "../system/system_config.h"
 #include "../data/camera.h"
 #include "../data/map.h"
-#include "tracking/tracker.h"
-#include "pose_estimate/pose_estimator.h"
 #include "../log/logging.h"
 
 
@@ -24,10 +24,21 @@ class VisualFrontend{
 
     public:
 
+    enum Status{
+        NOT_INITIALIZED=-1,
+        NORMAL=0,
+        LOST_TRACKING,
+        FAIL_POSE_ESTIMATION,
+    };
+
+
     VisualFrontend(const std::shared_ptr<SystemConfig> &sys_config);
     void setMap(const std::shared_ptr<Map> &map);
     void updateMap(const CameraFrame &camera_frame);
     void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
+
+    Status getStatus();
+
 
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
@@ -37,17 +48,10 @@ class VisualFrontend{
     std::shared_ptr<Reconstructor> reconstructor_;
     std::shared_ptr<PoseEstimator> pose_estimator_;
     std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
+    std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
     std::shared_ptr<CameraFrame> ref_camera_frame_;
-
-
-    enum VisualFrontendStatus{
-        NOT_INITIALIZED=-1,
-        NORMAL=0,
-        LOST_TRACKING,
-        FAIL_POSE_ESTIMATION,
-    };
-
-    VisualFrontendStatus status_;
+    
+    Status status_;
 
 
 };

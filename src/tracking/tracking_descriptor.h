@@ -2,8 +2,8 @@
 
 #include<opencv2/opencv.hpp>
 #include<memory>
-#include"../../log/logging.h"
-#include"../../data/camera.h"
+#include"../log/logging.h"
+#include"../data/camera.h"
 
 namespace modules_vins{
 

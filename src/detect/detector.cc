@@ -61,7 +61,7 @@ void Detector::computeDescriptor(const std::shared_ptr<Image> &img){
 
 void Detector::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 

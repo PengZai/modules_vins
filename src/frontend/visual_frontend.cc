@@ -15,6 +15,11 @@ sys_config_(sys_config)
 }
 
 
+VisualFrontend::Status VisualFrontend::getStatus(){
+
+    return this->status_;
+}
+
 void VisualFrontend::setMap(const std::shared_ptr<Map> &map){
     this->map_ = map;
 }
@@ -26,7 +31,7 @@ void VisualFrontend::setMap(const std::shared_ptr<Map> &map){
 
 void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 
@@ -48,7 +53,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     this->reconstructor_->pipeline(camera_frame);
 
   
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         if(this->camera_frame_deque_.size()>1){
             this->camera_frame_deque_.pop_back();
         }

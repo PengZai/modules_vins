@@ -7,11 +7,11 @@
 #include <opencv2/opencv.hpp>
 
 
-#include "../../../system/system_config.h"
-#include "../../../data/point.h"
-#include "../../../data/camera.h"
-#include "../../../log/logging.h"
-#include "../../../utils/utils.h"
+#include "../../system/system_config.h"
+#include "../../data/point.h"
+#include "../../data/camera.h"
+#include "../../log/logging.h"
+#include "../../utils/utils.h"
 
 
 namespace modules_vins

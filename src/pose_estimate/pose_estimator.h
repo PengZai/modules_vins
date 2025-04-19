@@ -5,8 +5,8 @@
 #include <Eigen/Core>               
 #include <opencv2/core/eigen.hpp>
 
-#include "../../data/camera.h"
-#include "../../system/system_config.h"
+#include "../data/camera.h"
+#include "../system/system_config.h"
 
 namespace modules_vins
 {

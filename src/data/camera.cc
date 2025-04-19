@@ -127,15 +127,17 @@ int CameraFrame::id_counter_=-1;
 
 
 CameraFrame::CameraFrame():
-id_(++CameraFrame::id_counter_)
+id_(++CameraFrame::id_counter_),
+status_(CameraFrame::Status::NOT_INITIALIZED)
 {
 
 
 }
 
 CameraFrame::CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector):
-image_vector_(image_vector), id_(++CameraFrame::id_counter_)
+CameraFrame()
 {
+    this->image_vector_ = image_vector;
 
 }
 

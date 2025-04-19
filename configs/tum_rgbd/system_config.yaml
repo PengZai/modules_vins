@@ -19,7 +19,7 @@ system:
   min_pose_norm_between_frame_in_slide_window: 0.1
 
   # initialized pose estimation
-  threshold_for_pnp_pose_log_norm: 2.0 # estimated pose can't too large
+  threshold_for_pnp_pose_log_norm: 1.0 # estimated pose can't too large
   min_inliers: 10
   max_num_fail: 5 # when number of fail of pose estimation  reach this, state turn to get lost.
   max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward

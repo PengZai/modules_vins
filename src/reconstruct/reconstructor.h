@@ -12,10 +12,10 @@
 
 
 
-#include "../../data/camera.h"
-#include "../../system/system_config.h"
-#include "../../data/camera.h"
-#include "../../data/map.h"
+#include "../data/camera.h"
+#include "../system/system_config.h"
+#include "../data/camera.h"
+#include "../data/map.h"
 
 
 

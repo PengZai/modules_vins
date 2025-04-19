@@ -84,10 +84,10 @@ void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::share
         tracked_keypoint_from_current_frame->setMatchInTime(match);
         img_from_current_frame->matches_in_time_.push_back(match);
 
-        tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_ref_frame);
-        tracked_keypoint_from_ref_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
+        // tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_ref_frame);
+        // tracked_keypoint_from_ref_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
         
-        tracked_keypoint_from_ref_frame->propagateMapPointPtr();
+        // tracked_keypoint_from_ref_frame->propagateMapPointPtr();
     }   
 
     VLOG(VERBOSE) << GREEN << img_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
@@ -100,7 +100,7 @@ void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::share
     
 void Tracker::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 

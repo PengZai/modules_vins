@@ -92,6 +92,10 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/data/data.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/frontend.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/visualization/visualization.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/utils/utils.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/detect/detect.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/tracking/tracking.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/pose_estimate/pose_estimate.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/reconstruct/reconstruct.cmake)
 
 
 

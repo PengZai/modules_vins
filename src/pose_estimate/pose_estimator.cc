@@ -106,7 +106,7 @@ int PoseEstimator::epipolarGeometryEstimator(
 
 void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::NORMAL){
+    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 
@@ -193,9 +193,9 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std
     // VLOG(VERBOSE) << "translation_vec \n" << translation_vec;
     // VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
-    if(checkEstimatedPose(estimated_T_current_cam_ref_cam, inlier_num) == true){
+    img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
 
-        img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
+    if(checkEstimatedPose(estimated_T_current_cam_ref_cam, inlier_num) == true){
 
         VLOG(VERBOSE) << "translation_vec \n" << translation_vec;
         VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
@@ -205,6 +205,8 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std
         camera_frame->status_ = CameraFrame::FAIL;
         return;
     }
+
+    camera_frame->status_ = CameraFrame::FAIL;
 
 
 
