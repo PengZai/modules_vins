@@ -4,21 +4,19 @@
 #include <memory>
 #include <map>
 
+#include "../system/system_config.h"
 #include "../log/logging.h"
 #include "camera.h"
 #include "point.h"
-#include "../system/system_config.h"
 
 
 namespace modules_vins{
-
-class CameraFrame;
 
 
 class Map{
 
     public:
-    Map(const std::shared_ptr<SystemConfig> &sys_config);
+    Map(const std::shared_ptr<modules_vins::SystemConfig> &sys_config);
 
     void insertMapPoint(const std::shared_ptr<MapPoint> &mappoint);
     bool isExistedMapPoint(const std::shared_ptr<MapPoint> &mappoint);
@@ -28,7 +26,7 @@ class Map{
 
 
     public:
-    std::shared_ptr<SystemConfig> sys_config_;
+    std::shared_ptr<modules_vins::SystemConfig> sys_config_;
 
     protected:
 

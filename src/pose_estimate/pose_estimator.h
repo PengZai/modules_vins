@@ -35,7 +35,7 @@ class PoseEstimator{
     std::shared_ptr<SystemConfig> sys_config_;
 
    
-    void pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame);
+    void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
 
 
 };

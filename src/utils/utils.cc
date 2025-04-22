@@ -51,5 +51,4 @@ cv::Point2d camera2pixel(const cv::Point3d &pt3d, cv::Mat &K)
 
 
 
-
 } //namespace modules_vins

@@ -63,8 +63,6 @@ void Tracker::trackInFrame(std::shared_ptr<CameraFrame> &camera_frame){
 void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::shared_ptr<Image> &img_from_current_frame){
     
 
-   
-
     std::vector<cv::DMatch> matches;
     this->bf_->matching(img_from_current_frame, img_from_ref_frame, matches);
     double min_distance = matches.front().distance;
@@ -79,15 +77,15 @@ void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::share
         match.imgIdx = img_from_ref_frame->sensor_id_; // Store index of the train image
 
         std::shared_ptr<KeyPoint> &tracked_keypoint_from_current_frame = img_from_current_frame->keypoint_vector_[match.queryIdx];
-        std::shared_ptr<KeyPoint> &tracked_keypoint_from_ref_frame = img_from_current_frame->keypoint_vector_[match.trainIdx];
+        std::shared_ptr<KeyPoint> &tracked_keypoint_from_ref_frame = img_from_ref_frame->keypoint_vector_[match.trainIdx];
 
         tracked_keypoint_from_current_frame->setMatchInTime(match);
         img_from_current_frame->matches_in_time_.push_back(match);
 
-        // tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_ref_frame);
-        // tracked_keypoint_from_ref_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
+        tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_ref_frame);
+        tracked_keypoint_from_ref_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
         
-        // tracked_keypoint_from_ref_frame->propagateMapPointPtr();
+        tracked_keypoint_from_ref_frame->propagateMapPointPtr();
     }   
 
     VLOG(VERBOSE) << GREEN << img_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
@@ -98,10 +96,15 @@ void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::share
 }
 
     
-void Tracker::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame){
+void Tracker::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
-        return;
+
+    std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
+
+    if(ref_camera_frame == nullptr){
+
+        VLOG(VERBOSE) << RED << "ref_camera_frame is nullptr" << RESET;
+        return ;
     }
 
     std::shared_ptr<Image> &img0_from_current_frame = camera_frame->image_vector_.at(0);

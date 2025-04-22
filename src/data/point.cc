@@ -186,7 +186,19 @@ void KeyPoint::setMatchInFrame(const cv::DMatch &match_in_frame){
     this->match_in_frame_ = match_in_frame;
 }
 
-    
+
+void KeyPoint::cleanTrackInTimeRelationship(){
+    this->match_in_time_.queryIdx = -1;
+    this->match_in_time_.trainIdx = -1;
+    this->match_in_time_.imgIdx   = -1;
+    this->match_in_time_.distance = std::numeric_limits<float>::max();  // or 0.0f
+
+    next_keypoint_in_time_ = nullptr;
+    prev_keypoint_in_time_ = nullptr;
+
+}
+
+
 } // namespace modules_vins
 
 

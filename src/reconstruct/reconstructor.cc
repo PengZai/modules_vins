@@ -6,6 +6,7 @@ namespace modules_vins{
 Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
 
     this->sys_config_ = sys_config;
+    this->trakcer_ = std::make_shared<Tracker>(sys_config);
     this->two_view_reconstructor_ = std::make_shared<TwoViewReconstructor>(sys_config);
     this->sensor_depth_reconstructor_ = std::make_shared<SensorDepthReconstruction>(sys_config);
 
@@ -41,35 +42,39 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     }
 
     
+    if(camera_frame->image_vector_.size() > 1){
+        this->trakcer_->trackInFrame(camera_frame);
 
-    // two view reconstruction
-    for(int i=1;i<(int)camera_frame->image_vector_.size();i++){
+        // two view reconstruction
+        for(int i=1;i<(int)camera_frame->image_vector_.size();i++){
 
-        std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(1);
-        this->two_view_reconstructor_->reconstruct(img_0, img_i);
+            std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(1);
+            this->two_view_reconstructor_->reconstruct(img_0, img_i);
+        }
     }
+    
 
 
-    // // project 3d point in camera coordinate to map coordinate
-    // for(int i=0; i<(int)img_0->keypoint_vector_.size(); i++){
+    // project 3d point in camera coordinate to map coordinate
+    for(int i=0; i<(int)img_0->keypoint_vector_.size(); i++){
 
-    //     std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
+        std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
 
 
-    //     if(kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
+        if(kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
 
-    //         Eigen::Vector3d map_point = img_0->T_c_w_.inverse() * Eigen::Vector3d(kp->pt3d_.x, kp->pt3d_.y, kp->pt3d_.z);
-    //         std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);
-    //         cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(kp->pt2i_);
-    //         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
+            Eigen::Vector3d map_point = img_0->T_c_w_.inverse() * Eigen::Vector3d(kp->pt3d_.x, kp->pt3d_.y, kp->pt3d_.z);
+            std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);
+            cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(kp->pt2i_);
+            map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
-    //         kp->setMapPointPtr(map_point_ptr);
-    //         camera_frame->map_point_vector_.emplace_back(map_point_ptr);
+            kp->setMapPointPtr(map_point_ptr);
+            camera_frame->map_point_vector_.emplace_back(map_point_ptr);
             
-    //     }
+        }
         
 
-    // }
+    }
 
     // cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
 
@@ -103,8 +108,6 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     //         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
     //         camera_frame->map_point_vector_.emplace_back(map_point_ptr);
 
-            
-            
 
     //     }
     // }

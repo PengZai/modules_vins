@@ -16,6 +16,7 @@
 #include "../system/system_config.h"
 #include "../data/camera.h"
 #include "../data/map.h"
+#include "../tracking/tracker.h"
 
 
 
@@ -37,7 +38,7 @@ class Reconstructor{
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
 
-
+    std::shared_ptr<Tracker> trakcer_;
     std::shared_ptr<TwoViewReconstructor> two_view_reconstructor_;
     std::shared_ptr<SensorDepthReconstruction> sensor_depth_reconstructor_;
 

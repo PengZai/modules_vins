@@ -20,7 +20,7 @@ bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation
 
     VLOG(VERBOSE) << "number of inliers: " << num_inliers;
     VLOG(VERBOSE) << "estimated_Transformation: \n" << Transformation.matrix();
-    VLOG(VERBOSE) << "the norm of estimated_Transformation.log(): " << d_norm;
+    VLOG(VERBOSE) << "the norm of estimated_Transformation norm: " << d_norm;
     
     
 
@@ -104,10 +104,13 @@ int PoseEstimator::epipolarGeometryEstimator(
 
 
 
-void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std::shared_ptr<CameraFrame> &camera_frame){
+void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
-    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
-        return;
+    std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
+    if(ref_camera_frame == nullptr){
+
+        VLOG(VERBOSE) << RED << "ref_camera_frame is nullptr" << RESET;
+        return ;
     }
 
 
@@ -177,13 +180,13 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std
 
     
     Eigen::Matrix<double, 3, 3> estimated_rotation;
-    Eigen::Vector3d estimated_position;
+    Eigen::Vector3d estimated_translation;
 
     cv::cv2eigen(cv_R, estimated_rotation);
-    cv::cv2eigen(translation_vec, estimated_position);
+    cv::cv2eigen(translation_vec, estimated_translation);
 
     Sophus::SE3<double> estimated_T_current_cam_ref_cam = Sophus::SE3<double>(
-        Sophus::SO3<double>(estimated_rotation), estimated_position
+        Sophus::SO3<double>(estimated_rotation), estimated_translation
     );
 
     // VLOG(VERBOSE) << "number of pair points: " << pt2ds.size();
@@ -196,8 +199,9 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std
     img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
 
     if(checkEstimatedPose(estimated_T_current_cam_ref_cam, inlier_num) == true){
-
-        VLOG(VERBOSE) << "translation_vec \n" << translation_vec;
+        camera_frame->status_ = CameraFrame::NORMAL;
+        VLOG(VERBOSE) << "estimated_translation_vec \n" << translation_vec;
+        VLOG(VERBOSE) << "estimated_translation_norm : " << estimated_translation.norm();
         VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
     }
@@ -206,8 +210,7 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &ref_camera_frame, std
         return;
     }
 
-    camera_frame->status_ = CameraFrame::FAIL;
-
+    // camera_frame->status_ = CameraFrame::FAIL;
 
 
 

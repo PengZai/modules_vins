@@ -9,9 +9,10 @@
 
 #include "../../system/system_config.h"
 #include "../../data/point.h"
+#include "../../utils/utils.h"
 #include "../../data/camera.h"
 #include "../../log/logging.h"
-#include "../../utils/utils.h"
+
 
 
 namespace modules_vins

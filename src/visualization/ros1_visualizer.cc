@@ -142,28 +142,30 @@ void ROS1Visualizer::constructPoseMsg(const Sophus::SE3<double> &pose, geometry_
 void ROS1Visualizer::publishPoses(const State &state){
 
     // const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back().inverse(); // the vector of pose of robot in world coordinate
+    if(!state.timestamp_T_c_w_map_.empty()){
+        auto it = state.timestamp_T_c_w_map_.rbegin();
+        const double newest_timestamp = it->first;
+        const Sophus::SE3<double> &newest_T_c_w = it->second;
 
-    auto it = state.timestamp_T_c_w_map_.rbegin();
-    const double newest_timestamp = it->first;
-    const Sophus::SE3<double> &newest_T_c_w = it->second;
-
-    geometry_msgs::PoseStamped pose_msg;
-    constructPoseMsg(newest_T_c_w.inverse(), pose_msg);
-    this->output_pose_pub_.publish(pose_msg);
+        geometry_msgs::PoseStamped pose_msg;
+        constructPoseMsg(newest_T_c_w.inverse(), pose_msg);
+        this->output_pose_pub_.publish(pose_msg);
 
 
-    if(this->sys_config_->visualizer_config_->rviz_params_->show_groundtruth_pose_){
+        if(this->sys_config_->visualizer_config_->rviz_params_->show_groundtruth_pose_){
 
-        double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
-        if(synchronized_gt_timestamp == -1){
-            return;
+            double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
+            if(synchronized_gt_timestamp == -1){
+                return;
+            }
+            const Sophus::SE3<double> &synchronized_GT_T_c_w = state.timestamp_GT_T_c_w_map_.at(synchronized_gt_timestamp);
+
+            constructPoseMsg(synchronized_GT_T_c_w, pose_msg);
+            this->output_GT_pose_pub_.publish(pose_msg);
+
         }
-        const Sophus::SE3<double> &synchronized_GT_T_c_w = state.timestamp_GT_T_c_w_map_.at(synchronized_gt_timestamp);
-
-        constructPoseMsg(synchronized_GT_T_c_w, pose_msg);
-        this->output_GT_pose_pub_.publish(pose_msg);
-
     }
+    
     
 
 }
@@ -172,22 +174,25 @@ void ROS1Visualizer::publishPoses(const State &state){
 void ROS1Visualizer::publishTrajectories(const State &state){
 
     nav_msgs::Path path_msgs;
-    publishTrajectory(state.timestamp_T_c_w_map_, path_msgs, this->output_trajectory_pub_);
-    if(this->sys_config_->visualizer_config_->rviz_params_->show_groundtruth_trajectory_){
+    if(!state.timestamp_T_c_w_map_.empty()){
+        publishTrajectory(state.timestamp_T_c_w_map_, path_msgs, this->output_trajectory_pub_);
+        if(this->sys_config_->visualizer_config_->rviz_params_->show_groundtruth_trajectory_){
 
-        auto it = state.timestamp_T_c_w_map_.rbegin();
-        const double newest_timestamp = it->first;
-        double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
-        if(synchronized_gt_timestamp == -1){
-            return;
+            auto it = state.timestamp_T_c_w_map_.rbegin();
+            const double newest_timestamp = it->first;
+            double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
+            if(synchronized_gt_timestamp == -1){
+                return;
+            }
+
+            auto it_end = state.timestamp_GT_T_c_w_map_.find(synchronized_gt_timestamp);
+
+            std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_sub_map(state.timestamp_GT_T_c_w_map_.begin(), it_end);
+
+            publishGTTrajectory(timestamp_GT_T_c_w_sub_map, path_msgs, this->output_GT_trajectory_pub_);
         }
-
-        auto it_end = state.timestamp_GT_T_c_w_map_.find(synchronized_gt_timestamp);
-
-        std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_sub_map(state.timestamp_GT_T_c_w_map_.begin(), it_end);
-
-        publishGTTrajectory(timestamp_GT_T_c_w_sub_map, path_msgs, this->output_GT_trajectory_pub_);
     }
+    
 
 }
 

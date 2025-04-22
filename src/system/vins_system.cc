@@ -195,32 +195,45 @@ void System::callbackVisualNavigation(){
             this->initializer_->pipeline(camera_frame);
 
             Initializer::Status initializer_status = this->initializer_->getStatus();
-           
-            // this->state_.map_->update(camera_frame);
+            if(initializer_status == Initializer::Status::SUCCESS){
+                this->status_ = Status::NORMAL;
+
+                // update map point in reference frame to map
+                const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque_ = this->initializer_->getInitializedReferenceCameraFrameDeque();
+                visual_frontend_->setRefCameraFrameDeque(ref_camera_frame_deque_);
+                this->initializer_->initializeGTTcwWithCameraFrame(ref_camera_frame_deque_.back(), this->state_);
+                for(const std::shared_ptr<CameraFrame> &ref_camera_frame : ref_camera_frame_deque_){
+                    this->state_.map_->update(ref_camera_frame);
+                    updateState(ref_camera_frame);
+                }
+
+                return;
+            }
 
         }
 
 
-        // if(this->status_== SystemStatus::NORMAL){
+        if(this->status_== Status::NORMAL){
 
-        //     camera_frame->status_ = CameraFrame::Status::NORMAL;
+            camera_frame->status_ = CameraFrame::Status::NORMAL;
 
-        //     if(camera_frame->id_ == 0){
-        //         this->initializer_->initializeGTTcwWithCameraFrame(camera_frame, this->state_);
-        //     }
+            this->visual_frontend_->pipeline(camera_frame);
 
-        //     this->visual_frontend_->pipeline(camera_frame);
-
-        //     VisualFrontend::Status visual_frontend_status = this->visual_frontend_->getStatus();
             
-        //     this->state_.map_->update(camera_frame);
+            if(camera_frame->status_ == CameraFrame::Status::NORMAL){
+                this->state_.map_->update(camera_frame);
+                updateState(camera_frame);
+            }
+
+            VisualFrontend::Status visual_frontend_status = this->visual_frontend_->getStatus();
+            if(visual_frontend_status == VisualFrontend::Status::GET_LOST){
+                this->status_= Status::NOT_INITIALIZED;
+            }
 
 
-        //     updateState(camera_frame);
+        }
 
-        // }
-
-        // this->visualizer_->publish(camera_frame, this->state_);
+        this->visualizer_->publish(camera_frame, this->state_);
 
 
     }

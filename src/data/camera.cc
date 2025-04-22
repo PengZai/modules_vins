@@ -105,6 +105,17 @@ void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
     this->T_c_w_ = Sophus::SE3<double>(Sophus::SO3<double>(rotation), position);
 }
 
+
+void Image::cleanTrackInTimeAndMappointRelationship(){
+    matches_in_time_.clear();
+    for(std::shared_ptr<KeyPoint> &keypoint : keypoint_vector_){
+        
+        keypoint->cleanTrackInTimeRelationship();
+        keypoint->setMapPointPtr(nullptr);
+    }
+
+}
+
 Eigen::Matrix3d Image::getRotation(){
 
     return T_c_w_.rotationMatrix();
@@ -128,6 +139,7 @@ int CameraFrame::id_counter_=-1;
 
 CameraFrame::CameraFrame():
 id_(++CameraFrame::id_counter_),
+ref_camera_frame_(nullptr),
 status_(CameraFrame::Status::NOT_INITIALIZED)
 {
 
@@ -149,6 +161,18 @@ void CameraFrame::setMap(const std::shared_ptr<Map> &map){
 
 const std::shared_ptr<Map> &CameraFrame::getMap() const{
     return this->map_;
+}
+
+
+void CameraFrame::cleanTrackInTimeAndMappointRelationship(){
+
+    for( std::shared_ptr<Image> image : this->image_vector_){
+        image->cleanTrackInTimeAndMappointRelationship();
+    }
+
+    for( std::shared_ptr<MapPoint> map_point : this->map_point_vector_ ){
+        map_point = nullptr;
+    }
 }
 
 

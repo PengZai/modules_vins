@@ -103,22 +103,24 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
     }
 
 
-    if(camera_frame_deque_.size()>1){
 
-        const std::shared_ptr<CameraFrame> &previous_camera_frame = this->camera_frame_deque_.front();
+    const std::shared_ptr<CameraFrame> &previous_camera_frame = camera_frame->ref_camera_frame_;
+    if(previous_camera_frame){
 
         const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame->image_vector_.at(0);
         cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->color_data_.clone();
-
+    
         cv::Mat img_0_matches_in_time;
         cv::drawMatches(img_0_color_data, img_0->cv_keypoint_vector_, img_0_color_data_from_previous_camera_frame, img_0_from_previous_camera_frame->cv_keypoint_vector_, img_0->matches_in_time_, img_0_matches_in_time,
             cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
         );
-
-
+    
+    
         cv::imshow("img 0 matches in time", img_0_matches_in_time);
 
     }
+
+  
 
 }   
 
@@ -298,7 +300,6 @@ void OpenCVVisualizer::publishTrackingInTime(const std::shared_ptr<CameraFrame> 
 void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    this->camera_frame_deque_.push_back(camera_frame);
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_matching_in_frame_){
         publishMatchingInFrame(camera_frame);
@@ -346,11 +347,6 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
     }
     #endif
 
-    if(this->camera_frame_deque_.size()>1){
-
-        this->camera_frame_deque_.pop_front();
-
-    }
 
     cv::waitKey(1);
 

@@ -6,8 +6,10 @@
 
 
 
+
 namespace modules_vins{
 
+class CameraFrame;
 
 cv::Point2d pixel2norm(const cv::Point2d &pt, const cv::Mat &K );
 cv::Point3d pixel2camera(const cv::Point2d &pt, double depth, cv::Mat &K);

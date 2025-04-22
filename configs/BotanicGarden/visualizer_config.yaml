@@ -9,7 +9,7 @@ visualizer:
 opencv_visualizer:
   show_projected_mappoint: 0
   show_matching_in_frame: 0
-  show_matching_in_time: 0
+  show_matching_in_time: 1
   show_tracking_in_time: 1
   show_sensor_depth: 0
   show_learned_depth: 1

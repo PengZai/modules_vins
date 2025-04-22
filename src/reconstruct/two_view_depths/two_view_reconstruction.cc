@@ -108,7 +108,7 @@ void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, cons
 
         col /= col.at<double>(3, 0);  // Normalize by last coordinate
         if(col.at<double>(2, 0) <= 0){
-            VLOG(VERBOSE) << "keypoint " << match.queryIdx << " has negative z" << col;
+            // VLOG(VERBOSE) << "keypoint " << match.queryIdx << " has negative z" << col;
             continue;
 
         }

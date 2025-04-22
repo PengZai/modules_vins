@@ -16,7 +16,6 @@ namespace modules_vins {
 
 class Map;
 
-
 struct SegmentOutput {
     int class_id_; // class id
     float confidence_; // confidence score
@@ -42,6 +41,8 @@ class Image{
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
 
         double getPointDepthFromSensor(const cv::Point2d &pt);
+        void cleanTrackInTimeAndMappointRelationship();
+
 
         Eigen::Matrix3d getRotation();
         Eigen::Vector3d getPosition();
@@ -100,7 +101,7 @@ class CameraFrame {
     
     void setMap(const std::shared_ptr<Map> &map);
     const std::shared_ptr<Map> &getMap() const;
-
+    void cleanTrackInTimeAndMappointRelationship();
 
     // CameraFrame(const CameraFrame &camera_frame);
 
@@ -108,6 +109,8 @@ class CameraFrame {
     static int id_counter_;
     int id_;
     std::vector<std::shared_ptr<MapPoint>> map_point_vector_;
+    std::shared_ptr<CameraFrame> ref_camera_frame_;
+
 
     enum Status{
         NOT_INITIALIZED=-1,
@@ -119,7 +122,6 @@ class CameraFrame {
 
     protected:
     std::shared_ptr<Map> map_;
-
 
 
     // Sophus::SE3<double> Tcw;

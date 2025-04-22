@@ -33,7 +33,6 @@ class OpenCVVisualizer{
     std::shared_ptr<SystemConfig> sys_config_;
     
     protected:
-    std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
 
 
     cv::Scalar GreenColor_; // green

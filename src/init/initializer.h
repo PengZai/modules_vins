@@ -11,6 +11,7 @@
 #include "../system/system_config.h"
 #include "../system/state.h"
 #include "../data/camera.h"
+#include "../utils/utils.h"
 
 namespace modules_vins{
 
@@ -26,14 +27,29 @@ class Initializer{
         SUCCESS, // success for initialization process
     };
 
+    inline const char* StatusToString(Status s) {
+        switch (s) {
+            case Status::NOT_INITIALIZED_YET: return "NOT_INITIALIZED_YET";
+            case Status::WORKING:             return "WORKING";
+            case Status::EXTEND:              return "EXTEND";
+            case Status::FAIL:                return "FAIL";
+            case Status::SUCCESS:             return "SUCCESS";
+            default:                  return "UNKNOWN_STATUS";
+        }
+    }
+
 
     Initializer(const std::shared_ptr<SystemConfig> sys_config);
 
-    bool initializeGTTcwWithCameraFrame(std::shared_ptr<CameraFrame> &camera_frame, State &state);
+    bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame, State &state);
     void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
     Status getStatus();
     void updateStatus(std::shared_ptr<CameraFrame> &camera_frame);
-
+    bool checkSuccess();
+    void printfStatus();
+    const std::deque<std::shared_ptr<CameraFrame>> &getInitializedReferenceCameraFrameDeque() const;
+    double getCumulativeTranslationInCameraFrameDeque(const std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque);
+    
     std::shared_ptr<SystemConfig> sys_config_;
 
     protected:
@@ -43,12 +59,14 @@ class Initializer{
     std::shared_ptr<Reconstructor> reconstructor_;
     std::shared_ptr<PoseEstimator> pose_estimator_;
     std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
-    int origin_index_;
+    int origin_index_in_camera_frame_deque_;
+    int camera_frame_index_;
+    int index_in_camera_frame_deque_for_latest_ref_camera_frame_; // a index in camera frame deque but its value was store in the latest element of ref_camera_frame_deque_
     std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
-    int ref_camera_frame_index_;
     int num_fail_;
-    int max_num_fail_;
-    int max_num_ref_camera_frame_;
+    int maximum_num_fail_;
+    int minimum_num_ref_camera_frame_;
+    double minimum_cumulative_translation_for_initialization_;
 
     Status status_;
 };
