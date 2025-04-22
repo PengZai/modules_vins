@@ -92,12 +92,9 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("max_stereo_time_offset", this->max_stereo_time_offset_);
     parse("max_color_sensor_depth_pair_time_offset", this->max_color_sensor_depth_pair_time_offset_);
 
-
-
-    int num_frame_in_slide_window_;
-    double min_pose_norm_between_frame_in_slide_window_;
-    parse("num_frame_in_slide_window", this->num_frame_in_slide_window_);
-    parse("min_pose_norm_between_frame_in_slide_window", this->min_pose_norm_between_frame_in_slide_window_);
+    parse("maximum_num_fail", this->maximum_num_fail_);
+    parse("minimum_num_in_ref_camera_frame", this->minimum_num_in_ref_camera_frame_);
+    parse("minimum_cumulative_translation", this->minimum_cumulative_translation_);
 
 
     parse("num_feature_points", this->num_feature_points_);
@@ -111,7 +108,7 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
 
     parse("threshold_for_pnp_pose_log_norm", this->threshold_for_pnp_pose_log_norm_);
     parse("min_inliers", this->min_inliers_);
-    parse("max_num_fail", this->max_num_fail_);
+    parse("max_fail_num", this->max_fail_num_);
     parse("max_num_backward_reference", this->max_num_backward_reference_);
 
     

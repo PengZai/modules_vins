@@ -7,9 +7,6 @@ Initializer::Initializer(const std::shared_ptr<SystemConfig> sys_config):
 sys_config_(sys_config),
 origin_index_in_camera_frame_deque_(0),
 num_fail_(0),
-maximum_num_fail_(3),
-minimum_num_ref_camera_frame_(3),
-minimum_cumulative_translation_for_initialization_(0.2),
 status_(Initializer::Status::NOT_INITIALIZED_YET)
 {
 
@@ -70,9 +67,9 @@ bool Initializer::checkSuccess(){
 
     VLOG(VERBOSE) << " cumulative value of translation in reference camera frame deque is : " << culmulative_trans;
 
-    if(culmulative_trans>=minimum_cumulative_translation_for_initialization_ &&
-         this->ref_camera_frame_deque_.size() >= this->minimum_num_ref_camera_frame_ &&
-          this->camera_frame_deque_.size() - (index_in_camera_frame_deque_for_latest_ref_camera_frame_ + 1) <= this->maximum_num_fail_ ){
+    if(culmulative_trans>=this->sys_config_->params_->minimum_cumulative_translation_ &&
+         this->ref_camera_frame_deque_.size() >= this->sys_config_->params_->minimum_num_in_ref_camera_frame_ &&
+          this->camera_frame_deque_.size() - (index_in_camera_frame_deque_for_latest_ref_camera_frame_ + 1) <= this->sys_config_->params_->maximum_num_fail_ ){
         return true;
     }
 
@@ -164,7 +161,7 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
  
         }
         else{
-            if( camera_frame_index_ - index_in_camera_frame_deque_for_latest_ref_camera_frame_ > this->maximum_num_fail_){
+            if( camera_frame_index_ - index_in_camera_frame_deque_for_latest_ref_camera_frame_ > this->sys_config_->params_->maximum_num_fail_){
                 VLOG(VERBOSE) << RED <<"fail to initialize system with camera frame id: " << this->camera_frame_deque_.at(this->origin_index_in_camera_frame_deque_)->id_  << RESET;
                 VLOG(VERBOSE) << GREEN << "reset nitializer::Status from WORKING to FAIL"  << RESET;
                 this->status_ = Initializer::Status::FAIL; 

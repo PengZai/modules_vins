@@ -14,14 +14,15 @@ system:
   threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
   matching_ratio: 2.0 # distance of matching point < min_distance * matching_ratio
 
-  #initialization
-  num_frame_in_slide_window: 2
-  min_pose_norm_between_frame_in_slide_window: 0.1
+  #initialization and visual frontend
+  maximum_num_fail: 2
+  minimum_camera_frame_num_in_ref_camera_frame: 2
+  minimum_cumulative_translation: 0.1
+
 
   # initialized pose estimation
   threshold_for_pnp_pose_log_norm: 1.0 # estimated pose can't too large
   min_inliers: 10
-  max_num_fail: 5 # when number of fail of pose estimation  reach this, state turn to get lost.
   max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward
 
 

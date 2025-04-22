@@ -5,9 +5,7 @@ namespace modules_vins{
 
 VisualFrontend::VisualFrontend(const std::shared_ptr<SystemConfig> &sys_config):
 sys_config_(sys_config),
-index_in_camera_frame_deque_for_latest_ref_camera_frame_(0),
-maximum_num_fail_(3),
-minimum_cumulative_translation_for_visual_frontend_(0.2)
+index_in_camera_frame_deque_for_latest_ref_camera_frame_(0)
 {
     
     this->detector_ = std::make_shared<Detector>(sys_config);
@@ -52,7 +50,7 @@ void VisualFrontend::maintainRefCameraFrameDeque(){
             culmulative_trans  += Tcw_translation_norm - prev_Tcw_translation_norm;
             Tcw_translation_norm = prev_Tcw_translation_norm;
 
-            if(culmulative_trans > this->minimum_cumulative_translation_for_visual_frontend_){
+            if(culmulative_trans > this->sys_config_->params_->minimum_cumulative_translation_){
                 start_erase_index = i;
                 break;
             }
@@ -113,7 +111,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     }
     else{
         VLOG(VERBOSE) << YELLOW << " Fail pose estimation for camera frame id : " << camera_frame->id_ << RESET;
-        if(camera_frame_deque_.size() - (index_in_camera_frame_deque_for_latest_ref_camera_frame_+1) > maximum_num_fail_){
+        if(camera_frame_deque_.size() - (index_in_camera_frame_deque_for_latest_ref_camera_frame_+1) > this->sys_config_->params_->maximum_num_fail_){
 
             this->status_ = Status::GET_LOST;
         }

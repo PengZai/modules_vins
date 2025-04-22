@@ -27,9 +27,9 @@ class SystemParameters: public Parameters{
         double scale_factor_;
         int level_pyramid_;
 
-        int num_frame_in_slide_window_;
-        double min_pose_norm_between_frame_in_slide_window_;
-
+        int maximum_num_fail_;
+        int minimum_num_in_ref_camera_frame_;
+        double minimum_cumulative_translation_;
 
         double threshold_for_tracking_descriptor_in_time_;
         double threshold_for_tracking_descriptor_in_frame_;
@@ -39,9 +39,8 @@ class SystemParameters: public Parameters{
 
         double threshold_for_pnp_pose_log_norm_;
         int min_inliers_;
-        int max_num_fail_;
         int max_num_backward_reference_;
-
+        int max_fail_num_;
         int max_num_local_map_size_;
 
         std::string imu_config_name_;
@@ -54,8 +53,6 @@ class SystemParameters: public Parameters{
         double max_tolerant_gt_time_offset_;
         std::string groundtruth_path_;
         Eigen::Matrix4d T_cam_GT_;
-
-
 
 
         bool check_triangulation_;

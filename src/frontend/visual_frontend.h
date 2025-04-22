@@ -53,8 +53,6 @@ class VisualFrontend{
     std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
     std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
     int index_in_camera_frame_deque_for_latest_ref_camera_frame_;  
-    int maximum_num_fail_;
-    double minimum_cumulative_translation_for_visual_frontend_;
     Status status_;
 
 

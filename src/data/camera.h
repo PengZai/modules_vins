@@ -6,9 +6,7 @@
 #include <sophus/se3.hpp>
 #include <sophus/so3.hpp>
 
-
 #include "point.h"
-#include "map.h"
 
 
 

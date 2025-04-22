@@ -1,5 +1,7 @@
 #include "camera.h"
 
+#include "map.h"
+
 
 namespace modules_vins{
 
