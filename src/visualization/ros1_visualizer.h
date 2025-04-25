@@ -33,6 +33,7 @@ class ROS1Visualizer{
     ROS1Visualizer(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh);
 
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
+    void setMap(const std::shared_ptr<Map> &map);
     void publish(const std::shared_ptr<CameraFrame> &camera_frame, const State &state);
     void publishTF();
     void publishImages(const std::shared_ptr<CameraFrame> &camera_frame);
@@ -48,6 +49,7 @@ class ROS1Visualizer{
     std::shared_ptr<SystemConfig> sys_config_;
     std::shared_ptr<ros::NodeHandle> nh_;
     image_transport::ImageTransport it_;
+    std::shared_ptr<Map> map_;
     std::shared_ptr<tf::TransformBroadcaster> tf_broadcaster_;
     std::vector<image_transport::Publisher> output_image_pub_vector_;
     ros::Publisher output_pose_pub_;
@@ -65,6 +67,8 @@ class ROS1Visualizer{
     // just for test
     Eigen::Matrix3d R_;  // Rotation matrix
     Eigen::Vector3d t_;  // Translation vector
+
+
 
 };
 

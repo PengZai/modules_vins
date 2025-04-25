@@ -113,7 +113,6 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
     const State &state = getState();
 
     std::shared_ptr<CameraFrame>camera_frame = std::make_shared<CameraFrame>(image_vector);
-    camera_frame->setMap(state.map_);
     camera_frame->status_ = CameraFrame::Status::NORMAL;
     this->camera_frame_deque_.push_back(camera_frame);
 

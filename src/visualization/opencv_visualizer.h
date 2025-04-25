@@ -6,6 +6,7 @@
 
 #include "../log/logging.h"
 #include "../system/system_config.h"
+#include "../data/map.h"
 #include "../data/camera.h"
 
 namespace modules_vins
@@ -18,6 +19,7 @@ class OpenCVVisualizer{
 
     OpenCVVisualizer(const std::shared_ptr<SystemConfig> &config);
     void publish(const std::shared_ptr<CameraFrame> &camera_frame);
+    void setMap(const std::shared_ptr<Map> &map);
     void drawTrackingPointPattern(cv::Mat &img, const std::shared_ptr<KeyPoint> &keypoint, const cv::Scalar &color);
     void publishMatchingInFrame(const std::shared_ptr<CameraFrame> &camera_frame);
     void publishMatchingInTime(const std::shared_ptr<CameraFrame> &camera_frame);
@@ -38,7 +40,8 @@ class OpenCVVisualizer{
     cv::Scalar GreenColor_; // green
     cv::Scalar RedColor_; // red
     cv::Scalar BlueColor_; // blue
- 
+    std::shared_ptr<Map> map_;
+
     std::vector<std::string> classes_;
 
 };

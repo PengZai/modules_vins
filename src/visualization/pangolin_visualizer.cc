@@ -24,24 +24,11 @@ sys_config_(sys_config)
     const double window_height = 720.0;
 
 
-    // // visualization
-    // vis = new cv::viz::Viz3d("Visual Odometry");
-    // cv::viz::WCoordinateSystem world_coor(1.0), camera_coor(0.5);
-    // cv::Point3d cam_pos( 0, -1.0, -1.0 ), cam_focal_point(0,0,0), cam_y_dir(0,1,0);
-    // cv::Affine3d cam_pose = cv::viz::makeCameraPose( cam_pos, cam_focal_point, cam_y_dir );
-    // vis->setViewerPose( cam_pose );
-    
-    // world_coor.setRenderingProperty(cv::viz::LINE_WIDTH, 2.0);
-    // camera_coor.setRenderingProperty(cv::viz::LINE_WIDTH, 1.0);
-    // vis->showWidget( "World", world_coor );
-    // vis->showWidget( "Camera", camera_coor );
-
-
-
     pangolin::CreateWindowAndBind("Pangolin Viewer", window_width, window_height);
 
     glEnable(GL_DEPTH_TEST);
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
     // Define projection and initial model view matrix
@@ -70,55 +57,160 @@ sys_config_(sys_config)
 }
 
 
+void PangolinVisualizer::setMap(const std::shared_ptr<Map> &map){
+    this->map_ = map;
+}
+
+
 void PangolinVisualizer::publish(const State &state){
 
 
     if(!pangolin::ShouldQuit()){
-    
-        auto it = state.timestamp_T_c_w_map_.rbegin();
-        const double newest_timestamp = it->first;
-        const Sophus::SE3<double> &newest_T_c_w = it->second;
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        this->d_cam_.Activate(this->s_cam_);
-        glClearColor(1.0f,1.0f,1.0f,1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            this->d_cam_.Activate(this->s_cam_);
 
-        // Draw something
-        pangolin::glDrawAxis(2.0);
+            glClearColor(1.0f,1.0f,1.0f,1.0f);
 
-        drawFrame(newest_T_c_w.inverse().matrix());
+            // Draw axis, red - x green - y blue -z
+            pangolin::glDrawAxis(0.5);
 
-        if(*is_follow_camera_){
-            s_cam_.Follow(newest_T_c_w.matrix());
-        }
+            publishPoses(state);
 
-        drawMapPoints(state);
-        drawTrajectory(state);
+            publishMapPoints(state);
+            publishTrajectories(state);
+        
 
         pangolin::FinishFrame();
     }
 }
 
-void PangolinVisualizer::drawTrajectory(const State &state){
 
-    // ref_translation_ = state.T_c_w_vector_.at(0).translation();
-    // for(int i=1; i < (int)state.T_c_w_vector_.size();i++){
 
-    //     const Sophus::SE3<double> &T_c_W = state.T_c_w_vector_.at(i).inverse();
+void PangolinVisualizer::publishPoses(const State &state){
 
-    //     glLineWidth(this->trajectory_line_size_);
-    //     glColor4f(0.0f,1.0f,0.0f,0.6f);
-    //     glBegin(GL_LINES);
-    //     Eigen::Vector3d translation = T_c_W.translation();
-    //     glVertex3d(ref_translation_.x(),ref_translation_.y(),ref_translation_.z());
-    //     glVertex3d(translation.x(),translation.y(),translation.z());
-    //     glEnd();
-    //     ref_translation_ = translation;        
-    // } 
+
+    if(!state.timestamp_T_c_w_map_.empty()){
+
+        auto it = state.timestamp_T_c_w_map_.rbegin();
+        const double newest_timestamp = it->first;
+        const Sophus::SE3<double> &newest_T_c_w = it->second;
+
+        drawFrame(newest_T_c_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
+
+        if(*is_follow_camera_){
+            s_cam_.Follow(newest_T_c_w.inverse().matrix());
+        }
+
+
+        if(this->sys_config_->visualizer_config_->pangolin_params_->show_groundtruth_trajectory_){
+            
+            double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
+            if(synchronized_gt_timestamp == -1){
+                return;
+            }
+
+            const Sophus::SE3<double> &synchronized_GT_T_c_w = state.timestamp_GT_T_c_w_map_.at(synchronized_gt_timestamp);
+            drawFrame(synchronized_GT_T_c_w.matrix(), Eigen::Vector3i(0,0,255));
+
+        }
+    }
+}
+
+void PangolinVisualizer::publishTrajectories(const State &state){
+
+    if(!state.timestamp_T_c_w_map_.empty()){
+        publishTrajectory(state.timestamp_T_c_w_map_, Eigen::Vector3i(0,255,0));
+        if(this->sys_config_->visualizer_config_->pangolin_params_->show_groundtruth_trajectory_){
+
+            auto it = state.timestamp_T_c_w_map_.rbegin();
+            const double newest_timestamp = it->first;
+            double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
+            if(synchronized_gt_timestamp == -1){
+                return;
+            }
+    
+            auto it_end = state.timestamp_GT_T_c_w_map_.find(synchronized_gt_timestamp);
+    
+            std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_sub_map(state.timestamp_GT_T_c_w_map_.begin(), it_end);
+            
+            publishGTTrajectory(timestamp_GT_T_c_w_sub_map, Eigen::Vector3i(0,0,255));
+        }   
+    }
 
 }
 
-void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c){
+
+
+void PangolinVisualizer::publishTrajectory(std::map<double, Sophus::SE3<double>> timestamp_T_c_w_map, const Eigen::Vector3i &bgr){
+
+    bool is_first = true;
+    Eigen::Vector3d prev_translation; 
+
+    if(!timestamp_T_c_w_map.empty()){
+
+        for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
+            
+            const Eigen::Vector3d &translation = T_c_w.inverse().translation();
+            drawPoint(translation, bgr);
+
+            if(is_first == true){
+                is_first = false;
+                prev_translation = translation;        
+                continue;
+            }
+
+            drawLine(prev_translation, translation, bgr);
+            
+            prev_translation = translation;        
+
+        }
+
+    }
+
+}
+
+
+void PangolinVisualizer::publishGTTrajectory(std::map<double, Sophus::SE3<double>> timestamp_T_c_w_map, const Eigen::Vector3i &bgr){
+
+    bool is_first = true;
+    Eigen::Vector3d prev_translation; 
+
+    if(!timestamp_T_c_w_map.empty()){
+
+        for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
+            
+            const Eigen::Vector3d &translation = T_c_w.translation();
+            drawPoint(translation, bgr);
+
+            if(is_first == true){
+                is_first = false;
+                prev_translation = translation;        
+                continue;
+            }
+
+            drawLine(prev_translation, translation, bgr);
+            
+            prev_translation = translation;        
+
+        }
+
+    }
+
+}
+
+
+void PangolinVisualizer::drawLine(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2, const Eigen::Vector3i &bgr){
+
+    glLineWidth(this->trajectory_line_size_);
+    glColor3d(bgr[2]/255.0f,bgr[1]/255.0f,bgr[0]/255.0f);
+    glBegin(GL_LINES);
+    glVertex3d(p1.x(),p1.y(),p1.z());
+    glVertex3d(p2.x(),p2.y(),p2.z());
+    glEnd();
+}
+
+void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Vector3i &bgr){
 
 
     const float w = this->frame_size_;
@@ -133,12 +225,15 @@ void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c){
 
     glPointSize(10.0f);  // Set point size in pixels
     glBegin(GL_POINTS);
-    glColor3f(1.0f, 0.0f, 0.0f);   // Set point color (red)
+    glColor3d(bgr[2]/255.0f,bgr[1]/255.0f,bgr[0]/255.0f);   // Set point color (red)
     glVertex3d(0, 0, 0);  // Plot point at (x=0, y=0, z=0)
     glEnd();
 
+    // Draw axis, red - x green - y blue -z
+    pangolin::glDrawAxis(0.5);
+
     glLineWidth(frame_line_width);
-    glColor3f(0.0f,0.0f,1.0f);
+    glColor3d(bgr[2]/255.0f,bgr[1]/255.0f,bgr[0]/255.0f);
     glBegin(GL_LINES);
 
     glVertex3d(0,0,0);
@@ -158,8 +253,14 @@ void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c){
     glVertex3d(w,h,z);
     glVertex3d(-w,-h,z);
     glVertex3d(w,-h,z);
+    glEnd();
 
-
+    glColor4f(bgr[2]/255.0f,bgr[1]/255.0f,bgr[0]/255.0f, 0.3f); // RGBA
+    glBegin(GL_QUADS);
+    glVertex3d(-w, -h, z); // bottom-left
+    glVertex3d(w, -h, z);  // bottom-right
+    glVertex3d(w, h, z);   // top-right
+    glVertex3d(-w, h, z);  // top-left
     glEnd();
 
     glPopMatrix();
@@ -167,25 +268,10 @@ void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c){
     glEnd();
 
 
-    // cv::Affine3d M(
-    //     cv::Affine3d::Mat3( 
-    //         T_w_c(0,0), T_w_c(0,1), T_w_c(0,2),
-    //         T_w_c(1,0), T_w_c(1,1), T_w_c(1,2),
-    //         T_w_c(2,0), T_w_c(2,1), T_w_c(2,2)
-    //     ), 
-    //     cv::Affine3d::Vec3(
-    //         T_w_c(0,3), T_w_c(1,3), T_w_c(2,3)
-    //     )
-    // );
-
-    // vis->setWidgetPose( "Camera", M);
-    // vis->spinOnce(1, false);
-
-
 }
 
 
-void PangolinVisualizer::drawMapPoints(const State &state){
+void PangolinVisualizer::publishMapPoints(const State &state){
 
 
     const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = state.map_->getMapPoints();
@@ -193,15 +279,21 @@ void PangolinVisualizer::drawMapPoints(const State &state){
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;
 
- 
-       glPointSize(this->point_size_);
-       glBegin(GL_POINTS);
-       glColor3d(map_point->bgr_[0]/255.0d,map_point->bgr_[1]/255.0d,map_point->bgr_[2]/255.0d);
-       glVertex3d(map_point->pt3d_[0], map_point->pt3d_[1], map_point->pt3d_[2]);
-       glEnd();
+
+       drawPoint(map_point->pt3d_, map_point->bgr_);
 
 
     }
+
+}
+
+void PangolinVisualizer::drawPoint(const Eigen::Vector3d &pt3d, const Eigen::Vector3i &bgr){
+
+    glPointSize(this->point_size_);
+    glBegin(GL_POINTS);
+    glVertex3d(pt3d[0],pt3d[1],pt3d[2]);
+    glColor3d(bgr[2]/255.0f,bgr[1]/255.0f,bgr[0]/255.0f);
+    glEnd();
 
 }
 

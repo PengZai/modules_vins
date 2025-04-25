@@ -12,7 +12,7 @@ option(USE_LIBTORCH "Enable libtorch" OFF)
 list(APPEND CMAKE_PREFIX_PATH "/opt/ros/noetic")
 
 find_package(Eigen3 REQUIRED)
-find_package(OpenCV 4 QUIET)
+find_package(OpenCV 4 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem thread date_time)
 find_package(Ceres REQUIRED)
 find_package(Sophus REQUIRED)

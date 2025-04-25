@@ -1,6 +1,5 @@
 #include "camera.h"
 
-#include "map.h"
 
 
 namespace modules_vins{
@@ -108,12 +107,11 @@ void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
 }
 
 
-void Image::cleanTrackInTimeAndMappointRelationship(){
+void Image::cleanTrackInTimeRelationship(){
     matches_in_time_.clear();
     for(std::shared_ptr<KeyPoint> &keypoint : keypoint_vector_){
         
         keypoint->cleanTrackInTimeRelationship();
-        keypoint->setMapPointPtr(nullptr);
     }
 
 }
@@ -156,24 +154,11 @@ CameraFrame()
 }
 
 
-void CameraFrame::setMap(const std::shared_ptr<Map> &map){
 
-    this->map_ = map;
-}
-
-const std::shared_ptr<Map> &CameraFrame::getMap() const{
-    return this->map_;
-}
-
-
-void CameraFrame::cleanTrackInTimeAndMappointRelationship(){
+void CameraFrame::cleanTrackInTimeRelationship(){
 
     for( std::shared_ptr<Image> image : this->image_vector_){
-        image->cleanTrackInTimeAndMappointRelationship();
-    }
-
-    for( std::shared_ptr<MapPoint> map_point : this->map_point_vector_ ){
-        map_point = nullptr;
+        image->cleanTrackInTimeRelationship();
     }
 }
 

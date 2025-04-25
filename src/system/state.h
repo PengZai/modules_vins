@@ -6,6 +6,7 @@
 
 #include "../system/system_config.h"
 #include "../data/camera.h"
+#include "../data/map.h"
 
 namespace modules_vins{
 

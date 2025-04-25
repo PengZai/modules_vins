@@ -98,7 +98,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
             break;
         }
         else{
-            camera_frame->cleanTrackInTimeAndMappointRelationship();
+            camera_frame->cleanTrackInTimeRelationship();
             VLOG(VERBOSE) << YELLOW << " Fail pose estimation with reference camera frame id : " << ref_camera_frame->id_ << " for camera frame id : " << camera_frame->id_ << RESET;
         }
 

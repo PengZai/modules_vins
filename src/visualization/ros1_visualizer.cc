@@ -42,6 +42,10 @@ void ROS1Visualizer::setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh){
     this->nh_ = nh;
 }
 
+void ROS1Visualizer::setMap(const std::shared_ptr<Map> &map){
+    this->map_ = map;
+}
+
 void ROS1Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const State &state){
     
 

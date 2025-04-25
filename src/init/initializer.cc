@@ -187,7 +187,7 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
         if(this->status_ == Initializer::Status::FAIL){
             this->ref_camera_frame_deque_.clear();
             for(int i=0;i<camera_frame_deque_.size();i++){
-                this->camera_frame_deque_.at(i)->cleanTrackInTimeAndMappointRelationship();
+                this->camera_frame_deque_.at(i)->cleanTrackInTimeRelationship();
             }
 
             this->origin_index_in_camera_frame_deque_++;

@@ -9,7 +9,6 @@
 
 namespace modules_vins{
 
-class KeyPoint;
 
 class MapPoint{
 
@@ -32,9 +31,6 @@ class MapPoint{
 
     Eigen::Vector3d pt3d_; // x y z
     Eigen::Vector3i bgr_; // x y z
-
-
-
 
 
 

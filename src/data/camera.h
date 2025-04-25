@@ -12,7 +12,6 @@
 
 namespace modules_vins {
 
-class Map;
 
 struct SegmentOutput {
     int class_id_; // class id
@@ -39,7 +38,7 @@ class Image{
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
 
         double getPointDepthFromSensor(const cv::Point2d &pt);
-        void cleanTrackInTimeAndMappointRelationship();
+        void cleanTrackInTimeRelationship();
 
 
         Eigen::Matrix3d getRotation();
@@ -97,9 +96,7 @@ class CameraFrame {
     CameraFrame();
     CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
     
-    void setMap(const std::shared_ptr<Map> &map);
-    const std::shared_ptr<Map> &getMap() const;
-    void cleanTrackInTimeAndMappointRelationship();
+    void cleanTrackInTimeRelationship();
 
     // CameraFrame(const CameraFrame &camera_frame);
 
@@ -118,8 +115,6 @@ class CameraFrame {
 
     Status status_;
 
-    protected:
-    std::shared_ptr<Map> map_;
 
 
     // Sophus::SE3<double> Tcw;

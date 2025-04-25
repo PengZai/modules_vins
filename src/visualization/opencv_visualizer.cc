@@ -19,6 +19,11 @@ sys_config_(sys_config), GreenColor_(cv::Scalar(0,255,0)), RedColor_(cv::Scalar(
         "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"};
 }
 
+
+void OpenCVVisualizer::setMap(const std::shared_ptr<Map> &map){
+    this->map_ = map;
+}
+
 void OpenCVVisualizer::drawTrackingPointPattern(cv::Mat &img, const std::shared_ptr<KeyPoint> &keypoint, const cv::Scalar &color){
 
     const double r = 5;
@@ -135,14 +140,14 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
 
     // const std::shared_ptr<Map> &map = camera_frame.getMap();
-    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = camera_frame->getMap()->getMapPoints();
+    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = this->map_->getMapPoints();
 
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;
 
        const Eigen::Vector3d pt3d_in_cam = img_0->T_c_w_ * map_point->pt3d_;
        cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
-       if(img_0->isInImage(reprojected_pixel)){
+       if(img_0->isInImage(reprojected_pixel) && pt3d_in_cam.z() > 0){
         cv::circle (img_0_color_data, reprojected_pixel, 2, cv::Scalar (0,255,0), -1);
        }
 
@@ -152,12 +157,7 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
 
 
 
-
-
 }
-
-
-
 
 
 

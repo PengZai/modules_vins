@@ -75,6 +75,7 @@ int main(int argc, char* argv[]) {
     sys.setVisualFrontend(visual_frontend);
 
     std::shared_ptr<modules_vins::Visualizer> visualizer = std::make_shared<modules_vins::Visualizer>(sys_config, nh);
+    visualizer->setMap(map);
     sys.setVisualizer(visualizer);
 
 

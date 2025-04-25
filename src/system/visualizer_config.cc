@@ -56,6 +56,8 @@ void PangolinParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("viewer_eye_positionY", this->viewer_eye_positionY_);
     parse("viewer_eye_positionZ", this->viewer_eye_positionZ_);
 
+    parse("show_groundtruth_trajectory", this->show_groundtruth_trajectory_);
+    parse("show_groundtruth_pose", this->show_groundtruth_pose_);
 
 }
 

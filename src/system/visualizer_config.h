@@ -55,6 +55,8 @@ class PangolinParameters: public Parameters{
     double viewer_eye_positionX_;
     double viewer_eye_positionY_;
     double viewer_eye_positionZ_;
+    bool show_groundtruth_trajectory_;
+    bool show_groundtruth_pose_;
 };
 
 
