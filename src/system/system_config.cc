@@ -87,31 +87,40 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("log_verbosity", this->log_verbosity_);
     parse("max_cameras", this->max_cameras_);
     parse("max_imus", this->max_imus_);
-
     
     parse("max_stereo_time_offset", this->max_stereo_time_offset_);
     parse("max_color_sensor_depth_pair_time_offset", this->max_color_sensor_depth_pair_time_offset_);
 
-    parse("maximum_num_fail", this->maximum_num_fail_);
-    parse("minimum_num_in_ref_camera_frame", this->minimum_num_in_ref_camera_frame_);
-    parse("minimum_cumulative_translation", this->minimum_cumulative_translation_);
 
-
+    // feature detect and tracking
     parse("num_feature_points", this->num_feature_points_);
     parse("scale_factor", this->scale_factor_);
     parse("level_pyramid", this->level_pyramid_);
 
+    
     parse("threshold_for_tracking_descriptor_in_time", this->threshold_for_tracking_descriptor_in_time_);
     parse("threshold_for_tracking_descriptor_in_frame", this->threshold_for_tracking_descriptor_in_frame_);
     parse("matching_ratio", this->matching_ratio_);
 
+
+    // initialized pose estimation
+    parse("maximum_num_fail", this->maximum_num_fail_);
+    parse("minimum_num_in_ref_camera_frame", this->minimum_num_in_ref_camera_frame_);
+    parse("minimum_cumulative_translation", this->minimum_cumulative_translation_);
 
     parse("threshold_for_pnp_pose_log_norm", this->threshold_for_pnp_pose_log_norm_);
     parse("min_inliers", this->min_inliers_);
     parse("max_fail_num", this->max_fail_num_);
     parse("max_num_backward_reference", this->max_num_backward_reference_);
 
+
+    //backend
+    parse("minimum_key_camera_frame_translation", this->minimum_key_camera_frame_translation_);
+
     
+
+
+    //map
     parse("max_num_local_map_size", this->max_num_local_map_size_);
 
     

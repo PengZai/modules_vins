@@ -26,6 +26,10 @@ system:
   max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward
 
 
+  # backend
+  minimum_key_camera_frame_translation: 0.2
+
+
   # map
   max_num_local_map_size: 10000
 

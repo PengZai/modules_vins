@@ -19,12 +19,12 @@ opencv_visualizer:
 
 
 pangolin_visualizer:
-  frame_size: 0.2
+  frame_size: 0.1
   point_size: 2.0
   trajectory_line_size: 1.0
   viewer_eye_positionX: 0.0
   viewer_eye_positionY: -0.7
-  viewer_eye_positionZ: 2.5
+  viewer_eye_positionZ: -1.8
   show_groundtruth_trajectory: 1
   show_groundtruth_pose: 1
 

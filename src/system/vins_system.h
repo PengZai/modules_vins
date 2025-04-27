@@ -16,6 +16,7 @@
 #include "../log/logging.h"
 #include "../log/evo_record.h"
 #include "state.h"
+#include "../backend/keyframe_manager.h"
 
 
 namespace modules_vins
@@ -33,6 +34,7 @@ class System {
         void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
         void setInitializer(const std::shared_ptr<Initializer> &initializer);
         void setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_frontend);
+        void setKeyFrameManager(const std::shared_ptr<KeyFrameManager> &key_frame_manager);
         void setVisualizer(const std::shared_ptr<Visualizer> &visualizer);
         void setMap(const std::shared_ptr<Map> &map);
         void setRecorder(const std::shared_ptr<EVORecorder> &evo_recorder);
@@ -61,6 +63,7 @@ class System {
     protected:
         std::shared_ptr<Initializer> initializer_;
         std::shared_ptr<VisualFrontend> visual_frontend_;
+        std::shared_ptr<KeyFrameManager> key_frame_manager_;
         std::shared_ptr<Visualizer> visualizer_;
         std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
         std::atomic<bool> is_thread_running_;

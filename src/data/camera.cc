@@ -140,6 +140,7 @@ int CameraFrame::id_counter_=-1;
 CameraFrame::CameraFrame():
 id_(++CameraFrame::id_counter_),
 ref_camera_frame_(nullptr),
+is_key_camera_frame_(false),
 status_(CameraFrame::Status::NOT_INITIALIZED)
 {
 
@@ -173,6 +174,26 @@ std::ostream& operator<<(std::ostream& os, const Image &img) {
     << "Descriptor Size: " << img.descriptors_.rows << "x" << img.descriptors_.cols << "\n";
     return os;
 }
+
+
+
+// // just for auto incremental
+// int KeyCameraFrame::id_counter_=-1;
+
+
+// KeyCameraFrame::KeyCameraFrame():
+// CameraFrame()
+// {
+//     id_ = ++KeyCameraFrame::id_counter_;
+
+// }
+
+// KeyCameraFrame::KeyCameraFrame(const std::vector<std::shared_ptr<Image>> image_vector):
+// KeyCameraFrame()
+// {
+//     this->image_vector_ = image_vector;
+
+// }
 
 
 } //modules_vins

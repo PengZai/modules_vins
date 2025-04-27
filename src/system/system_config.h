@@ -43,6 +43,8 @@ class SystemParameters: public Parameters{
         int max_fail_num_;
         int max_num_local_map_size_;
 
+        double minimum_key_camera_frame_translation_;
+
         std::string imu_config_name_;
         std::string camera_config_name_;
         std::string visualizer_config_name_;

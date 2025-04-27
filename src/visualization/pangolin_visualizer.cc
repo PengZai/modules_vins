@@ -33,11 +33,11 @@ sys_config_(sys_config)
 
     // Define projection and initial model view matrix
     this->s_cam_ = pangolin::OpenGlRenderState(
-        pangolin::ProjectionMatrix(window_width,window_height,420,420,320,240,0.2,100),
+        pangolin::ProjectionMatrix(window_width,window_height,500,500,512,389,0.1,1000),
         pangolin::ModelViewLookAt(
             this->viewer_eye_positionX_,this->viewer_eye_positionY_,this->viewer_eye_positionZ_,  // eye (camera) position in world
             0, 0, 0,  // look-at point (center of scene)
-            0.0, 1.0, 0.0 // up direction (usually Y-up)
+            0.0, -1.0, 0.0 // up direction (usually Y-up)
         )
     );
 
@@ -50,7 +50,7 @@ sys_config_(sys_config)
     pangolin::CreatePanel("menu").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
 
     this->is_reset_ = new pangolin::Var<bool>("menu.Reset", false);
-    this->is_follow_camera_ = new pangolin::Var<bool>("menu.Follow Camera",false,true);
+    this->is_follow_camera_ = new pangolin::Var<bool>("menu.Follow Camera",true,true);
 
 
 
@@ -76,12 +76,27 @@ void PangolinVisualizer::publish(const State &state){
             pangolin::glDrawAxis(0.5);
 
             publishPoses(state);
-
+            publishKeyPoses(state);
             publishMapPoints(state);
             publishTrajectories(state);
         
 
         pangolin::FinishFrame();
+    }
+}
+
+
+void PangolinVisualizer::publishKeyPoses(const State &state){
+
+    if(!state.timestamp_key_T_c_w_map_.empty()){
+
+        for (const auto& [timestamp, T_c_w] : state.timestamp_key_T_c_w_map_) {
+
+            drawFrame(T_c_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
+
+        }
+
+
     }
 }
 
@@ -210,7 +225,7 @@ void PangolinVisualizer::drawLine(const Eigen::Vector3d &p1, const Eigen::Vector
     glEnd();
 }
 
-void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Vector3i &bgr){
+void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Vector3i &bgr, bool drawAxis){
 
 
     const float w = this->frame_size_;
@@ -230,7 +245,9 @@ void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Ve
     glEnd();
 
     // Draw axis, red - x green - y blue -z
-    pangolin::glDrawAxis(0.5);
+    if(drawAxis){
+        pangolin::glDrawAxis(this->frame_size_);
+    }
 
     glLineWidth(frame_line_width);
     glColor3d(bgr[2]/255.0f,bgr[1]/255.0f,bgr[0]/255.0f);

@@ -19,8 +19,9 @@ class State{
 
 
         std::map<double, Sophus::SE3<double>> timestamp_T_c_w_map_; // the map of pose of robot in world coordinate
+        std::map<double, Sophus::SE3<double>> timestamp_key_T_c_w_map_; // the map of pose of robot in world coordinate
         std::map<double, Sophus::SE3<double>> timestamp_GT_T_full_map_; // a map of Groundtruth pose of robot in world coordinate
-        std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_map_; // a map of Groundtruth pose of robot in world coordinate
+        std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_map_; // a sub map of Groundtruth pose of robot in world coordinate
 
      
 

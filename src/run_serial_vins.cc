@@ -9,6 +9,7 @@
 
 // #include "log/logging.h"
 #include "frontend/visual_frontend.h"
+#include "backend/keyframe_manager.h"
 #include "system/vins_system.h"
 #include "system/system_config.h"
 #include "data/map.h"
@@ -73,6 +74,9 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::VisualFrontend>(sys_config);
     visual_frontend->setMap(map);
     sys.setVisualFrontend(visual_frontend);
+
+    std::shared_ptr<modules_vins::KeyFrameManager> key_frame_manager = std::make_shared<modules_vins::KeyFrameManager>(sys_config);
+    sys.setKeyFrameManager(key_frame_manager);
 
     std::shared_ptr<modules_vins::Visualizer> visualizer = std::make_shared<modules_vins::Visualizer>(sys_config, nh);
     visualizer->setMap(map);

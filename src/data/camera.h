@@ -97,7 +97,6 @@ class CameraFrame {
     CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
     
     void cleanTrackInTimeRelationship();
-
     // CameraFrame(const CameraFrame &camera_frame);
 
     std::vector<std::shared_ptr<Image>> image_vector_;
@@ -113,6 +112,8 @@ class CameraFrame {
         FAIL
     };
 
+    bool is_key_camera_frame_;
+
     Status status_;
 
 
@@ -125,7 +126,19 @@ class CameraFrame {
 };
 
 
+// class KeyCameraFrame : public CameraFrame {
 
+//     public:
+
+//     KeyCameraFrame();
+//     KeyCameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
+
+//     static int id_counter_;
+//     std::shared_ptr<KeyCameraFrame> ref_key_camera_frame_;
+
+
+
+// };
 
 
 }

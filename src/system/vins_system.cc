@@ -37,6 +37,11 @@ void System::setVisualFrontend(const std::shared_ptr<VisualFrontend> &visual_fro
     this->visual_frontend_ = visual_frontend;
 }
 
+void System::setKeyFrameManager(const std::shared_ptr<KeyFrameManager> &key_frame_manager){
+
+    this->key_frame_manager_ = key_frame_manager;
+}
+
 
 void System::setMap(const std::shared_ptr<Map> &map){
     this->state_.map_ = map;
@@ -132,6 +137,11 @@ void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
     this->state_.timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
     VLOG(VERBOSE) << GREEN << "new state has been added to system" << RESET;
 
+    if(camera_frame->is_key_camera_frame_){
+        this->state_.timestamp_key_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
+        VLOG(VERBOSE) << GREEN << "new key camera frame has been added to system" << RESET;
+    }
+
     // T_w_c is actual position and orientation of camera in world, for visualization
     Sophus::SE3<double> T_w_c_ = img_0->T_c_w_.inverse();
     this->evo_recorder_->writeTrajectoryOnce(img_0->timestamp_, T_w_c_.translation(), T_w_c_.unit_quaternion());
@@ -203,7 +213,9 @@ void System::callbackVisualNavigation(){
                 this->initializer_->initializeGTTcwWithCameraFrame(ref_camera_frame_deque_.back(), this->state_);
                 for(const std::shared_ptr<CameraFrame> &ref_camera_frame : ref_camera_frame_deque_){
                     this->state_.map_->update(ref_camera_frame);
+                    key_frame_manager_->updateKeyFrame(ref_camera_frame);                    
                     updateState(ref_camera_frame);
+                    
                 }
 
                 return;
@@ -221,6 +233,7 @@ void System::callbackVisualNavigation(){
             
             if(camera_frame->status_ == CameraFrame::Status::NORMAL){
                 this->state_.map_->update(camera_frame);
+                key_frame_manager_->updateKeyFrame(camera_frame);                    
                 updateState(camera_frame);
             }
 

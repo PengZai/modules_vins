@@ -27,7 +27,8 @@ class PangolinVisualizer{
     void setMap(const std::shared_ptr<Map> &map);
     void publish(const State& state);
     void publishPoses(const State &state);
-    void drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Vector3i &bgr);
+    void publishKeyPoses(const State &state);
+    void drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Vector3i &bgr, bool drawAxis = true);
     void publishMapPoints(const State& state);
     void drawPoint(const Eigen::Vector3d &pt3d, const Eigen::Vector3i &bgr);
     void publishTrajectories(const State &state);
