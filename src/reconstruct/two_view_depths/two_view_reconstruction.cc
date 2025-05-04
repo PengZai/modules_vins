@@ -9,6 +9,10 @@ TwoViewReconstructor::TwoViewReconstructor(const std::shared_ptr<SystemConfig> &
 sys_config_(sys_config)
 {
 
+    this->num_disparities_ = 64;
+    int block_size = 15;
+    this->stereoBM_ = cv::StereoBM::create(this->num_disparities_, block_size);
+
 }
 
 
@@ -48,7 +52,44 @@ void TwoViewReconstructor::checkTriangulatedPointsWithReprojection(const cv::Poi
 }
 
 
+
+
 void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j){
+
+
+    twoViewTriangulation(img_i, img_j);
+    
+}
+
+
+void TwoViewReconstructor::stereoBatchMatching(const std::shared_ptr<Image> &left_img, const std::shared_ptr<Image> &right_img){
+
+
+    cv::Mat disparity;  
+
+    this->stereoBM_->compute(left_img->gray_data_, right_img->gray_data_, disparity);
+
+    disparity.convertTo(disparity, CV_32FC1, 1.0 / 16.);
+
+    Eigen::Matrix<double, 4, 4> T_right_cam_left_cam= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(right_img->sensor_id_, left_img->sensor_id_);
+    Eigen::Vector3d t = T_right_cam_left_cam.block<3,1>(0, 3);  // Get translation vector
+    double B = t.norm();
+    const Eigen::Matrix3d K_left = this->sys_config_->camera_config_->params_vector_.at(left_img->sensor_id_)->getIntrinsicsMatrix();
+    double fx = K_left(0,0);
+
+    cv::Mat validMask = disparity > 0;
+    cv::Mat depth = cv::Mat::zeros(disparity.size(), CV_32FC1);
+
+    cv::Mat tmp_depth;
+    cv::divide(fx * B, disparity, tmp_depth);  // tmp = fx * B / disparity
+    tmp_depth.copyTo(depth, validMask);       // apply only where valid
+
+    left_img->stereo_depth_ = depth;
+
+
+}
+
+void TwoViewReconstructor::twoViewTriangulation(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j){
 
 
     if(img_i->matches_in_frame_.size() == 0){

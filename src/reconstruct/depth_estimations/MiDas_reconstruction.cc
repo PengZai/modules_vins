@@ -42,11 +42,26 @@ void MiDas::reconstruct(const std::shared_ptr<Image> &img){
                             .detach()
                             .cpu();
 
-    cv::Mat output_mat = cv::Mat(input_height_, input_width_, CV_32FC1, output_tensor.data_ptr<float>());
+    cv::Mat midas_inv_depth  = cv::Mat(input_height_, input_width_, CV_32FC1, output_tensor.data_ptr<float>());
+    cv::normalize(midas_inv_depth, midas_inv_depth, 1e-6f, 1.0, cv::NORM_MINMAX);
+
+    float min_depth = 1e-6f;
+    float max_depth = 100.0f;
+
+    float A = (1.0f / min_depth) - (1.0f / max_depth);
+    float B = 1.0f / max_depth;
+    cv::Mat inv_depth, true_depth;
+
+    // inv_depth = A * norm + B
+    inv_depth = midas_inv_depth * A + B;
+
+    // true_depth = 1 / inv_depth
+    cv::divide(1.0, inv_depth, true_depth);  // element-wise division
+
     // Resize the depth map
-    cv::resize(output_mat, img->learned_depth_, cv::Size(img->color_data_.cols, img->color_data_.rows));
+    cv::resize(true_depth, img->learned_depth_, cv::Size(img->color_data_.cols, img->color_data_.rows));
+
     
-    VLOG(VERBOSE) << "just test";
 
 }
     

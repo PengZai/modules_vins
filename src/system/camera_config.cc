@@ -36,8 +36,21 @@ Eigen::Matrix<double, 4, 4> CameraConfig::getExtrinsicsBetweenCamerasBySensorID(
 
 
 CameraParameters::CameraParameters():
-    resolution_(2), distortion_coeffs_(4), intrinsics_(4)
+    resolution_(2), 
+    distortion_coeffs_(4), 
+    intrinsics_(4),
+    use_sensor_depth_(false),
+    use_learned_depth_(false),
+    use_stereo_matching_(false),
+    use_learned_stereo_matching_(false),
+    use_learned_object_detection_(false),
+    use_learned_semantic_segmentation_(false)
 {}
+
+
+
+
+
 
 const Eigen::VectorXd CameraParameters::getDistortionCoeffs(){
 
@@ -92,6 +105,13 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("use_learned_depth", this->use_learned_depth_);
     parse("model_name_learned_depth", this->model_name_learned_depth_);
     parse("output_learned_depth_rostopic", this->output_learned_depth_rostopic_);
+
+    parse("use_stereo_matching", this->use_stereo_matching_);
+    parse("stereo_matching_rostopic", this->stereo_matching_rostopic_);
+
+    parse("use_learned_stereo_matching", this->use_learned_stereo_matching_);
+    parse("model_name_learned_stereo_matching", this->model_name_learned_stereo_matching_);
+    parse("learned_stereo_matching_rostopic", this->learned_stereo_matching_rostopic_);
 
     parse("use_learned_object_detection", this->use_learned_object_detection_);
     parse("model_name_learned_object_detection", this->model_name_learned_object_detection_);

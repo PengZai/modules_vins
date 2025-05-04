@@ -43,6 +43,13 @@ class CameraParameters : public Parameters
         std::string model_name_learned_depth_;
         std::string output_learned_depth_rostopic_;
 
+        bool use_stereo_matching_;
+        std::string stereo_matching_rostopic_;
+
+        bool use_learned_stereo_matching_;
+        std::string model_name_learned_stereo_matching_;
+        std::string learned_stereo_matching_rostopic_;
+
         bool use_learned_object_detection_;
         std::string model_name_learned_object_detection_;
         std::string learned_object_detection_rostopic_;

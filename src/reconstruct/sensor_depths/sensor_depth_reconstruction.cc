@@ -34,16 +34,15 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
     }
 
     
+    for (int row = 0; row < img->color_data_.rows; ++row) {
+        for (int col = 0; col < img->color_data_.cols; ++col) {
 
-    // for (int row = 0; row < img->depth_.rows; ++row) {
-    //     for (int col = 0; col < img->depth_.cols; ++col) {
+            cv::Point2i pt = cv::Point2d(col, row);
+            double depth = img->getPointDepthFromSensor(pt);
+            img->depth_.at<double>(row, col) = depth;
 
-    //         cv::Point2d pt = cv::Point2d(col, row);
-    //         double depth = img->getPointDepthFromSensor(pt);
-    //         img->depth_.at<double>(row, col) = depth;
-
-    //     }
-    // }
+        }
+    }
 
 }
 

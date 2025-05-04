@@ -10,12 +10,13 @@ fi
 
 
 
-docker build -t $IMAGE_NAME -f "${HOME}/vscode_projects/${PROJECT_NAME}/catkin_ws/src/${PROJECT_NAME}/Docker/Dockerfile" .
+docker build -t $IMAGE_NAME -f "${HOME}/vscode_projects/${PROJECT_NAME}/catkin_ws/src/${PROJECT_NAME}/Docker/Dockerfile" --build-arg NPROC=1 .
 
 
 xhost +local:root
 
 docker run \
+    --rm \
     -e DISPLAY=$DISPLAY \
     -v ~/.Xauthority:/root/.Xauthority:rw \
     --network host \

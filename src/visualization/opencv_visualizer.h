@@ -24,10 +24,13 @@ class OpenCVVisualizer{
     void publishMatchingInFrame(const std::shared_ptr<CameraFrame> &camera_frame);
     void publishMatchingInTime(const std::shared_ptr<CameraFrame> &camera_frame);
     void publishProjectedMapPoint(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publishStereoDepth(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publishLearnedStereoDisparity(const std::shared_ptr<CameraFrame> &camera_frame);
     void publishSensorDepth(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishLearnedDepth(const CameraFrame &camera_frame);
-    void publishObjectDetection(const CameraFrame &camera_frame);
-    void publishSemanticSegmentation(const CameraFrame &camera_frame);
+    void publishLearnedDepth(const std::shared_ptr<CameraFrame> &camera_frame);
+    void invDepthAndMixColor(const cv::Mat &input_depth, const cv::Mat &input_color, cv::Mat &mixed_depth_color);
+    void publishObjectDetection(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publishSemanticSegmentation(const std::shared_ptr<CameraFrame> &camera_frame);
     void publishTrackingInTime(const std::shared_ptr<CameraFrame> &camera_frame);
 
 

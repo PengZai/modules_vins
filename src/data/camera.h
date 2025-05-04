@@ -5,6 +5,8 @@
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
 #include <sophus/so3.hpp>
+#include <cmath>
+
 
 #include "point.h"
 
@@ -37,7 +39,7 @@ class Image{
         void setTcw(const Sophus::SE3<double> T_c_w);
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
 
-        double getPointDepthFromSensor(const cv::Point2d &pt);
+        double getPointDepthFromSensor(const cv::Point2i &pt);
         void cleanTrackInTimeRelationship();
 
 
@@ -58,6 +60,8 @@ class Image{
         cv::Mat gray_data_;
         cv::Mat depth_;
         cv::Mat learned_depth_;
+        cv::Mat stereo_depth_;
+        cv::Mat learned_stereo_depth_;
         cv::Mat sensor_depth_;
         std::vector<cv::KeyPoint> cv_keypoint_vector_;
         cv::Mat descriptors_;

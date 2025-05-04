@@ -6,7 +6,7 @@
 #include <opencv2/core.hpp>
 
 
-#include "../../../data/camera.h"
+#include "../../data/camera.h"
 
 namespace modules_vins{
 

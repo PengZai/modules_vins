@@ -5,6 +5,7 @@
 
 #include "../system/system_config.h"
 #include "../data/camera.h"
+#include "../reconstruct/reconstructor.h"
 
 namespace modules_vins
 {
@@ -22,6 +23,10 @@ class KeyFrameManager{
 
     protected:
     std::vector<std::shared_ptr<CameraFrame>> key_camera_frame_vector_;
+    std::shared_ptr<Map> map_;
+
+    std::shared_ptr<Reconstructor> reconstructor_;
+
 };
 
     

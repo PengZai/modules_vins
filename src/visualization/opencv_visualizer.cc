@@ -160,6 +160,22 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
 }
 
 
+void OpenCVVisualizer::publishStereoDepth(const std::shared_ptr<CameraFrame> &camera_frame){
+
+    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+
+    if(img_0->stereo_depth_.empty()){
+        return;
+    }
+    // visualize depth
+    cv::Mat mixed_depth_color;
+    invDepthAndMixColor(img_0->stereo_depth_, img_0->color_data_, mixed_depth_color);
+
+    cv::imshow("disparity in frame for image "+std::to_string(0), mixed_depth_color);
+    
+
+}
+
 
 void OpenCVVisualizer::publishSensorDepth(const std::shared_ptr<CameraFrame> &camera_frame){
 
@@ -168,51 +184,93 @@ void OpenCVVisualizer::publishSensorDepth(const std::shared_ptr<CameraFrame> &ca
         const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
 
         cv::Mat img_i_sensor_detph = img_i->sensor_depth_;
+        if(img_i->sensor_depth_.empty()){
+            continue;
+        }
+
+
         cv::imshow("sensor depth in frame for image "+std::to_string(i), img_i_sensor_detph);
     }
 
 }
 
-void OpenCVVisualizer::publishLearnedDepth(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publishLearnedDepth(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
-    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
-        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+    for(int i=0; i<(int)camera_frame->image_vector_.size(); i++){
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
 
         if(img_i->learned_depth_.empty()){
             continue;
         }
 
-        cv::Mat img_i_learned_detph = img_i->learned_depth_.clone();
+        // cv::Mat img_i_learned_detph = img_i->learned_depth_.clone();
 
         // visualize depth
-        double min_val, max_val;
-        cv::Mat depth_visual;
-        cv::minMaxLoc(img_i_learned_detph, &min_val, &max_val);
-        img_i_learned_detph = 255 * (img_i_learned_detph - min_val) / (max_val - min_val);
-        img_i_learned_detph.convertTo(depth_visual, CV_8U);
-        cv::applyColorMap(depth_visual, depth_visual, cv::COLORMAP_JET); //COLORMAP_HOT, COLORMAP_JET
-
-        // Stack the image and depth map
         cv::Mat mixed_depth_color;
-
-         // Blend images (alpha blending)
-        double alpha = 0.80;  // depth overlay transparency (0 = invisible, 1 = fully depth)
-        double beta = 1.0 - alpha;
-        cv::addWeighted(depth_visual, alpha, img_i->color_data_, beta, 0.0, mixed_depth_color);
+        invDepthAndMixColor(img_i->learned_depth_, img_i->color_data_, mixed_depth_color);
 
         cv::imshow("learned depth in frame for image " + std::to_string(i), mixed_depth_color);
     }
 
 }
 
+void OpenCVVisualizer::publishLearnedStereoDisparity(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
-void OpenCVVisualizer::publishObjectDetection(const CameraFrame &camera_frame){
+    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
-    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
+    if(img_0->learned_stereo_depth_.empty()){
+        return;
+    }
+    // cv::Mat img_0_learned_stereo_depth = img_0->learned_stereo_depth_.clone();
 
-        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+    // visualize depth
+    cv::Mat mixed_depth_color;
+    invDepthAndMixColor(img_0->learned_stereo_depth_, img_0->color_data_, mixed_depth_color);
+
+    cv::imshow("learned stereo disparity in frame for image " + std::to_string(0), mixed_depth_color);
+    
+
+}
+
+void OpenCVVisualizer::invDepthAndMixColor(const cv::Mat &input_depth, const cv::Mat &input_color, cv::Mat &mixed_depth_color){
+
+    // visualize depth
+    double min_val, max_val;
+    cv::Mat inv_depth = cv::Mat::zeros(input_depth.size(), CV_32FC1);
+
+    for (int y = 0; y < input_depth.rows; ++y) {
+        for (int x = 0; x < input_depth.cols; ++x) {
+            float d = input_depth.at<float>(y, x);
+            if (d > 1e-6f) {  // avoid zero or negative depth
+                inv_depth.at<float>(y, x) = 1.0f / d;
+            } else {
+                inv_depth.at<float>(y, x) = std::numeric_limits<float>::quiet_NaN();  
+            }
+        }
+    }
+
+    cv::Mat depth_visual;
+    cv::minMaxLoc(inv_depth, &min_val, &max_val);
+    inv_depth = 255 * (inv_depth - min_val) / (max_val - min_val);
+    inv_depth.convertTo(depth_visual, CV_8U);
+    cv::applyColorMap(depth_visual, depth_visual, cv::COLORMAP_JET); //COLORMAP_HOT, COLORMAP_JET
+
+     // Blend images (alpha blending)
+    double alpha = 0.9;  // depth overlay transparency (0 = invisible, 1 = fully depth)
+    double beta = 1.0 - alpha;
+    cv::addWeighted(depth_visual, alpha, input_color, beta, 0.0, mixed_depth_color);
+
+}
+
+
+
+void OpenCVVisualizer::publishObjectDetection(const std::shared_ptr<CameraFrame> &camera_frame){
+
+    for(int i=0; i<(int)camera_frame->image_vector_.size(); i++){
+
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
         if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_object_detection_){
 
 
@@ -238,11 +296,11 @@ void OpenCVVisualizer::publishObjectDetection(const CameraFrame &camera_frame){
     
 }
 
-void OpenCVVisualizer::publishSemanticSegmentation(const CameraFrame &camera_frame){
+void OpenCVVisualizer::publishSemanticSegmentation(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    for(int i=0; i<(int)camera_frame.image_vector_.size(); i++){
+    for(int i=0; i<(int)camera_frame->image_vector_.size(); i++){
 
-        const std::shared_ptr<Image> &img_i = camera_frame.image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
 
         if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_semantic_segmentation_){
 
@@ -317,6 +375,10 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
     if(this->sys_config_->params_->check_triangulation_){
         
     }
+
+    if(this->sys_config_->visualizer_config_->opencv_params_->show_stereo_depth_){
+        publishStereoDepth(camera_frame);
+    }
    
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_sensor_depth_){
@@ -324,7 +386,7 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
         publishSensorDepth(camera_frame);
     }
 
-
+ 
 
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_tracking_in_time_){
@@ -346,6 +408,13 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
 
         publishSemanticSegmentation(camera_frame);
     }
+
+    if(this->sys_config_->visualizer_config_->opencv_params_->show_learned_stereo_disparity_){
+
+        publishLearnedStereoDisparity(camera_frame);
+    }
+
+    
     #endif
 
 

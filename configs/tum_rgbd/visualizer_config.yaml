@@ -3,11 +3,11 @@
 visualizer:
   # visualization tool
   use_opencv_vis: 1
-  use_pangolin_vis: 1
+  use_pangolin_vis: 0
   use_rviz_vis: 1
 
 opencv_visualizer:
-  show_projected_mappoint: 1
+  show_projected_mappoint: 0
   show_matching_in_frame: 0
   show_matching_in_time: 1
   show_tracking_in_time: 1
@@ -31,6 +31,7 @@ pangolin_visualizer:
 
 rviz_visualizer:
   output_pose_rostopic: /output/camera_pose
+  output_key_frame_poses_rostopic: /output/key_camera_poses
   output_trajectory_rostopic: /output/trajectory
   output_tracked_map_points_rostopic: /output/tracked_points
   show_groundtruth_trajectory: 1

@@ -10,7 +10,10 @@ int MapPoint::id_counter_ = -1;
 
 
 MapPoint::MapPoint():
-id_(++MapPoint::id_counter_), timestamp_(-1)
+id_(++MapPoint::id_counter_),
+timestamp_(-1),
+pt3d_(0,0,0),
+bgr_(0,0,0)
 {
 
 };
@@ -60,7 +63,15 @@ left_keypoint_in_frame_(nullptr),
 right_keypoint_in_frame_(nullptr)
 {
     this->match_in_time_.trainIdx = -1;
-    this->match_in_time_.queryIdx = id_;
+    this->match_in_time_.queryIdx = -1;
+    this->match_in_time_.imgIdx = id_;
+    this->match_in_time_.distance = std::numeric_limits<float>::max();
+
+    this->match_in_frame_.trainIdx = -1;
+    this->match_in_frame_.queryIdx = -1;
+    this->match_in_frame_.imgIdx = id_;
+    this->match_in_frame_.distance = std::numeric_limits<float>::max();
+
 }
 
 KeyPoint::KeyPoint(const cv::KeyPoint kp):

@@ -8,26 +8,26 @@
 #include <iostream>
 #include <string>
 
-#include "../../data/camera.h"
+#include "../../../system/system_config.h"
+#include "../../../data/camera.h"
 
 
 namespace modules_vins{
 
 
-class MiDas{
+class FastACVNetPlus{
 
     public:
 
     
-    MiDas(const std::string &model_path);
-    void reconstruct(const std::shared_ptr<Image> &img);
+    FastACVNetPlus(const std::shared_ptr<SystemConfig> &sys_config, const std::string &model_path);
+    void reconstruct(const std::shared_ptr<Image> &left_img, const std::shared_ptr<Image> &right_img);
 
     protected:
 
     // Network input size (predefined)
-    const int input_width_ = 384;
-    const int input_height_ = 288;
-    
+
+    std::shared_ptr<SystemConfig> sys_config_;
     std::string model_path_;
     torch::jit::script::Module module_;            /// Torch model
     torch::Device device_;

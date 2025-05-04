@@ -37,7 +37,7 @@ color_data_(data)
 
 
 
-double Image::getPointDepthFromSensor(const cv::Point2d &pt){
+double Image::getPointDepthFromSensor(const cv::Point2i &pt){
 
     int x = cvRound(pt.x);
     int y = cvRound(pt.y);
@@ -46,13 +46,14 @@ double Image::getPointDepthFromSensor(const cv::Point2d &pt){
 
 
     if(sensor_depth_.empty()){
-        return -1;
+        return 0;
     }
 
     // here, depth was stored as 32FC1, so we read data with float type.
-    float d = sensor_depth_.ptr<float>(y)[x];
+    float d = sensor_depth_.at<float>(y, x);
 
-    if ( d!=0 )
+
+    if ( d>0 && std::isnan(d) == false)
     {
         return double(d)/depth_scale;
     }
@@ -63,14 +64,14 @@ double Image::getPointDepthFromSensor(const cv::Point2d &pt){
         int dy[4] = {0,-1,0,1};
         for ( int i=0; i<4; i++ )
         {
-            d = sensor_depth_.ptr<ushort>( y+dy[i] )[x+dx[i]];
-            if ( d!=0 )
+            d = sensor_depth_.at<float>(y+dy[i], x+dx[i]);
+            if ( d>0 && std::isnan(d) == false)
             {
                 return double(d)/depth_scale;
             }
         }
     }
-    return -1.0;
+    return 0;
 }
 
 

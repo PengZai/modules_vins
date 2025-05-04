@@ -8,7 +8,7 @@ system:
   max_color_sensor_depth_pair_time_offset: 0.02 # max time offset for image pair for bgr and depth (unit: second)
 
   # feature detect and tracking
-  num_feature_points: 2000
+  num_feature_points: 500
   scale_factor: 1.2
   level_pyramid: 8
   threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
@@ -22,8 +22,14 @@ system:
   max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward
 
 
+
+
+  # backend
+  minimum_key_camera_frame_translation: 0.5
+
+
   # map
-  max_num_local_map_size: 20000
+  max_num_local_map_size: 20000000
 
   # relative config file name
   imu_config_name: "imu_config.yaml"

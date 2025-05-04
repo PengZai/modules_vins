@@ -17,7 +17,12 @@ void OpenCVParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     
     parse("show_tracking_in_time", this->show_tracking_in_time_);
     parse("show_sensor_depth", this->show_sensor_depth_);
+    parse("show_stereo_depth", this->show_stereo_depth_);
+
+
+    
     parse("show_learned_depth", this->show_learned_depth_);
+    parse("show_learned_stereo_disparity", this->show_learned_stereo_disparity_);
     parse("show_object_detection", this->show_object_detection_);
     parse("show_semantic_segmentation", this->show_semantic_segmentation_);
 
@@ -31,6 +36,8 @@ void RVisParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     this->node_ = node;
 
     parse("output_pose_rostopic", this->output_pose_rostopic_);
+    parse("output_key_frame_poses_rostopic", this->output_key_frame_poses_rostopic_);
+    
     parse("output_trajectory_rostopic", this->output_trajectory_rostopic_);
     parse("output_tracked_map_points_rostopic", this->output_tracked_map_points_rostopic_);
 

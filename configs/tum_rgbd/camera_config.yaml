@@ -17,15 +17,15 @@ cam0:
   use_sensor_detph: 1
   sensor_depth_rostopic: /camera/depth/image
 
-  use_learned_depth: 1
+  use_learned_depth: 0
   model_name_learned_depth: model-v21-small-traced.pt
   output_learned_depth_rostopic: /camera/learned_depth/image
 
-  use_learned_object_detection: 1
+  use_learned_object_detection: 0
   model_name_learned_object_detection: yolov8n.cuda.torchscript
   learned_object_detection_rostopic: /camera/object_detection/image
 
-  use_learned_semantic_segmentation: 1
+  use_learned_semantic_segmentation: 0
   model_name_learned_semantic_segmentation: yolov8s-seg.torchscript
   learned_semantic_segmentation_rostopic: /camera/semantic_segmentation/image
 

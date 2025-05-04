@@ -4,7 +4,10 @@ Build
 .vscode
 *.pt
 *.torchscript
+*.png
+*.ckpt
 
+evaluation_results/BotanicGarden/1018_00
 
 examples/torchscripts_tutorials/datasets
 examples/torchscripts_tutorials/runs

@@ -4,6 +4,7 @@
 
 #ifdef USE_LIBTORCH
 #include "depth_estimations/MiDas_reconstruction.h"
+#include "two_view_depths/stereo_matching/fast_acvnet_plus.h"
 #endif
 
 #include "two_view_depths/two_view_reconstruction.h"
@@ -44,6 +45,7 @@ class Reconstructor{
 
     #ifdef USE_LIBTORCH 
     std::shared_ptr<MiDas> midas_reconstructor_;
+    std::shared_ptr<FastACVNetPlus> fast_acvnet_plus_reconstructor_;
     #endif
 
 

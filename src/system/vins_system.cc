@@ -211,9 +211,10 @@ void System::callbackVisualNavigation(){
                 const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque_ = this->initializer_->getInitializedReferenceCameraFrameDeque();
                 visual_frontend_->setRefCameraFrameDeque(ref_camera_frame_deque_);
                 this->initializer_->initializeGTTcwWithCameraFrame(ref_camera_frame_deque_.back(), this->state_);
-                for(const std::shared_ptr<CameraFrame> &ref_camera_frame : ref_camera_frame_deque_){
-                    this->state_.map_->update(ref_camera_frame);
+                for(int i = ref_camera_frame_deque_.size() - 1; i >= 0; i--){
+                    const std::shared_ptr<CameraFrame> &ref_camera_frame  = ref_camera_frame_deque_.at(i);
                     key_frame_manager_->updateKeyFrame(ref_camera_frame);                    
+                    this->state_.map_->update(ref_camera_frame);
                     updateState(ref_camera_frame);
                     
                 }
@@ -232,8 +233,8 @@ void System::callbackVisualNavigation(){
 
             
             if(camera_frame->status_ == CameraFrame::Status::NORMAL){
-                this->state_.map_->update(camera_frame);
                 key_frame_manager_->updateKeyFrame(camera_frame);                    
+                this->state_.map_->update(camera_frame);
                 updateState(camera_frame);
             }
 
@@ -243,6 +244,10 @@ void System::callbackVisualNavigation(){
             }
 
 
+        }
+
+        if(camera_frame->is_key_camera_frame_){
+            VLOG(VERBOSE) << "key camera frame";
         }
 
         this->visualizer_->publish(camera_frame, this->state_);

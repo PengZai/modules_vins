@@ -22,6 +22,7 @@ ros_rate_(40)
     this->tf_broadcaster_ = std::make_shared<tf::TransformBroadcaster>();
 
     this->output_pose_pub_ = this->nh_->advertise<geometry_msgs::PoseStamped>(this->sys_config_->visualizer_config_->rviz_params_->output_pose_rostopic_, 1);
+    this->output_key_frame_poses_pub_ = this->nh_->advertise<geometry_msgs::PoseArray>(this->sys_config_->visualizer_config_->rviz_params_->output_key_frame_poses_rostopic_, 1);
     this->output_GT_pose_pub_ = this->nh_->advertise<geometry_msgs::PoseStamped>(this->sys_config_->visualizer_config_->rviz_params_->output_groundtruth_pose_rostopic_, 1);
     this->output_trajectory_pub_ = this->nh_->advertise<nav_msgs::Path>(this->sys_config_->visualizer_config_->rviz_params_->output_trajectory_rostopic_, 1);
     this->output_GT_trajectory_pub_ = this->nh_->advertise<nav_msgs::Path>(this->sys_config_->visualizer_config_->rviz_params_->output_groundtruth_trajectory_rostopic_, 1);
@@ -54,6 +55,7 @@ void ROS1Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, c
         publishTF();
         publishImages(camera_frame);
         publishPoses(state);
+        publishKeyPoses(state);
         publishTrajectories(state);
         publishMapPoint(state);
 
@@ -142,6 +144,27 @@ void ROS1Visualizer::constructPoseMsg(const Sophus::SE3<double> &pose, geometry_
 }
 
 
+void ROS1Visualizer::constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::Pose &pose_msg){
+
+
+    const Eigen::Matrix3d &rotation = pose.rotationMatrix();
+    const Eigen::Vector3d &position = pose.translation();
+
+    // Example translation and rotation
+    const Eigen::Quaterniond q(rotation);
+
+    pose_msg.position.x = position.x();
+    pose_msg.position.y = position.y();
+    pose_msg.position.z = position.z();
+
+    pose_msg.orientation.x = q.x();
+    pose_msg.orientation.y = q.y();
+    pose_msg.orientation.z = q.z();
+    pose_msg.orientation.w = q.w();
+ 
+
+}
+
 
 void ROS1Visualizer::publishPoses(const State &state){
 
@@ -174,6 +197,28 @@ void ROS1Visualizer::publishPoses(const State &state){
 
 }
 
+
+void ROS1Visualizer::publishKeyPoses(const State &state){
+
+    if(!state.timestamp_key_T_c_w_map_.empty()){
+        
+        geometry_msgs::PoseArray pose_array_msg;
+        pose_array_msg.header.stamp = ros::Time::now();
+        pose_array_msg.header.frame_id = this->pose_frame_id_;
+
+        for (const auto& [timestamp, T_c_w] : state.timestamp_key_T_c_w_map_) {
+            
+            geometry_msgs::Pose pose_msg;
+            constructPoseMsg(T_c_w.inverse(), pose_msg);
+            pose_array_msg.poses.push_back(pose_msg);
+        }
+
+        this->output_key_frame_poses_pub_.publish(pose_array_msg);
+
+
+
+    }
+}
 
 void ROS1Visualizer::publishTrajectories(const State &state){
 

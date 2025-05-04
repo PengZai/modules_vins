@@ -5,7 +5,7 @@
 #include <Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
-
+#include <opencv2/calib3d.hpp>
 
 #include "../../system/system_config.h"
 #include "../../data/point.h"
@@ -26,10 +26,16 @@ class TwoViewReconstructor{
     public:
     TwoViewReconstructor(const std::shared_ptr<SystemConfig> &sys_config);    
     void reconstruct(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1);
+    void stereoBatchMatching(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j);
+    void twoViewTriangulation(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j);
     void checkTriangulatedPointsWithReprojection(const cv::Point2d &pt2d, const cv::Point3d &pt3d, const cv::Mat &T, const cv::Mat &K);
     
     std::shared_ptr<SystemConfig> sys_config_;
 
+
+    protected:
+    cv::Ptr<cv::StereoBM> stereoBM_;
+    int num_disparities_;
 };
 
     

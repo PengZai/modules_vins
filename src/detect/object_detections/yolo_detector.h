@@ -7,7 +7,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 
-#include "../../../data/camera.h"
+#include "../../data/camera.h"
 
 
 namespace modules_vins

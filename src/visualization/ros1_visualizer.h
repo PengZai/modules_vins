@@ -6,6 +6,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/point_cloud.h>
@@ -38,7 +39,9 @@ class ROS1Visualizer{
     void publishTF();
     void publishImages(const std::shared_ptr<CameraFrame> &camera_frame);
     void constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::PoseStamped &pose_msg);
+    void constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::Pose &pose_msg);
     void publishPoses(const State &state);
+    void publishKeyPoses(const State &state);
     void publishTrajectories(const State &state);
     void publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub);
     void publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub); 
@@ -53,6 +56,7 @@ class ROS1Visualizer{
     std::shared_ptr<tf::TransformBroadcaster> tf_broadcaster_;
     std::vector<image_transport::Publisher> output_image_pub_vector_;
     ros::Publisher output_pose_pub_;
+    ros::Publisher output_key_frame_poses_pub_;
     ros::Publisher output_GT_pose_pub_;
     ros::Publisher output_tracked_map_points_pub_;
     ros::Publisher output_trajectory_pub_;

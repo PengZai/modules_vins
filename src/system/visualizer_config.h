@@ -19,7 +19,9 @@ class OpenCVParameters: public Parameters{
     bool show_matching_in_time_;
     bool show_tracking_in_time_;
     bool show_sensor_depth_;
+    bool show_stereo_depth_;
     bool show_learned_depth_;
+    bool show_learned_stereo_disparity_;
     bool show_object_detection_;
     bool show_semantic_segmentation_;
 
@@ -34,6 +36,7 @@ class RVisParameters: public Parameters{
     public:
 
     std::string output_pose_rostopic_; 
+    std::string output_key_frame_poses_rostopic_;
     std::string output_trajectory_rostopic_;
     std::string output_tracked_map_points_rostopic_; 
     bool show_groundtruth_trajectory_;

@@ -4,6 +4,7 @@
 #include <memory>
 #include <map>
 
+
 #include "../system/system_config.h"
 #include "../log/logging.h"
 #include "camera.h"
