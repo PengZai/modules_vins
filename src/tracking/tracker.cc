@@ -15,6 +15,7 @@ void Tracker::trackInFrame(std::shared_ptr<CameraFrame> &camera_frame){
 
 
     std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+
     for(int j=1;j<(int)camera_frame->image_vector_.size();j++){
 
         std::shared_ptr<Image> &img_j = camera_frame->image_vector_.at(j);
@@ -30,6 +31,16 @@ void Tracker::trackInFrame(std::shared_ptr<CameraFrame> &camera_frame){
                 break;
             }
             // Manually assign `imgIdx`
+            cv::Point2d pt21 = img_0->keypoint_vector_[match.queryIdx]->pt2i_;
+            cv::KeyPoint cv_pt21 = img_0->cv_keypoint_vector_[match.queryIdx];
+
+            cv::Point2d pt22 = img_j->keypoint_vector_[match.trainIdx]->pt2i_;
+
+            double y_distance = std::abs(img_0->keypoint_vector_[match.queryIdx]->pt2i_.y - img_j->keypoint_vector_[match.trainIdx]->pt2i_.y);
+            if(y_distance > 10){
+                continue;
+            }
+
             match.imgIdx = img_j->sensor_id_; // Store index of the train image
             img_0->keypoint_vector_[match.queryIdx]->setMatchInFrame(match);
             img_0->matches_in_frame_.push_back(match);
@@ -50,7 +61,7 @@ void Tracker::trackInFrame(std::shared_ptr<CameraFrame> &camera_frame){
             tracked_keypoint_from_img_j->setLeftKeyPointInFrame(tracked_keypoint_from_img_0);
             
         }
-        VLOG(VERBOSE) << GREEN << img_j->matches_in_frame_.size() << " points were trakced in frame between " << img_0->sensor_id_  << " and " << img_j->sensor_id_ << RESET; 
+        LOG(INFO) << GREEN << img_j->matches_in_frame_.size() << " points were trakced in frame between " << img_0->sensor_id_  << " and " << img_j->sensor_id_ << RESET; 
 
     }
 
@@ -67,12 +78,22 @@ void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::share
     this->bf_->matching(img_from_current_frame, img_from_ref_frame, matches);
     double min_distance = matches.front().distance;
 
+
+
     for (int i=0; i < (int)matches.size(); i++) {
         cv::DMatch &match = matches[i];
         if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_time_)){
             // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
             break;
         }
+
+        cv::Point2d pt21 = img_from_current_frame->keypoint_vector_[match.queryIdx]->pt2i_;
+        cv::KeyPoint cv_pt21 = img_from_current_frame->cv_keypoint_vector_[match.queryIdx];
+
+        cv::Point2d pt22 = img_from_ref_frame->keypoint_vector_[match.trainIdx]->pt2i_;
+
+        double y_distance = std::abs(img_from_current_frame->keypoint_vector_[match.queryIdx]->pt2i_.y - img_from_ref_frame->keypoint_vector_[match.trainIdx]->pt2i_.y);
+
         // Manually assign `imgIdx`
         match.imgIdx = img_from_ref_frame->sensor_id_; // Store index of the train image
 
@@ -88,7 +109,7 @@ void Tracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::share
         tracked_keypoint_from_ref_frame->propagateMapPointPtr();
     }   
 
-    VLOG(VERBOSE) << GREEN << img_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
+    LOG(INFO) << GREEN << img_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
 
     
 
@@ -103,7 +124,7 @@ void Tracker::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
     if(ref_camera_frame == nullptr){
 
-        VLOG(VERBOSE) << RED << "ref_camera_frame is nullptr" << RESET;
+        LOG(INFO) << RED << "ref_camera_frame is nullptr" << RESET;
         return ;
     }
 

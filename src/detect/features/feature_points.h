@@ -9,6 +9,9 @@
 namespace modules_vins{
 
 
+
+
+
 class ORBFeature{
 
     public:
@@ -21,7 +24,8 @@ class ORBFeature{
     int num_features_;
     double scale_factor_;
     int level_pyramid_;
-    cv::Ptr<cv::ORB> orb;
+    cv::Ptr<cv::ORB> orb_;
+    cv::Ptr<cv::GFTTDetector> gftt_;
 
 
 };

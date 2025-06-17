@@ -18,21 +18,21 @@ bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation
     Sophus::Vector6d d = Transformation.log();
     double d_norm = d.norm();
 
-    VLOG(VERBOSE) << "number of inliers: " << num_inliers;
-    VLOG(VERBOSE) << "estimated_Transformation: \n" << Transformation.matrix();
-    VLOG(VERBOSE) << "the norm of estimated_Transformation norm: " << d_norm;
+    LOG(INFO) << "number of inliers: " << num_inliers;
+    LOG(INFO) << "estimated_Transformation: \n" << Transformation.matrix();
+    LOG(INFO) << "the norm of estimated_Transformation norm: " << d_norm;
     
     
 
     if(num_inliers < this->sys_config_->params_->min_inliers_)
     {
-        VLOG(VERBOSE) << "reject because inlier is too small: " << num_inliers;
+        LOG(INFO) << "reject because inlier is too small: " << num_inliers;
         return false;
     }
 
     if(d_norm > this->sys_config_->params_->threshold_for_pnp_pose_log_norm_){
 
-        VLOG(VERBOSE) <<"reject because motion is too large: " << d_norm;
+        LOG(INFO) <<"reject because motion is too large: " << d_norm;
         return false;
     }
 
@@ -109,7 +109,7 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
     if(ref_camera_frame == nullptr){
 
-        VLOG(VERBOSE) << RED << "ref_camera_frame is nullptr" << RESET;
+        LOG(INFO) << RED << "ref_camera_frame is nullptr" << RESET;
         return ;
     }
 
@@ -124,8 +124,15 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     std::vector<cv::Point2d> prev_pt2ds;
     std::vector<cv::Point3d> pt3ds;
 
+    std::vector<Eigen::Vector2d> eigen_pt2ds;
+    std::vector<Eigen::Vector3d> eigen_pt3ds;
+
+
+    const Eigen::Matrix3d K = this->sys_config_->camera_config_->params_vector_.at(0)->getIntrinsicsMatrix();
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(0)->getCVIntrinsicsMatrix();         
 
+    const Eigen::VectorXd distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(0)->getDistortionCoeffs();
+    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(0)->getCVDistortionCoeffs();
 
 
     for(int i=0; i < (int)img_0_from_current_frame->matches_in_time_.size();i++){
@@ -141,19 +148,22 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         }
 
         pt2ds.push_back(kp_from_current_frame->pt2i_);
+        eigen_pt2ds.push_back(Eigen::Vector2d(kp_from_current_frame->pt2i_.x, kp_from_current_frame->pt2i_.y));
+
         reprojected_pt2is.push_back(camera2pixel(kp_from_ref_frame->pt3d_, cv_K));
         prev_pt2ds.push_back(kp_from_ref_frame->pt2i_);
         pt3ds.push_back(kp_from_ref_frame->pt3d_);
+        eigen_pt3ds.push_back(Eigen::Vector3d(kp_from_ref_frame->pt3d_.x, kp_from_ref_frame->pt3d_.y, kp_from_ref_frame->pt3d_.z));
+
 
     }
 
     // for(int j=0;j<pt3ds.size();j++){
-    //     VLOG(VERBOSE) << "prev:" << prev_pt2is.at(j).x << " projected:"<< reprojected_pt2is.at(j).x << ":" << "curr" << pt2is.at(j).x;
+    //     LOG(INFO) << "prev:" << prev_pt2is.at(j).x << " projected:"<< reprojected_pt2is.at(j).x << ":" << "curr" << pt2is.at(j).x;
     // }
 
     // checkImages(img_0_from_previous_frame, img_0_from_current_frame);
 
-    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(0)->getCVDistortionCoeffs();
 
 
     cv::Mat translation_vec;
@@ -189,20 +199,37 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         Sophus::SO3<double>(estimated_rotation), estimated_translation
     );
 
-    // VLOG(VERBOSE) << "number of pair points: " << pt2ds.size();
+    // LOG(INFO) << "number of pair points: " << pt2ds.size();
     // checkEstimatedPose(estimated_T_current_cam_previous_cam, inlier_num);
     // img_0_from_current_frame->setTcw(estimated_T_current_cam_previous_cam * img_0_from_previous_frame->T_c_w_);
 
-    // VLOG(VERBOSE) << "translation_vec \n" << translation_vec;
-    // VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
+    // LOG(INFO) << "translation_vec \n" << translation_vec;
+    // LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
-    img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
+
+    LOG(INFO) << "Pnp:\n" << estimated_T_current_cam_ref_cam.matrix();
+
+    // estimated_T_current_cam_ref_cam = Sophus::SE3d();
+
+    // Sophus::SE3<double> before_optimized_estimated_T_current_cam_ref_cam = estimated_T_current_cam_ref_cam;
 
     if(checkEstimatedPose(estimated_T_current_cam_ref_cam, inlier_num) == true){
-        camera_frame->status_ = CameraFrame::NORMAL;
-        VLOG(VERBOSE) << "estimated_translation_vec \n" << translation_vec;
-        VLOG(VERBOSE) << "estimated_translation_norm : " << estimated_translation.norm();
-        VLOG(VERBOSE) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
+        // camera_frame->status_ = CameraFrame::NORMAL;
+        camera_frame->status_ = CameraFrame::FAIL;
+
+
+
+        LOG(INFO) << "before_BA\n" << estimated_T_current_cam_ref_cam.matrix();
+
+        bundleAdjustment(estimated_T_current_cam_ref_cam, eigen_pt3ds, eigen_pt2ds, K, distortion_coeffs);
+
+        LOG(INFO) << "after BA\n" << estimated_T_current_cam_ref_cam.matrix();
+
+        img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
+
+        LOG(INFO) << "estimated_translation_vec \n" << translation_vec;
+        LOG(INFO) << "estimated_translation_norm : " << estimated_translation.norm();
+        LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
     }
     else{
@@ -210,7 +237,11 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         return;
     }
 
+
+
     // camera_frame->status_ = CameraFrame::FAIL;
+
+
 
 
 

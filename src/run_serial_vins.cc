@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 
     }
 
-    VLOG(VERBOSE) << GREEN << "vins has finished successfully, then close the programe" << RESET;
+    LOG(INFO) << GREEN << "vins has finished successfully, then close the programe" << RESET;
 
 
     ros::shutdown();

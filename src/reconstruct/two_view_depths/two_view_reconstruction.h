@@ -27,9 +27,11 @@ class TwoViewReconstructor{
     TwoViewReconstructor(const std::shared_ptr<SystemConfig> &sys_config);    
     void reconstruct(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1);
     void stereoBatchMatching(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j);
-    void twoViewTriangulation(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j);
+    void twoViewTriangulationWithOpenCV(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j);
+    void twoViewTriangulationWithSVD(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j);
     void checkTriangulatedPointsWithReprojection(const cv::Point2d &pt2d, const cv::Point3d &pt3d, const cv::Mat &T, const cv::Mat &K);
     
+    bool triangulatePoint(const std::vector<Eigen::Matrix<double, 3, 4>> &poses, const std::vector<Eigen::Vector3d> points, Eigen::Vector3d &pt_world);
     std::shared_ptr<SystemConfig> sys_config_;
 
 

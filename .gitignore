@@ -11,3 +11,9 @@ evaluation_results/BotanicGarden/1018_00
 
 examples/torchscripts_tutorials/datasets
 examples/torchscripts_tutorials/runs
+examples/DepthAnything
+examples/Fast-ACVNet
+examples/FoundationStereo
+examples/ZoeDepth
+examples/openStereo
+examples/Midas

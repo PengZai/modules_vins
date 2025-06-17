@@ -18,7 +18,7 @@ void FileDataLoader::load_groundtruth(const std::string &path_to_file, std::map<
 
     std::ifstream file_in(path_to_file);
     if(!file_in){
-        VLOG(VERBOSE) << RED << "File not found: " << path_to_file <<  RESET;
+        LOG(INFO) << RED << "File not found: " << path_to_file <<  RESET;
     }
 
     std::string line;
@@ -63,12 +63,12 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
     this->view_full_.addQuery(this->bag_);
     ros::Time rosbag_start_time = this->view_full_.getBeginTime();
     ros::Time rosbag_end_time = this->view_full_.getEndTime();
-    VLOG(VERBOSE) << "ros bag start from " << std::to_string(rosbag_start_time.toSec()) << "s" << " to " << std::to_string(rosbag_end_time.toSec()) << "s";
+    LOG(INFO) << "ros bag start from " << std::to_string(rosbag_start_time.toSec()) << "s" << " to " << std::to_string(rosbag_end_time.toSec()) << "s";
 
 
     // Check to make sure we have data to play
     if (this->view_full_.size() == 0) {
-        VLOG(VERBOSE) << RED << "[SERIAL]: No messages to play on specified topics.  Exiting." << RESET;
+        LOG(INFO) << RED << "[SERIAL]: No messages to play on specified topics.  Exiting." << RESET;
         ros::shutdown();
         std::exit(EXIT_FAILURE);
     }
@@ -97,7 +97,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
             
     }
 
-    VLOG(VERBOSE) << GREEN << "Total of " << loaded_msgs_.size() << " messages!" << RESET;
+    LOG(INFO) << GREEN << "Total of " << loaded_msgs_.size() << " messages!" << RESET;
 
 
 
@@ -105,7 +105,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
     // loop over all the message we have collected, synchronize them according to ros time
     for(size_t m=0; m < this->loaded_msgs_.size(); m++){
 
-        VLOG(VERBOSE) << "we are preparing " << m << " message";
+        LOG(INFO) << "we are preparing " << m << " message";
 
         // Skip messages that we have already used
         if (used_index_set.find(m) != used_index_set.end()) {
@@ -177,14 +177,14 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
             msg_groups_ready_for_process.emplace_back(msg_group);
         }
         else{
-            VLOG(VERBOSE) << YELLOW <<"the message :" << m << " with rostopic :" << base_cam_rgb_rostopic \
+            LOG(INFO) << YELLOW <<"the message :" << m << " with rostopic :" << base_cam_rgb_rostopic \
             << ", unable to find all the pair, thus it will be discarded" << RESET;
         }
 
     }
 
 
-    VLOG(VERBOSE) << GREEN << "we get "<< msg_groups_ready_for_process.size() << " message groups in total of " << loaded_msgs_.size() << " messages!" << RESET;
+    LOG(INFO) << GREEN << "we get "<< msg_groups_ready_for_process.size() << " message groups in total of " << loaded_msgs_.size() << " messages!" << RESET;
 
 
 
@@ -234,7 +234,7 @@ int ROSDataLoader::findSynchronizedIndex(const std::string &target_rostopic, int
         synchronized_idx = smallest_time_offset_idx;
     }
     else{
-        VLOG(VERBOSE) << YELLOW <<"with base rostopic: " << base_topic << "message :" << m_source_index << " in ros time : "<< std::to_string(base_time)  << " s "\
+        LOG(INFO) << YELLOW <<"with base rostopic: " << base_topic << "message :" << m_source_index << " in ros time : "<< std::to_string(base_time)  << " s "\
         << ", Unable to find the pair with rostopic:"<< target_rostopic <<". finally find message: " \
         <<  smallest_time_offset_idx << " in ros time : "<< std::to_string(target_rostopic_time)  << " s " << " , with the smallest time offset : " \
         << std::to_string(smallest_time_offset);     

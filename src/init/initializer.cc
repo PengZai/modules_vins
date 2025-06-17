@@ -15,7 +15,7 @@ status_(Initializer::Status::NOT_INITIALIZED_YET)
     Eigen::Matrix<double, 3, 3> coordinate_R = this->sys_config_->params_->T_cam_GT_.block<3,3>(0,0);
     double coordinate_R_det = coordinate_R.determinant();
     if(std::abs(1-coordinate_R_det) > 0.1){
-        VLOG(VERBOSE) <<  RED << "det of extrinsic between GT and CAM small than 1 too much" << RESET;
+        LOG(INFO) <<  RED << "det of extrinsic between GT and CAM small than 1 too much" << RESET;
         std::exit(EXIT_FAILURE);
     }
 
@@ -65,7 +65,7 @@ bool Initializer::checkSuccess(){
 
     double culmulative_trans = getCumulativeTranslationInCameraFrameDeque(this->ref_camera_frame_deque_);
 
-    VLOG(VERBOSE) << " cumulative value of translation in reference camera frame deque is : " << culmulative_trans;
+    LOG(INFO) << " cumulative value of translation in reference camera frame deque is : " << culmulative_trans;
 
     if(culmulative_trans>=this->sys_config_->params_->minimum_cumulative_translation_ &&
          this->ref_camera_frame_deque_.size() >= this->sys_config_->params_->minimum_num_in_ref_camera_frame_ &&
@@ -99,7 +99,10 @@ double Initializer::getCumulativeTranslationInCameraFrameDeque(const std::deque<
 }
 
 
-void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame){
+void Initializer::updateStatus(std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque){
+
+
+    std::shared_ptr<CameraFrame> &latest_camera_frame = this->camera_frame_deque_.back();
 
 
     if(this->status_ == Initializer::Status::NOT_INITIALIZED_YET){
@@ -112,7 +115,7 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
         this->origin_index_in_camera_frame_deque_ = 0;
         this->camera_frame_index_ = this->origin_index_in_camera_frame_deque_+1;
         this->index_in_camera_frame_deque_for_latest_ref_camera_frame_ = this->origin_index_in_camera_frame_deque_;
-        VLOG(VERBOSE) << GREEN << "reset nitializer::Status from NOT_INITIALIZED_YET to EXTEND"  << RESET;
+        LOG(INFO) << GREEN << "reset nitializer::Status from NOT_INITIALIZED_YET to EXTEND"  << RESET;
         this->status_ = Initializer::Status::EXTEND;
         return;
     }
@@ -133,7 +136,7 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
 
             std::shared_ptr<CameraFrame> &ref_camera_frame = ref_camera_frame_deque_.at(i);
             current_camera_frame->ref_camera_frame_ = ref_camera_frame;
-            VLOG(VERBOSE) << "estimating pose betweeen reference frame with id: " << ref_camera_frame->id_ << " and current frame with id: " << current_camera_frame->id_;
+            LOG(INFO) << "estimating pose betweeen reference frame with id: " << ref_camera_frame->id_ << " and current frame with id: " << current_camera_frame->id_;
 
             this->trakcer_->pipeline(current_camera_frame);
             this->pose_estimator_->pipeline(current_camera_frame);
@@ -141,7 +144,7 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
             // std::shared_ptr<Image> img_0_from_current_frame = current_camera_frame->image_vector_.at(0);
             // std::shared_ptr<Image> img_0_from_ref_frame = ref_camera_frame->image_vector_.at(0);
             // double diff_trans = std::abs(img_0_from_current_frame->T_c_w_.translation().norm() - img_0_from_ref_frame->T_c_w_.translation().norm());
-            // VLOG(VERBOSE) << "estimated difference of translation: " << diff_trans;
+            // LOG(INFO) << "estimated difference of translation: " << diff_trans;
 
             if(current_camera_frame->status_ == CameraFrame::Status::NORMAL){
                 break;
@@ -150,11 +153,11 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
         }
     
         if(current_camera_frame->status_ == CameraFrame::Status::NORMAL){
-            VLOG(VERBOSE) << GREEN << " correct pose estimation, add camera frame id : " <<  this->camera_frame_deque_.at(this->camera_frame_index_)->id_  << " to ref_camera_frame_deque_"<< RESET;
+            LOG(INFO) << GREEN << " correct pose estimation, add camera frame id : " <<  this->camera_frame_deque_.at(this->camera_frame_index_)->id_  << " to ref_camera_frame_deque_"<< RESET;
             this->ref_camera_frame_deque_.push_front(current_camera_frame);
             index_in_camera_frame_deque_for_latest_ref_camera_frame_ = this->camera_frame_index_;
             if(checkSuccess()){
-                VLOG(VERBOSE) << GREEN << "initialization process successes, return"  << RESET;
+                LOG(INFO) << GREEN << "initialization process successes, return"  << RESET;
                 this->status_ = Initializer::Status::SUCCESS;                
                 return;
             }
@@ -162,13 +165,13 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
         }
         else{
             if( camera_frame_index_ - index_in_camera_frame_deque_for_latest_ref_camera_frame_ > this->sys_config_->params_->maximum_num_fail_){
-                VLOG(VERBOSE) << RED <<"fail to initialize system with camera frame id: " << this->camera_frame_deque_.at(this->origin_index_in_camera_frame_deque_)->id_  << RESET;
-                VLOG(VERBOSE) << GREEN << "reset nitializer::Status from WORKING to FAIL"  << RESET;
+                LOG(INFO) << RED <<"fail to initialize system with camera frame id: " << this->camera_frame_deque_.at(this->origin_index_in_camera_frame_deque_)->id_  << RESET;
+                LOG(INFO) << GREEN << "reset nitializer::Status from WORKING to FAIL"  << RESET;
                 this->status_ = Initializer::Status::FAIL; 
 
             }
             else{
-                VLOG(VERBOSE) << YELLOW << "wrong pose estimation, skip the camera frame id : " <<  this->camera_frame_deque_.at(this->camera_frame_index_)->id_ << RESET;
+                LOG(INFO) << YELLOW << "wrong pose estimation, skip the camera frame id : " <<  this->camera_frame_deque_.at(this->camera_frame_index_)->id_ << RESET;
             }
         }
 
@@ -178,7 +181,7 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
         if(this->status_ == Initializer::Status::WORKING){
             this->camera_frame_index_++;
             if(this->camera_frame_index_ >= this->camera_frame_deque_.size()){
-                VLOG(VERBOSE) << YELLOW << "not enough camera frames for initialization, we have to extend camera frame deque"  << RESET;
+                LOG(INFO) << YELLOW << "not enough camera frames for initialization, we have to extend camera frame deque"  << RESET;
                 this->status_ = Initializer::Status::EXTEND;  
             }
         }
@@ -194,8 +197,8 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
             this->index_in_camera_frame_deque_for_latest_ref_camera_frame_ = this->origin_index_in_camera_frame_deque_;
             this->camera_frame_index_ = this->origin_index_in_camera_frame_deque_+1;
             this->ref_camera_frame_deque_.push_front(this->camera_frame_deque_.at(this->origin_index_in_camera_frame_deque_));
-            VLOG(VERBOSE) << RED << "we reset origin of system with camera frame id: " << this->camera_frame_deque_.at(this->origin_index_in_camera_frame_deque_)->id_  << RESET;
-            VLOG(VERBOSE) << GREEN << "reset nitializer::Status from FAIL to WORKING"  << RESET;
+            LOG(INFO) << RED << "we reset origin of system with camera frame id: " << this->camera_frame_deque_.at(this->origin_index_in_camera_frame_deque_)->id_  << RESET;
+            LOG(INFO) << GREEN << "reset nitializer::Status from FAIL to WORKING"  << RESET;
             this->status_ = Initializer::Status::WORKING;
         }
 
@@ -208,13 +211,13 @@ void Initializer::updateStatus(std::shared_ptr<CameraFrame> &latest_camera_frame
 
 void Initializer::printfStatus(){
 
-    VLOG(VERBOSE) << GREEN <<"Initializer::Status: " << StatusToString(this->status_) << RESET;
-    VLOG(VERBOSE) << GREEN << "camera_frame_deque_.size : " << this->camera_frame_deque_.size() << RESET;
-    VLOG(VERBOSE) << GREEN << "origin_index_in_camera_frame_deque_ : " <<  this->origin_index_in_camera_frame_deque_ << RESET;
-    VLOG(VERBOSE) << GREEN << "camera_frame_index_ : " <<  this->camera_frame_index_ << RESET;
-    VLOG(VERBOSE) << GREEN << "ref_camera_frame_deque_.size : " << this->ref_camera_frame_deque_.size() << RESET;
-    VLOG(VERBOSE) << GREEN << "index_in_camera_frame_deque_for_latest_ref_camera_frame_ : " <<  this->index_in_camera_frame_deque_for_latest_ref_camera_frame_ << RESET;
-    VLOG(VERBOSE) << GREEN << "culmulative translation in reference cmaera frame deque : " <<  getCumulativeTranslationInCameraFrameDeque(this->ref_camera_frame_deque_) << RESET;
+    LOG(INFO) << GREEN <<"Initializer::Status: " << StatusToString(this->status_) << RESET;
+    LOG(INFO) << GREEN << "camera_frame_deque_.size : " << this->camera_frame_deque_.size() << RESET;
+    LOG(INFO) << GREEN << "origin_index_in_camera_frame_deque_ : " <<  this->origin_index_in_camera_frame_deque_ << RESET;
+    LOG(INFO) << GREEN << "camera_frame_index_ : " <<  this->camera_frame_index_ << RESET;
+    LOG(INFO) << GREEN << "ref_camera_frame_deque_.size : " << this->ref_camera_frame_deque_.size() << RESET;
+    LOG(INFO) << GREEN << "index_in_camera_frame_deque_for_latest_ref_camera_frame_ : " <<  this->index_in_camera_frame_deque_for_latest_ref_camera_frame_ << RESET;
+    LOG(INFO) << GREEN << "culmulative translation in reference cmaera frame deque : " <<  getCumulativeTranslationInCameraFrameDeque(this->ref_camera_frame_deque_) << RESET;
 
 }
 
@@ -223,23 +226,26 @@ void Initializer::printfStatus(){
 
 
 
-void Initializer::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
+void Initializer::pipeline(std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque){
 
 
-    VLOG(VERBOSE) << "Initializer start with camera frame id: " << camera_frame->id_;
+
+    std::shared_ptr<CameraFrame> &camera_frame = this->camera_frame_deque_.back();
+
+    LOG(INFO) << "Initializer start with camera frame id: " << camera_frame->id_;
 
 
     this->detector_->pipeline(camera_frame);
 
 
-    updateStatus(camera_frame);
+    updateStatus(camera_frame_deque);
 
 
     this->reconstructor_->pipeline(camera_frame);
 
     
     
-    VLOG(VERBOSE) << "Initializer end with camera frame id: " << camera_frame->id_;
+    LOG(INFO) << "Initializer end with camera frame id: " << camera_frame->id_;
     
 
 

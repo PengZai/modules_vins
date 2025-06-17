@@ -131,7 +131,7 @@ RUN echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
 # ultralytics library for YOLO
 RUN python3 -m pip install \
     ultralytics \
-    timm==0.5.4 \
+    timm==0.6.12 \
     opencv-python \
     matplotlib \
     tqdm \
@@ -171,8 +171,17 @@ RUN cd Pangolin && git checkout tags/v0.6 && mkdir build
 WORKDIR /root/Pangolin/build
 RUN cmake .. && make -j$(NPROC) && make install
 
-
-
-
+# for depth anything v2
+RUN python3 -m pip install \
+    gradio_imageslider \
+    gradio==4.29.0 \
+    open3d \
+# for foundation stereo
+    trimesh \
+    omegaconf \
+    joblib \
+    transformations \
+    einops \
+    flash_attn 
 
 WORKDIR /root

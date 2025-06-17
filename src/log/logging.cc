@@ -10,18 +10,12 @@ std::unordered_map<std::string, int> Logger::LOG_LEVEL_MAP_ = {
     {"VERBOSE", VERBOSE},
 };
 
-void CustomPrefix(std::ostream &s, const google::LogMessageInfo &l, void*) {
-    s << l.severity
-    << " id:"
-    << l.thread_id << std::setfill('0')
-    << " "
-    << l.filename << ':' << l.line_number << "]";
- }
+
 
 void Logger::setLogger(const char* const *argv, const std::string &log_verbosity){
 
     std::cout << "Logging system is being initialized" << std::endl;
-    google::InitGoogleLogging(argv[0], &CustomPrefix);
+    google::InitGoogleLogging(argv[0]);
     FLAGS_logtostderr = 1;
     FLAGS_v = LOG_LEVEL_MAP_[log_verbosity];
 

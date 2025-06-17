@@ -28,7 +28,7 @@ void FastACVNetPlus::reconstruct(const std::shared_ptr<Image> &left_img, const s
 
     if(left_img_height != right_img_height || left_img_width != right_img_width){
         
-        VLOG(VERBOSE) << " left image size " << " left : (" << left_img_height << "," << left_img_width << ") is not equal to right image size : (" <<  right_img_height << "," << right_img_width << ")";
+        LOG(INFO) << " left image size " << " left : (" << left_img_height << "," << left_img_width << ") is not equal to right image size : (" <<  right_img_height << "," << right_img_width << ")";
         return;
     }
 

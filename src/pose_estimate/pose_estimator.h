@@ -7,6 +7,8 @@
 
 #include "../data/camera.h"
 #include "../system/system_config.h"
+#include "../optimization/bundle_adjustment.h"
+
 
 namespace modules_vins
 {

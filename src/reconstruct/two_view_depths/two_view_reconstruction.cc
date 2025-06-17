@@ -24,15 +24,15 @@ void TwoViewReconstructor::checkTriangulatedPointsWithReprojection(const cv::Poi
     cv::Mat R = T(cv::Range(0,3), cv::Range(0,3));  // 3x3 rotation
     cv::Mat t = T(cv::Range(0,3), cv::Range(3,4));  // 3x1 translation
 
-    // VLOG(VERBOSE) << "K " << K;
-    // VLOG(VERBOSE) << "R " << R;
-    // VLOG(VERBOSE) << "t " << t;
+    // LOG(INFO) << "K " << K;
+    // LOG(INFO) << "R " << R;
+    // LOG(INFO) << "t " << t;
 
 
     // convert 3d keypoint to camera coordinate;
     cv::Mat reprojected_cam_pt3d = R*(cv::Mat_<double>(3,1) << pt3d.x, pt3d.y, pt3d.z) + t;
 
-    // VLOG(VERBOSE) << "reprojected_cam_pt3d " << reprojected_cam_pt3d;
+    // LOG(INFO) << "reprojected_cam_pt3d " << reprojected_cam_pt3d;
 
     cv::Point2d reprojected_normalized_pt2d(
         reprojected_cam_pt3d.at<double>(0,0)/reprojected_cam_pt3d.at<double>(2,0), 
@@ -41,12 +41,12 @@ void TwoViewReconstructor::checkTriangulatedPointsWithReprojection(const cv::Poi
 
     cv::Point2d res = reprojected_normalized_pt2d - normalized_pt2d;
 
-    VLOG(VERBOSE) << " checkTriangulatedPoints ";
-    VLOG(VERBOSE) << " pt2d in pixel plane: " << pt2d;
-    VLOG(VERBOSE) << " pt3d in camera coordinate: " << pt3d;
-    VLOG(VERBOSE) << " normalized_pt2 :" << normalized_pt2d;
-    VLOG(VERBOSE) << " reprojected_normalized_pt2d: " << reprojected_normalized_pt2d;
-    VLOG(VERBOSE) << " reprojected_normalized_pt2d - normalized_pt2: " << res;
+    LOG(INFO) << " checkTriangulatedPoints ";
+    LOG(INFO) << " pt2d in pixel plane: " << pt2d;
+    LOG(INFO) << " pt3d in camera coordinate: " << pt3d;
+    LOG(INFO) << " normalized_pt2 :" << normalized_pt2d;
+    LOG(INFO) << " reprojected_normalized_pt2d: " << reprojected_normalized_pt2d;
+    LOG(INFO) << " reprojected_normalized_pt2d - normalized_pt2: " << res;
 
     
 }
@@ -56,8 +56,14 @@ void TwoViewReconstructor::checkTriangulatedPointsWithReprojection(const cv::Poi
 
 void TwoViewReconstructor::reconstruct(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j){
 
+    if(img_i->matches_in_frame_.size() == 0){
+        LOG(INFO) << RED <<"There aren't any match information in img i" << RESET;
+        return;
+    }
 
-    twoViewTriangulation(img_i, img_j);
+    // twoViewTriangulationWithOpenCV(img_i, img_j);
+    twoViewTriangulationWithSVD(img_i, img_j);
+
     
 }
 
@@ -89,13 +95,102 @@ void TwoViewReconstructor::stereoBatchMatching(const std::shared_ptr<Image> &lef
 
 }
 
-void TwoViewReconstructor::twoViewTriangulation(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j){
+/**
+ * linear triangulation with SVD
+ * s1 * x1 = P * X, s1 is depth scale, x1 is normalized pixel in camera coordinate, P is [R|t], X is world point(actuall point in left camera coordinate)
+ * @param poses     poses, the pose could see pt_world
+ * @param points    points in normalized plane
+ * @param pt_world  triangulated point in the world
+ * @return true if success
+ * 
+ */
 
-
-    if(img_i->matches_in_frame_.size() == 0){
-        VLOG(VERBOSE) << RED <<"There aren't any match information in img i" << RESET;
-        return;
+bool TwoViewReconstructor::triangulatePoint(const std::vector<Eigen::Matrix<double, 3, 4>> &poses,
+                   const std::vector<Eigen::Vector3d> points, Eigen::Vector3d &pt_world) {
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2 * poses.size(), 4);
+    Eigen::Matrix<double, Eigen::Dynamic, 1> b(2 * poses.size());
+    b.setZero();
+    for (size_t i = 0; i < poses.size(); ++i) {
+        Eigen::Matrix<double, 3, 4> m = poses[i];
+        A.block<1, 4>(2 * i, 0) = points[i][0] * m.row(2) - m.row(0);      // u * P3 - P1
+        A.block<1, 4>(2 * i + 1, 0) = points[i][1] * m.row(2) - m.row(1);  // v * P3 - P2
     }
+    auto svd = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
+    pt_world = (svd.matrixV().col(3) / svd.matrixV()(3, 3)).head<3>();
+
+    // if (svd.singularValues()[3] / svd.singularValues()[2] < 1e-2) {
+    //     // solution qualtiy is not good, give up
+    //     return true;
+    // }
+
+    // return false;
+    // std::cout << "condition number : " << svd.singularValues()[0] / svd.singularValues()[3] << std::endl;
+
+    if (svd.singularValues()[3] / svd.singularValues()[2] > 1e-2 || pt_world[2] <= 0) {
+        // solution qualtiy is not good, give up
+        return false;
+    }
+
+    return true;
+}
+
+
+void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j){
+
+    std::vector<Eigen::Matrix<double, 3, 4>> poses;
+
+    cv::Mat cv_Ki = this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->getCVIntrinsicsMatrix();
+    cv::Mat cv_Kj = this->sys_config_->camera_config_->params_vector_.at(img_j->sensor_id_)->getCVIntrinsicsMatrix();
+
+    Eigen::Matrix<double, 3, 4> Ti;
+    Ti.setZero();
+    Ti.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();  // Set top-left 3x3 to identity
+
+    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_j->sensor_id_, img_i->sensor_id_);
+    Eigen::Matrix<double, 3, 4> Tj = T_cam_j_cam_i.topRows(3);
+
+    poses.emplace_back(Ti);
+    poses.emplace_back(Tj);
+
+    int success_count = 0;
+
+    for(int i=0; i < (int)img_i->matches_in_frame_.size(); i++){
+
+        std::vector<Eigen::Vector3d> normalized_pt3d;
+        Eigen::Vector3d pt_world;
+        cv::DMatch &match = img_i->matches_in_frame_[i];
+
+        cv::Point2i &tracked_pt2i_from_img_i = img_i->keypoint_vector_[match.queryIdx]->pt2i_;
+        cv::Point2i &tracked_pt2i_from_img_j = img_j->keypoint_vector_[match.trainIdx]->pt2i_;
+
+        cv::Point2d normalized_pt2d_from_img_i = pixel2norm(tracked_pt2i_from_img_i, cv_Ki);
+        cv::Point2d normalized_pt2d_from_img_j = pixel2norm(tracked_pt2i_from_img_j, cv_Kj);
+        
+ 
+        normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_i.x, normalized_pt2d_from_img_i.y, 1.0));
+        normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_j.x, normalized_pt2d_from_img_j.y, 1));
+        
+        bool success = triangulatePoint(poses, normalized_pt3d, pt_world);
+        if(success == false){
+            continue;
+        }
+
+        img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
+        LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
+
+        success_count++;
+
+    }
+
+    LOG(INFO) << GREEN << success_count << " triangulated points is successful" << RESET;
+
+
+
+}
+
+
+void TwoViewReconstructor::twoViewTriangulationWithOpenCV(const std::shared_ptr<Image> &img_i, const std::shared_ptr<Image> &img_j){
+
 
 
     cv::Mat cv_Ki = this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->getCVIntrinsicsMatrix();
@@ -149,7 +244,7 @@ void TwoViewReconstructor::twoViewTriangulation(const std::shared_ptr<Image> &im
 
         col /= col.at<double>(3, 0);  // Normalize by last coordinate
         if(col.at<double>(2, 0) <= 0){
-            // VLOG(VERBOSE) << "keypoint " << match.queryIdx << " has negative z" << col;
+            // LOG(INFO) << "keypoint " << match.queryIdx << " has negative z" << col;
             continue;
 
         }

@@ -45,7 +45,7 @@ class Parameters{
         template <typename T>
         void parse(const std::string &parameter_name, T &parsed_value){
             (*this->node_)[parameter_name] >> parsed_value;
-            VLOG(VERBOSE) << parameter_name << " : " << parsed_value;
+            LOG(INFO) << parameter_name << " : " << parsed_value;
         }
 
         template <typename T>
@@ -60,7 +60,7 @@ class Parameters{
                 log_stream << parsed_values[i] << ", ";
             }
             
-            VLOG(VERBOSE) << log_stream.str() << "]";
+            LOG(INFO) << log_stream.str() << "]";
  
         }
 
@@ -76,7 +76,7 @@ class Parameters{
                 
             }
             
-            VLOG(VERBOSE) << log_stream.str() << "]";
+            LOG(INFO) << log_stream.str() << "]";
  
         }
 
@@ -102,7 +102,7 @@ class Parameters{
                 if(i < node.size()-1) {log_stream << "\n";}
             }
 
-            VLOG(VERBOSE) << log_stream.str() << "]";
+            LOG(INFO) << log_stream.str() << "]";
 
 
         }

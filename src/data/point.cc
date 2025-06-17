@@ -126,7 +126,7 @@ void KeyPoint::propagateMapPointPtr(){
         setMapPointPtrRightForward(this->map_point_ptr_);
     }
     else{
-        // VLOG(VERBOSE) << YELLOW << "trying propagate a null map point ptr";
+        // LOG(INFO) << YELLOW << "trying propagate a null map point ptr";
     }
 }
 

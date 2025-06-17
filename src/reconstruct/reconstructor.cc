@@ -17,6 +17,8 @@ Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
     if(this->sys_config_->camera_config_->params_vector_.at(0)->use_learned_stereo_matching_){
 
         this->fast_acvnet_plus_reconstructor_ = std::make_shared<FastACVNetPlus>(this->sys_config_, sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_stereo_matching_);
+        // this->foundation_stereo_reconstructor_ = std::make_shared<FoundationStereo>(this->sys_config_, sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_stereo_matching_);
+
     }
 
     #endif
@@ -66,6 +68,8 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
             #ifdef USE_LIBTORCH
             if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_stereo_matching_){
                 this->fast_acvnet_plus_reconstructor_->reconstruct(img_0, img_i);
+
+                // this->foundation_stereo_reconstructor_->reconstruct(img_0, img_i);
             }
             #endif
 
@@ -105,7 +109,7 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
     //         double depth = img_0->depth_.at<double>(row, col);
     //         if(depth == -1){
-    //             // VLOG(VERBOSE) << "depth = -1 at" << " row: " << row << ", col: " << col;
+    //             // LOG(INFO) << "depth = -1 at" << " row: " << row << ", col: " << col;
     //             continue;
     //         }
 

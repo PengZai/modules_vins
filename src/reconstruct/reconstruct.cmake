@@ -16,6 +16,7 @@ if(USE_LIBTORCH)
     list(APPEND LIBRARY_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/reconstruct/depth_estimations/MiDas_reconstruction.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/reconstruct/two_view_depths/stereo_matching/fast_acvnet_plus.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/reconstruct/two_view_depths/stereo_matching/foundation_stereo.cc
     )
 
 endif()

@@ -23,7 +23,7 @@ void SystemConfig::loadFromPath(const std::string &config_path){
     camera_config->loadConfigFromPath(camera_config_path);
     int Nnode = camera_config->file_storage_->root().size();
     if(Nnode < this->params_->max_cameras_){
-        VLOG(VERBOSE) << RED << " maxCameras could not be out of configure number of camera" << RESET;
+        LOG(INFO) << RED << " maxCameras could not be out of configure number of camera" << RESET;
         std::exit(EXIT_FAILURE);
     }
 
@@ -140,7 +140,7 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("check_triangulation", this->check_triangulation_);
 
    
-    VLOG(VERBOSE) << "config file loaded";
+    LOG(INFO) << "config file loaded";
 
 }
 

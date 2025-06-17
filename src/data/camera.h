@@ -58,6 +58,8 @@ class Image{
         int sensor_id_; 
         cv::Mat color_data_;
         cv::Mat gray_data_;
+        cv::Mat normalize_gray_data_;
+
         cv::Mat depth_;
         cv::Mat learned_depth_;
         cv::Mat stereo_depth_;

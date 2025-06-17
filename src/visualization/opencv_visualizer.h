@@ -46,6 +46,8 @@ class OpenCVVisualizer{
     std::shared_ptr<Map> map_;
 
     std::vector<std::string> classes_;
+    std::vector<cv::Scalar> class_colors_;
+
 
 };
     

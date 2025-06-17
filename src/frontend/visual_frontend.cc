@@ -74,10 +74,10 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
     this->camera_frame_deque_.push_back(camera_frame);
 
-    VLOG(VERBOSE) << "VisualFrontend Start with camera frame id: " << camera_frame->id_;
+    LOG(INFO) << "VisualFrontend Start with camera frame id: " << camera_frame->id_;
 
     if(camera_frame->id_ == 181){
-        VLOG(VERBOSE) << " just test ";
+        LOG(INFO) << " just test ";
     }
 
     std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
@@ -88,7 +88,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
         std::shared_ptr<CameraFrame> &ref_camera_frame = ref_camera_frame_deque_.at(i);
         
-        VLOG(VERBOSE) << "estimating pose betweeen reference frame with id: " << ref_camera_frame->id_ << " and current frame with id: " << camera_frame->id_;
+        LOG(INFO) << "estimating pose betweeen reference frame with id: " << ref_camera_frame->id_ << " and current frame with id: " << camera_frame->id_;
         camera_frame->ref_camera_frame_ = ref_camera_frame;
 
         this->trakcer_->pipeline(camera_frame);
@@ -99,7 +99,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         }
         else{
             camera_frame->cleanTrackInTimeRelationship();
-            VLOG(VERBOSE) << YELLOW << " Fail pose estimation with reference camera frame id : " << ref_camera_frame->id_ << " for camera frame id : " << camera_frame->id_ << RESET;
+            LOG(INFO) << YELLOW << " Fail pose estimation with reference camera frame id : " << ref_camera_frame->id_ << " for camera frame id : " << camera_frame->id_ << RESET;
         }
 
     }
@@ -110,7 +110,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         maintainRefCameraFrameDeque();
     }
     else{
-        VLOG(VERBOSE) << YELLOW << " Fail pose estimation for camera frame id : " << camera_frame->id_ << RESET;
+        LOG(INFO) << YELLOW << " Fail pose estimation for camera frame id : " << camera_frame->id_ << RESET;
         if(camera_frame_deque_.size() - (index_in_camera_frame_deque_for_latest_ref_camera_frame_+1) > this->sys_config_->params_->maximum_num_fail_){
 
             this->status_ = Status::GET_LOST;
@@ -119,7 +119,7 @@ void VisualFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
     this->reconstructor_->pipeline(camera_frame);
 
-    VLOG(VERBOSE) << "VisualFrontend End with camera frame id: " << camera_frame->id_;
+    LOG(INFO) << "VisualFrontend End with camera frame id: " << camera_frame->id_;
 
 }
 

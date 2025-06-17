@@ -6,7 +6,7 @@ project(modules_vins)
 # It tells CMake where to look for install prefixes of libraries or packages. 
 # This is especially useful if your dependencies are installed in non-standard locations (not in /usr or /usr/local on Linux, for example).
 
-option(USE_LIBTORCH "Enable libtorch" ON)
+option(USE_LIBTORCH "Enable libtorch" OFF)
 
 
 list(APPEND CMAKE_PREFIX_PATH "/opt/ros/noetic")
@@ -16,9 +16,10 @@ set(OpenCV_DIR "/usr/local/lib/cmake/opencv4")
 find_package(OpenCV 4 REQUIRED)
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 find_package(Boost REQUIRED COMPONENTS system filesystem thread date_time)
-find_package(Ceres REQUIRED)
 find_package(Sophus REQUIRED)
-find_package(glog 0.6.0 REQUIRED)
+# find_package(glog 0.6.0 REQUIRED)
+find_package(Ceres REQUIRED)
+find_package(gflags REQUIRED)
 find_package(Pangolin 0.6 REQUIRED)
 if(USE_LIBTORCH)
     set(CMAKE_CUDA_ARCHITECTURES 89)

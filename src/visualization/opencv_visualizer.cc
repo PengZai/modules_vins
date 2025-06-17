@@ -10,14 +10,42 @@ sys_config_(sys_config), GreenColor_(cv::Scalar(0,255,0)), RedColor_(cv::Scalar(
 {
 
     // Note that in this example the classes are hard-coded
-    this->classes_ = {"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant",
-        "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra",
-        "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
-        "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife",
-        "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair",
-        "couch", "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
-        "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"};
+    this->classes_ = {"others","cover","grassland","chair"
+        "bush",
+        "tree trunk",
+        "tree",
+        "sky",
+        "road",
+        "grass",
+        "flower bed",
+        "swing",
+        "dustbin",
+        "water plants",
+        "lamp",
+        "column",
+        "building",
+        "water",
+        "bridge",
+        "facility",
+        "fencing",
+        "door",
+        "sign",
+        "person",
+        "bike",
+        "rider"};
+
+    cv::RNG rng(12345);  // deterministic random
+    
+    for (int i = 0; i < this->classes_.size(); ++i) {
+        int r = rng.uniform(0, 256);
+        int g = rng.uniform(0, 256);
+        int b = rng.uniform(0, 256);
+        this->class_colors_.emplace_back(b, g, r);  // OpenCV uses BGR
+    }
+    
+      
 }
+
 
 
 void OpenCVVisualizer::setMap(const std::shared_ptr<Map> &map){
@@ -50,7 +78,7 @@ void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame>
 
         
         const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
-        cv::Mat img_i_data = img_i->color_data_.clone();
+        cv::Mat img_i_data = img_i->normalize_gray_data_.clone();
 
         if(i==0){
             img_0 = img_i;
@@ -92,7 +120,7 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
 
 
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
-    cv::Mat img_0_color_data = img_0->color_data_.clone();
+    cv::Mat img_0_color_data = img_0->normalize_gray_data_.clone();
 
 
     for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
@@ -114,7 +142,7 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
     if(previous_camera_frame){
 
         const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame->image_vector_.at(0);
-        cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->color_data_.clone();
+        cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->normalize_gray_data_.clone();
     
         cv::Mat img_0_matches_in_time;
         cv::drawMatches(img_0_color_data, img_0->cv_keypoint_vector_, img_0_color_data_from_previous_camera_frame, img_0_from_previous_camera_frame->cv_keypoint_vector_, img_0->matches_in_time_, img_0_matches_in_time,
@@ -258,7 +286,7 @@ void OpenCVVisualizer::invDepthAndMixColor(const cv::Mat &input_depth, const cv:
     cv::applyColorMap(depth_visual, depth_visual, cv::COLORMAP_JET); //COLORMAP_HOT, COLORMAP_JET
 
      // Blend images (alpha blending)
-    double alpha = 0.9;  // depth overlay transparency (0 = invisible, 1 = fully depth)
+    double alpha = 1.0;  // depth overlay transparency (0 = invisible, 1 = fully depth)
     double beta = 1.0 - alpha;
     cv::addWeighted(depth_visual, alpha, input_color, beta, 0.0, mixed_depth_color);
 
@@ -279,12 +307,20 @@ void OpenCVVisualizer::publishObjectDetection(const std::shared_ptr<CameraFrame>
             // Show the results
             for (const BoxOutput& box_output : img_i->box_outputs_) {
 
-                // Draw bounding box on image
-                cv::rectangle(img_i_color_data, box_output.box_, cv::Scalar(0, 255, 0), 2);
+                std::string detected_class = this->classes_[box_output.class_id_];
+                // if(detected_class == "tree"){
+                //      // Draw bounding box on image
+                //     cv::rectangle(img_i_color_data, box_output.box_, this->class_colors_[box_output.class_id_], 2);
+
+                //     // Label
+                //     std::string label = "ID: " + detected_class;
+                //     cv::putText(img_i_color_data, label, cv::Point(box_output.box_.x, box_output.box_.y-10), cv::FONT_HERSHEY_SIMPLEX, 0.5, this->class_colors_[box_output.class_id_], 1);
+                // }
+                cv::rectangle(img_i_color_data, box_output.box_, this->class_colors_[box_output.class_id_], 2);
 
                 // Label
-                std::string label = "ID: " + this->classes_[box_output.class_id_];
-                cv::putText(img_i_color_data, label, cv::Point(box_output.box_.x, box_output.box_.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                std::string label = "ID: " + detected_class;
+                cv::putText(img_i_color_data, label, cv::Point(box_output.box_.x, box_output.box_.y-10), cv::FONT_HERSHEY_SIMPLEX, 0.5, this->class_colors_[box_output.class_id_], 1);
             }
 
             cv::imshow("YOLO detections for image " + std::to_string(i), img_i_color_data);
@@ -309,11 +345,24 @@ void OpenCVVisualizer::publishSemanticSegmentation(const std::shared_ptr<CameraF
             cv::Mat img_i_color_data = img_i->color_data_;
             cv::Mat mask = img_i->color_data_.clone();
             for (const SegmentOutput& segment_output : img_i->segment_outputs_) {
-                cv::rectangle(mask, segment_output.box_, cv::Scalar(0, 255, 0), 2, 8);
-                mask(segment_output.box_).setTo(cv::Scalar(0, 0, 255), segment_output.boxMask_);
+
+                std::string segment_out_class = this->classes_[segment_output.class_id_];
+                // if(segment_out_class == "tree"){
+
+                //     cv::rectangle(mask, segment_output.box_, this->class_colors_[segment_output.class_id_], 2, 8);
+                //     mask(segment_output.box_).setTo(this->class_colors_[segment_output.class_id_], segment_output.boxMask_);
+
+                //     std::string label = "ID: " + this->classes_[segment_output.class_id_];
+                //     cv::putText(mask, label, cv::Point(segment_output.box_.x, segment_output.box_.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, this->class_colors_[segment_output.class_id_], 1);
+                // }
+               
+
+                cv::rectangle(mask, segment_output.box_, this->class_colors_[segment_output.class_id_], 2, 8);
+                mask(segment_output.box_).setTo(this->class_colors_[segment_output.class_id_], segment_output.boxMask_);
 
                 std::string label = "ID: " + this->classes_[segment_output.class_id_];
-                cv::putText(mask, label, cv::Point(segment_output.box_.x, segment_output.box_.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                cv::putText(mask, label, cv::Point(segment_output.box_.x, segment_output.box_.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, this->class_colors_[segment_output.class_id_], 1);
+                
             }
 
             cv::Mat mixed_segment_color;

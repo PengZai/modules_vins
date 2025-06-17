@@ -42,9 +42,9 @@ class Initializer{
     Initializer(const std::shared_ptr<SystemConfig> sys_config);
 
     bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame, State &state);
-    void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
+    void pipeline(std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque);
     Status getStatus();
-    void updateStatus(std::shared_ptr<CameraFrame> &camera_frame);
+    void updateStatus(std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque);
     bool checkSuccess();
     void printfStatus();
     const std::deque<std::shared_ptr<CameraFrame>> &getInitializedReferenceCameraFrameDeque() const;

@@ -3,6 +3,8 @@
 PROJECT_NAME="modules_vins"
 IMAGE_NAME="${PROJECT_NAME}:12.4.0-devel-ubuntu20.04"
 DATA_PATH="/media/${USER}/zhipeng_usb/datasets"
+DATA_PATH2="/media/${USER}/zhipeng_8t/datasets"
+
 # Pick up config image key if specified
 if [[ ! -z "${CONFIG_DATA_PATH}" ]]; then
     DATA_PATH=$CONFIG_DATA_PATH
@@ -18,11 +20,13 @@ xhost +local:root
 docker run \
     --rm \
     -e DISPLAY=$DISPLAY \
+    --shm-size=8g \
     -v ~/.Xauthority:/root/.Xauthority:rw \
     --network host \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v ${HOME}/vscode_projects/${PROJECT_NAME}/catkin_ws:/root/catkin_ws \
     -v ${DATA_PATH}:/root/datasets \
+    -v ${DATA_PATH2}:/root/datasets2 \
     --privileged \
     --cap-add sys_ptrace \
     --runtime=nvidia \

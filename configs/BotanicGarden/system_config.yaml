@@ -13,7 +13,7 @@ system:
   level_pyramid: 8
   threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
   threshold_for_tracking_descriptor_in_frame:50.0 # for tracking cross images in same frame
-  matching_ratio: 2.0 # distance of matching point < min_distance * matching_ratio
+  matching_ratio: 4.0 # distance of matching point < min_distance * matching_ratio
 
   # initialized pose estimation
   threshold_for_pnp_pose_log_norm: 2.0 # estimated pose can't too large
@@ -29,7 +29,7 @@ system:
 
 
   # map
-  max_num_local_map_size: 20000000
+  max_num_local_map_size: 100000
 
   # relative config file name
   imu_config_name: "imu_config.yaml"

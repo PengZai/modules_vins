@@ -9,7 +9,7 @@ status_(Status::NOT_INITIALIZED)
 {
     
     this->is_thread_running_.store(false, std::memory_order_relaxed);
-    VLOG(KEY) << GREEN << "System has being initialized" << RESET;
+    LOG(INFO) << GREEN << "System has being initialized" << RESET;
 
 
 }
@@ -57,7 +57,7 @@ void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInsta
 
     const sensor_msgs::ImageConstPtr &image_msg_ptr = msg_ptr->instantiate<sensor_msgs::Image>();
     if (image_msg_ptr == nullptr) {
-        VLOG(VERBOSE) << YELLOW << "message coming from camera is empty" << RESET;
+        LOG(INFO) << YELLOW << "message coming from camera is empty" << RESET;
         return;        
     }
 
@@ -75,7 +75,7 @@ void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInsta
 
     const sensor_msgs::ImageConstPtr &image_msg_ptr = msg_ptr->instantiate<sensor_msgs::Image>();
     if (image_msg_ptr == nullptr) {
-        VLOG(VERBOSE) << YELLOW << "message coming from camera is empty" << RESET;
+        LOG(INFO) << YELLOW << "message coming from camera is empty" << RESET;
         return;        
     }
 
@@ -96,7 +96,7 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
 
     for(int cam_id=0; cam_id < (int)msg_groups.size(); cam_id++){
 
-        // VLOG(VERBOSE) <<  "cam_id: " << cam_id <<  " : " <<msgs.at(cam_id).getTopic();
+        // LOG(INFO) <<  "cam_id: " << cam_id <<  " : " <<msgs.at(cam_id).getTopic();
 
         
         std::map<std::string, std::shared_ptr<rosbag::MessageInstance>> dtype_to_msg_ptr_map = msg_groups.at(cam_id);
@@ -135,11 +135,11 @@ void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     this->state_.timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
-    VLOG(VERBOSE) << GREEN << "new state has been added to system" << RESET;
+    LOG(INFO) << GREEN << "new state has been added to system" << RESET;
 
     if(camera_frame->is_key_camera_frame_){
         this->state_.timestamp_key_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
-        VLOG(VERBOSE) << GREEN << "new key camera frame has been added to system" << RESET;
+        LOG(INFO) << GREEN << "new key camera frame has been added to system" << RESET;
     }
 
     // T_w_c is actual position and orientation of camera in world, for visualization
@@ -201,7 +201,7 @@ void System::callbackVisualNavigation(){
         
         if(this->status_== Status::NOT_INITIALIZED){
 
-            this->initializer_->pipeline(camera_frame);
+            this->initializer_->pipeline(this->camera_frame_deque_);
 
             Initializer::Status initializer_status = this->initializer_->getStatus();
             if(initializer_status == Initializer::Status::SUCCESS){
@@ -247,7 +247,7 @@ void System::callbackVisualNavigation(){
         }
 
         if(camera_frame->is_key_camera_frame_){
-            VLOG(VERBOSE) << "key camera frame";
+            LOG(INFO) << "key camera frame";
         }
 
         this->visualizer_->publish(camera_frame, this->state_);
