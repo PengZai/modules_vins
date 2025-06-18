@@ -33,6 +33,7 @@ class Reconstructor{
 
     Reconstructor(const std::shared_ptr<SystemConfig> &sys_config);
     void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
+    void setTracker(const std::shared_ptr<Tracker> &tracker);
 
 
 
@@ -40,7 +41,7 @@ class Reconstructor{
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
 
-    std::shared_ptr<Tracker> trakcer_;
+    std::shared_ptr<Tracker> tracker_;
     std::shared_ptr<TwoViewReconstructor> two_view_reconstructor_;
     std::shared_ptr<SensorDepthReconstruction> sensor_depth_reconstructor_;
 

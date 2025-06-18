@@ -6,7 +6,6 @@ namespace modules_vins{
 Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
 
     this->sys_config_ = sys_config;
-    this->trakcer_ = std::make_shared<Tracker>(sys_config);
     this->two_view_reconstructor_ = std::make_shared<TwoViewReconstructor>(sys_config);
     this->sensor_depth_reconstructor_ = std::make_shared<SensorDepthReconstruction>(sys_config);
 
@@ -25,8 +24,10 @@ Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
 }
 
 
+void Reconstructor::setTracker(const std::shared_ptr<Tracker> &tracker){
 
-
+    this->tracker_ = tracker;
+}
 
 void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
@@ -53,7 +54,7 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     if(camera_frame->image_vector_.size() > 1){
-        this->trakcer_->trackInFrame(camera_frame);
+        this->tracker_->trackInFrame(camera_frame);
 
         // two view reconstruction
         for(int i=1;i<(int)camera_frame->image_vector_.size();i++){

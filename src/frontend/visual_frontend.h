@@ -35,24 +35,33 @@ class VisualFrontend{
 
 
     VisualFrontend(const std::shared_ptr<SystemConfig> &sys_config);
-    void setMap(const std::shared_ptr<Map> &map);
+    virtual ~VisualFrontend() = default;
+
     void updateMap(const CameraFrame &camera_frame);
-    void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
+    virtual void pipeline(std::shared_ptr<CameraFrame> &camera_frame) = 0;
     void setRefCameraFrameDeque(const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque);
     void maintainRefCameraFrameDeque();
     Status getStatus();
 
+    void setDetector(const std::shared_ptr<Detector> &detector);
+    void setTracker(const std::shared_ptr<Tracker> &tracker);
+    void setReconstructor(const std::shared_ptr<Reconstructor> &reconstructor);
+    void setPoseEstimator(const std::shared_ptr<PoseEstimator> &pose_estimator);
+    void setMap(const std::shared_ptr<Map> &map);
+
+
+
 
     protected:
+    int fail_pose_estimation_num_;
     std::shared_ptr<SystemConfig> sys_config_;
     std::shared_ptr<Map> map_;
     std::shared_ptr<Detector> detector_;
-    std::shared_ptr<Tracker> trakcer_;
+    std::shared_ptr<Tracker> tracker_;
     std::shared_ptr<Reconstructor> reconstructor_;
     std::shared_ptr<PoseEstimator> pose_estimator_;
     std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
     std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
-    int index_in_camera_frame_deque_for_latest_ref_camera_frame_;  
     Status status_;
 
 

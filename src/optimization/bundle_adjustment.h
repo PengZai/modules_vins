@@ -9,7 +9,7 @@ namespace modules_vins
 {
     
 
-void bundleAdjustment(Sophus::SE3<double> &Transformation, std::vector<Eigen::Vector3d> &pts3d, std::vector<Eigen::Vector2d> &observation_pts2d, const Eigen::Matrix3d &K, const Eigen::VectorXd &distortion_coeffs);
+bool bundleAdjustment(Sophus::SE3<double> &Transformation, std::vector<Eigen::Vector3d> &pts3d, std::vector<Eigen::Vector2d> &observation_pts2d, const Eigen::Matrix3d &K, const Eigen::VectorXd &distortion_coeffs);
 
 struct ReprojectionError {
     ReprojectionError(double obs_x, double obs_y,

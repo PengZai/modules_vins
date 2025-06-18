@@ -9,12 +9,18 @@ Detector::Detector(const std::shared_ptr<SystemConfig> &sys_config):
 sys_config_(sys_config)
 {
 
-    this->orb_feature_ = std::make_shared<ORBFeature>(sys_config);
-
     #ifdef USE_LIBTORCH
     this->yolo_detector_ = std::make_shared<YOLODetector>(sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_object_detection_);
     this->yolo_segmentor_ = std::make_shared<YOLOSegmentor>(sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_semantic_segmentation_);
     #endif
+}
+
+
+void Detector::setFeaturePoint(const std::shared_ptr<FeaturePoint> &feature_point){
+
+
+    this->feature_point_ = feature_point;
+
 }
 
 void Detector::detect(const std::shared_ptr<Image> &img){
@@ -32,9 +38,12 @@ void Detector::detect(const std::shared_ptr<Image> &img){
         std::exit(EXIT_FAILURE);
     }
 
-    cv::equalizeHist(img->gray_data_, img->normalize_gray_data_);
+    // cv::equalizeHist(img->gray_data_, img->normalize_gray_data_);
 
-    this->orb_feature_->detect(img);
+    this->feature_point_->detect(img);
+
+
+    LOG(INFO) << "Detect " << img->cv_keypoint_vector_.size() << " new features";
 
     #ifdef USE_LIBTORCH
 
@@ -57,7 +66,7 @@ void Detector::detect(const std::shared_ptr<Image> &img){
 
 void Detector::computeDescriptor(const std::shared_ptr<Image> &img){
 
-    this->orb_feature_->compute(img);
+    this->feature_point_->compute(img);
 
 
 }
@@ -76,8 +85,6 @@ void Detector::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
         computeDescriptor(img);
 
-
-        // LOG(INFO) << *img;
 
     }
 

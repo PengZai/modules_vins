@@ -21,7 +21,7 @@
 
 
 
-    <node name="modules_vins" pkg="modules_vins" type="run_serial_vins" output="screen">
+    <node name="modules_vins" pkg="modules_vins" type="run_serial_vins_KLT" output="screen">
 
         <param name="bag_path"                  type="str"    value="$(arg bag_path)"/>
         <param name="config_path"               type="str"    value="$(arg config_path)" />

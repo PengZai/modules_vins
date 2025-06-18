@@ -3,15 +3,21 @@
 namespace modules_vins{
 
 
-
-
-ORBFeature::ORBFeature(const std::shared_ptr<SystemConfig> &sys_config){
+FeaturePoint::FeaturePoint(const std::shared_ptr<SystemConfig> &sys_config){
 
     this->num_features_ = sys_config->params_->num_feature_points_;
+  
+
+}
+
+ORBFeature::ORBFeature(const std::shared_ptr<SystemConfig> &sys_config):
+FeaturePoint(sys_config)
+{
+
     this->scale_factor_ = sys_config->params_->scale_factor_;
     this->level_pyramid_ = sys_config->params_->level_pyramid_;
-    this->orb_ = cv::ORB::create(num_features_, scale_factor_, level_pyramid_);
-    this->gftt_ = cv::GFTTDetector::create(num_features_, 0.01, 20);
+    this->orb_ = cv::ORB::create(this->num_features_, scale_factor_, level_pyramid_);
+    this->gftt_ = cv::GFTTDetector::create(this->num_features_, 0.01, 20);
 }
 
 void ORBFeature::detect(const std::shared_ptr<Image> &img){
@@ -26,12 +32,14 @@ void ORBFeature::detect(const std::shared_ptr<Image> &img){
 
     int count_new_detected = 0;
 
-    this->gftt_->detect(img->normalize_gray_data_, img->cv_keypoint_vector_);
+    this->gftt_->detect(img->gray_data_, img->cv_keypoint_vector_);
     
     
-    LOG(INFO) << "Detect " << img->cv_keypoint_vector_.size() << " new features";
 
 }
+
+
+
 
 void ORBFeature::compute(const std::shared_ptr<Image> &img){
 
@@ -46,41 +54,26 @@ void ORBFeature::compute(const std::shared_ptr<Image> &img){
     LOG(INFO) << " we leave " << img->cv_keypoint_vector_.size() << " features after descriptor computation";
 
 }
+
+
     
 
-FASTFeature::FASTFeature(int num_features){
-
-    this->num_features_ = num_features;
-    this->fast = cv::FastFeatureDetector::create(num_features, true);
-
+GoodFeature::GoodFeature(const std::shared_ptr<SystemConfig> &sys_config):
+FeaturePoint(sys_config)
+{
 
 }
 
-void FASTFeature::detect(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints){
 
+void GoodFeature::detect(const std::shared_ptr<Image> &img){
 
-    this->fast->detect(img, keypoints);
-}
-
-
-
-STCornerFeature::STCornerFeature(int num_features){
-
-        this->num_features_ = num_features;
-}
-
-
-void STCornerFeature::detect(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints){
-
-
-
-    // Detect good feature points to track (Shi-Tomasi corner detection)
-    // cv::goodFeaturesToTrack(img, keypoints, 100, 0.01, 10);
+    this->gftt_->detect(img->gray_data_, img->cv_keypoint_vector_);
 
 }
-      
-    
 
+void GoodFeature::compute(const std::shared_ptr<Image> &img){
+
+}
     
 
    

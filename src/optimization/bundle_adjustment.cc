@@ -8,7 +8,7 @@ namespace modules_vins
 {
 
 
-void bundleAdjustment(Sophus::SE3<double> &Transformation, std::vector<Eigen::Vector3d> &pts3d, std::vector<Eigen::Vector2d> &observation_pts2d, const Eigen::Matrix3d &K, const Eigen::VectorXd &distortion_coeffs){
+bool bundleAdjustment(Sophus::SE3<double> &Transformation, std::vector<Eigen::Vector3d> &pts3d, std::vector<Eigen::Vector2d> &observation_pts2d, const Eigen::Matrix3d &K, const Eigen::VectorXd &distortion_coeffs){
 
 
     Eigen::Vector3d rotation_vec = Transformation.so3().log();
@@ -34,24 +34,31 @@ void bundleAdjustment(Sophus::SE3<double> &Transformation, std::vector<Eigen::Ve
     }
     
     ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-    options.dense_linear_algebra_library_type = ceres::EIGEN;
+    options.linear_solver_type = ceres::SPARSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
     // options.num_linear_solver_threads = 1;
     // options.max_num_iterations = 50;
     // options.num_threads = 1;
     // options.gradient_tolerance = 1e-16;
-    // options.function_tolerance = 1e-16;
+    options.function_tolerance = 1e-16;
 
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
+
+    double final_cost = summary.final_cost;
+
+    if(final_cost > options.function_tolerance*1e4){
+        return false;
+    }
+
     Transformation = Sophus::SE3d(
         Sophus::SO3d::exp(Eigen::Vector3d(pose[0], pose[1], pose[2])),  // convert angle-axis to SO(3)
         Eigen::Vector3d(pose[3], pose[4], pose[5]));                     // set translation
     
+
+    return true;
 
 }
     

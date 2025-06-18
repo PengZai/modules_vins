@@ -35,9 +35,6 @@ catkin_package(
 # ==============================ros=================================
 
 
-add_executable(run_serial_vins
-    src/run_serial_vins.cc
-)
 
 list(APPEND LIBRARY_THIRDPARTY
     ${OpenCV_LIBS}
@@ -79,10 +76,7 @@ include_directories(
 )
 
 
-target_include_directories(run_serial_vins
-    PRIVATE
-    ${DIRS_HEADER_THIRDPARTY}
-)
+
 
 add_definitions(${PCL_DEFINITIONS})
 
@@ -115,10 +109,36 @@ target_link_libraries(${LIB_PROJECT_NAME}
 )
 
 
-target_link_libraries(run_serial_vins
+add_executable(run_serial_vins_KLT
+    src/run_serial_vins_KLT.cc
+)
+
+target_include_directories(run_serial_vins_KLT
+    PRIVATE
+    ${DIRS_HEADER_THIRDPARTY}
+)
+
+target_link_libraries(run_serial_vins_KLT
     PUBLIC
     ${LIB_PROJECT_NAME}
 )
+
+
+
+add_executable(run_serial_vins_descriptor_match
+    src/run_serial_vins_descriptor_match.cc
+)
+
+target_include_directories(run_serial_vins_descriptor_match
+    PRIVATE
+    ${DIRS_HEADER_THIRDPARTY}
+)
+
+target_link_libraries(run_serial_vins_descriptor_match
+    PUBLIC
+    ${LIB_PROJECT_NAME}
+)
+
 
 
 # if(ENABLE_CMAKE_DEBUG)

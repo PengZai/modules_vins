@@ -40,17 +40,20 @@ bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation
     
 }
 
-int PoseEstimator::PnpEstimator(
+bool PoseEstimator::PnpEstimator(
     const std::vector<cv::Point3d> &pt3ds, 
     const std::vector<cv::Point2d> &pt2ds, 
-    cv::Mat &cv_R, 
-    cv::Mat &translation_vec,
+    Sophus::SE3<double> &estimated_T,
     const cv::Mat &cv_K,
     const cv::Mat &cv_distortion_coeffs
 ){
 
+    cv::Mat cv_R, rortation_vec, translation_vec;
+    cv::eigen2cv(estimated_T.rotationMatrix(), cv_R);
+    cv::eigen2cv(estimated_T.translation(), translation_vec);
+    cv::Rodrigues(cv_R, rortation_vec);
+
     cv::Mat inliers;
-    cv::Mat rortation_vec;
 
     bool success = cv::solvePnPRansac(
     pt3ds,                 // std::vector<cv::Point3d>
@@ -59,7 +62,7 @@ int PoseEstimator::PnpEstimator(
     cv_distortion_coeffs,       // Distortion coefficients
     rortation_vec,                          // Output: rotation vector
     translation_vec,                          // Output: translation vector
-    false,                         // Use extrinsic guess? Usually false
+    true,                         // Use extrinsic guess? Usually false
     100,                           // RANSAC iterations
     4.0,                           // Reprojection error threshold (pixels)
     0.99,                          // Confidence
@@ -69,7 +72,27 @@ int PoseEstimator::PnpEstimator(
     cv::Rodrigues(rortation_vec, cv_R);
 
 
-    return inliers.rows;
+    Eigen::Matrix<double, 3, 3> estimated_rotation;
+    Eigen::Vector3d estimated_translation;
+
+    cv::cv2eigen(cv_R, estimated_rotation);
+    cv::cv2eigen(translation_vec, estimated_translation);
+
+    estimated_T = Sophus::SE3<double>(
+        Sophus::SO3<double>(estimated_rotation), estimated_translation
+    );
+
+    LOG(INFO) << "Pnp:\n" << estimated_T.matrix();
+
+    if(checkEstimatedPose(estimated_T, inliers.rows) == true){
+
+        return true;
+
+    }
+    else{
+        return false;
+    }
+
 
 }
 
@@ -123,10 +146,10 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     std::vector<cv::Point2d> reprojected_pt2is;
     std::vector<cv::Point2d> prev_pt2ds;
     std::vector<cv::Point3d> pt3ds;
+    std::vector<int> used_idxes;
 
     std::vector<Eigen::Vector2d> eigen_pt2ds;
     std::vector<Eigen::Vector3d> eigen_pt3ds;
-
 
     const Eigen::Matrix3d K = this->sys_config_->camera_config_->params_vector_.at(0)->getIntrinsicsMatrix();
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(0)->getCVIntrinsicsMatrix();         
@@ -147,14 +170,13 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
             continue;
         }
 
+        used_idxes.push_back(i);
         pt2ds.push_back(kp_from_current_frame->pt2i_);
-        eigen_pt2ds.push_back(Eigen::Vector2d(kp_from_current_frame->pt2i_.x, kp_from_current_frame->pt2i_.y));
-
         reprojected_pt2is.push_back(camera2pixel(kp_from_ref_frame->pt3d_, cv_K));
         prev_pt2ds.push_back(kp_from_ref_frame->pt2i_);
         pt3ds.push_back(kp_from_ref_frame->pt3d_);
+        eigen_pt2ds.push_back(Eigen::Vector2d(kp_from_current_frame->pt2i_.x, kp_from_current_frame->pt2i_.y));
         eigen_pt3ds.push_back(Eigen::Vector3d(kp_from_ref_frame->pt3d_.x, kp_from_ref_frame->pt3d_.y, kp_from_ref_frame->pt3d_.z));
-
 
     }
 
@@ -164,89 +186,53 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
     // checkImages(img_0_from_previous_frame, img_0_from_current_frame);
 
-
-
-    cv::Mat translation_vec;
-    cv::Mat cv_R;
-
-    // pnp estimator
-    // cv::Mat inliers;
-
-
-
-    int inlier_num = PnpEstimator(pt3ds, 
-        pt2ds, 
-        cv_R, 
-        translation_vec,
-        cv_K,
-        cv_distortion_coeffs);
-
-    // int inlier_num = epipolarGeometryEstimator(prev_pt2ds, 
-    //     pt2ds, 
-    //     cv_R, 
-    //     translation_vec,
-    //     cv_K);
-
-
-    
-    Eigen::Matrix<double, 3, 3> estimated_rotation;
-    Eigen::Vector3d estimated_translation;
-
-    cv::cv2eigen(cv_R, estimated_rotation);
-    cv::cv2eigen(translation_vec, estimated_translation);
-
-    Sophus::SE3<double> estimated_T_current_cam_ref_cam = Sophus::SE3<double>(
-        Sophus::SO3<double>(estimated_rotation), estimated_translation
-    );
-
-    // LOG(INFO) << "number of pair points: " << pt2ds.size();
-    // checkEstimatedPose(estimated_T_current_cam_previous_cam, inlier_num);
-    // img_0_from_current_frame->setTcw(estimated_T_current_cam_previous_cam * img_0_from_previous_frame->T_c_w_);
-
-    // LOG(INFO) << "translation_vec \n" << translation_vec;
-    // LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
-
-
-    LOG(INFO) << "Pnp:\n" << estimated_T_current_cam_ref_cam.matrix();
-
-    // estimated_T_current_cam_ref_cam = Sophus::SE3d();
-
-    // Sophus::SE3<double> before_optimized_estimated_T_current_cam_ref_cam = estimated_T_current_cam_ref_cam;
-
-    if(checkEstimatedPose(estimated_T_current_cam_ref_cam, inlier_num) == true){
-        // camera_frame->status_ = CameraFrame::NORMAL;
+    int pt3ds_size = pt3ds.size();
+    if(pt3ds_size < this->sys_config_->params_->min_inliers_){
         camera_frame->status_ = CameraFrame::FAIL;
+        LOG(INFO) << "number of 3d points " << pt3ds_size << " , is less then : " << this->sys_config_->params_->min_inliers_ << " in pnp estimation";
 
-
-
-        LOG(INFO) << "before_BA\n" << estimated_T_current_cam_ref_cam.matrix();
-
-        bundleAdjustment(estimated_T_current_cam_ref_cam, eigen_pt3ds, eigen_pt2ds, K, distortion_coeffs);
-
-        LOG(INFO) << "after BA\n" << estimated_T_current_cam_ref_cam.matrix();
-
-        img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
-
-        LOG(INFO) << "estimated_translation_vec \n" << translation_vec;
-        LOG(INFO) << "estimated_translation_norm : " << estimated_translation.norm();
-        LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
-
-    }
-    else{
-        camera_frame->status_ = CameraFrame::FAIL;
         return;
     }
 
 
+    Sophus::SE3<double> estimated_T_current_cam_ref_cam = Sophus::SE3<double>();
+    bool success=false;
+    success = PnpEstimator(pt3ds, pt2ds, estimated_T_current_cam_ref_cam, cv_K, cv_distortion_coeffs);
+    if(success == false){
+        
+        camera_frame->status_=CameraFrame::Status::FAIL;
+        return;
+    }
+    img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
 
-    // camera_frame->status_ = CameraFrame::FAIL;
+    LOG(INFO) << "before_BA\n" << img_0_from_current_frame->T_c_w_.matrix();
 
 
+    // success = bundleAdjustment(estimated_T_current_cam_ref_cam, eigen_pt3ds, eigen_pt2ds, K, distortion_coeffs);
+    // if(success == false){
+        
+    //     camera_frame->status_=CameraFrame::Status::FAIL;
+    //     return;
+    // }
+    
+    // // update 3d points after BA
+    // for(int i=0 ; i<eigen_pt3ds.size();i++){
+
+    //     img_0_from_ref_frame->keypoint_vector_.at(used_idxes[i])->pt3d_ = cv::Point3d(eigen_pt3ds[i](0),eigen_pt3ds[i](1),eigen_pt3ds[i](2));
+    // }
+
+    // LOG(INFO) << "after BA\n" << estimated_T_current_cam_ref_cam.matrix();
+
+    // img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
+
+    // // LOG(INFO) << "estimated_translation_vec \n" << translation_vec;
+    // // LOG(INFO) << "estimated_translation_norm : " << estimated_translation.norm();
+    // LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
 
+    camera_frame->status_=CameraFrame::Status::NORMAL;
 
 }
-
 
 } // namespace modules_vins
 

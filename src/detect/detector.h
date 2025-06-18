@@ -23,13 +23,14 @@ class Detector{
 
     public:
     Detector(const std::shared_ptr<SystemConfig> &sys_config);
+    void setFeaturePoint(const std::shared_ptr<FeaturePoint> &feature_point);
     void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
     void detect(const std::shared_ptr<Image> &img);
     void computeDescriptor(const std::shared_ptr<Image> &img);
 
 
     protected:
-    std::shared_ptr<ORBFeature> orb_feature_;
+    std::shared_ptr<FeaturePoint> feature_point_;
 
     #ifdef USE_LIBTORCH
     std::shared_ptr<YOLODetector> yolo_detector_;

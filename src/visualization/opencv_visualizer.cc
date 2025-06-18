@@ -78,7 +78,7 @@ void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame>
 
         
         const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
-        cv::Mat img_i_data = img_i->normalize_gray_data_.clone();
+        cv::Mat img_i_data = img_i->gray_data_.clone();
 
         if(i==0){
             img_0 = img_i;
@@ -120,7 +120,7 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
 
 
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
-    cv::Mat img_0_color_data = img_0->normalize_gray_data_.clone();
+    cv::Mat img_0_color_data = img_0->gray_data_.clone();
 
 
     for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
@@ -142,7 +142,7 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
     if(previous_camera_frame){
 
         const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame->image_vector_.at(0);
-        cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->normalize_gray_data_.clone();
+        cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->gray_data_.clone();
     
         cv::Mat img_0_matches_in_time;
         cv::drawMatches(img_0_color_data, img_0->cv_keypoint_vector_, img_0_color_data_from_previous_camera_frame, img_0_from_previous_camera_frame->cv_keypoint_vector_, img_0->matches_in_time_, img_0_matches_in_time,

@@ -10,15 +10,28 @@ namespace modules_vins{
 
 
 
+class FeaturePoint{
+
+    public:
+    FeaturePoint(const std::shared_ptr<SystemConfig> &sys_config);
+    virtual ~FeaturePoint() = default;
 
 
-class ORBFeature{
+    virtual void detect(const std::shared_ptr<Image> &img) = 0;
+    virtual void compute(const std::shared_ptr<Image> &img) = 0;
+
+    protected:
+    int num_features_;
+};
+
+
+class ORBFeature : public FeaturePoint{
 
     public:
     ORBFeature(const std::shared_ptr<SystemConfig> &sys_config);
 
-    void detect(const std::shared_ptr<Image> &img);
-    void compute(const std::shared_ptr<Image> &img);
+    void detect(const std::shared_ptr<Image> &img) override;
+    void compute(const std::shared_ptr<Image> &img) override;
 
     protected:
     int num_features_;
@@ -30,37 +43,25 @@ class ORBFeature{
 
 };
 
-class FASTFeature{
+class GoodFeature : public FeaturePoint{
 
 
     public:
-    FASTFeature(int num_features);
-
-    void detect(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints);
-
-    protected:
-    cv::Ptr<cv::FastFeatureDetector> fast;
-    int num_features_;
- 
-};
-
-// ShiTomasiCorner
-class STCornerFeature{
-
-
-    
-
-    public:
-    STCornerFeature(int num_features);
-
-    void detect(const cv::Mat &img, std::vector<cv::KeyPoint> &keypoints);
+    GoodFeature(const std::shared_ptr<SystemConfig> &sys_config);
+    void detect(const std::shared_ptr<Image> &img) override;
+    void compute(const std::shared_ptr<Image> &img) override;
 
 
     protected:
-    int num_features_;
-    
+    cv::Ptr<cv::GFTTDetector> gftt_;
+
 
 };
+
+
+
+
+
 
 
 } //modules_vins

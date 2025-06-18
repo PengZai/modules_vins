@@ -109,7 +109,7 @@ void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
 
 
 void Image::cleanTrackInTimeRelationship(){
-    matches_in_time_.clear();
+    this->matches_in_time_.clear();
     for(std::shared_ptr<KeyPoint> &keypoint : keypoint_vector_){
         
         keypoint->cleanTrackInTimeRelationship();

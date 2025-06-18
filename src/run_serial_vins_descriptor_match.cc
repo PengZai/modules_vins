@@ -8,14 +8,15 @@
 #include <rosbag/view.h>
 
 // #include "log/logging.h"
-#include "frontend/visual_frontend.h"
+#include "frontend/descriptor_match_frontend.h"
 #include "backend/keyframe_manager.h"
 #include "system/vins_system.h"
 #include "system/system_config.h"
 #include "data/map.h"
 #include "data/dataloader.h"
 #include "log/evo_record.h"
-
+#include "init/descriptor_match_initializer.h"
+#include "tracking/descriptor_tracker.h"
 
 
 int main(int argc, char* argv[]) {
@@ -62,8 +63,16 @@ int main(int argc, char* argv[]) {
 
     sys.setConfig(sys_config);
 
-    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::Initializer>(sys_config);
-    sys.setInitializer(initializer);
+    std::shared_ptr<modules_vins::FeaturePoint> feature_point = std::make_shared<modules_vins::ORBFeature>(sys_config);
+    std::shared_ptr<modules_vins::Detector> detector = std::make_shared<modules_vins::Detector>(sys_config);
+
+    detector->setFeaturePoint(feature_point);
+
+    std::shared_ptr<modules_vins::Tracker> tracker = std::make_shared<modules_vins::DescriptorTracker>(sys_config);
+    std::shared_ptr<modules_vins::Reconstructor> reconstructor = std::make_shared<modules_vins::Reconstructor>(sys_config);
+    reconstructor->setTracker(tracker);
+    
+    std::shared_ptr<modules_vins::PoseEstimator> pose_estimator = std::make_shared<modules_vins::PoseEstimator>(sys_config);
 
     std::shared_ptr<modules_vins::Map> map = std::make_shared<modules_vins::Map>(sys_config);
     sys.setMap(map);
@@ -71,8 +80,22 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<modules_vins::EVORecorder> evo_recorder = std::make_shared<modules_vins::EVORecorder>(sys_config);
     sys.setRecorder(evo_recorder);
 
-    std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::VisualFrontend>(sys_config);
+    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::DescriptorMatchInitializer>(sys_config);
+    initializer->setDetector(detector);
+    initializer->setTracker(tracker);
+    initializer->setReconstructor(reconstructor);
+    initializer->setPoseEstimator(pose_estimator);
+
+    sys.setInitializer(initializer);
+
+    std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::DescriptorMatchFrontend>(sys_config);
+    visual_frontend->setDetector(detector);
+    visual_frontend->setTracker(tracker);
+    visual_frontend->setReconstructor(reconstructor);
+    visual_frontend->setPoseEstimator(pose_estimator);
     visual_frontend->setMap(map);
+
+
     sys.setVisualFrontend(visual_frontend);
 
     std::shared_ptr<modules_vins::KeyFrameManager> key_frame_manager = std::make_shared<modules_vins::KeyFrameManager>(sys_config);

@@ -176,7 +176,7 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         }
 
         img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
-        LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
+        // LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
 
         success_count++;
 
