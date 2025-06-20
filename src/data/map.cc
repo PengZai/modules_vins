@@ -52,16 +52,16 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     // project 3d point in camera coordinate to map coordinate
-    for(int i=0; i<(int)img_0->keypoint_vector_.size(); i++){
+    for(size_t i=0; i<(int)img_0->keypoint_vector_.size(); i++){
 
         std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
 
 
-        if(kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
+        if(kp != nullptr && kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
 
             Eigen::Vector3d map_point = img_0->T_c_w_.inverse() * Eigen::Vector3d(kp->pt3d_.x, kp->pt3d_.y, kp->pt3d_.z);
             std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);
-            cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(kp->pt2i_);
+            cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(kp->cv_keypoint_.pt);
             map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
             kp->setMapPointPtr(map_point_ptr);
@@ -86,7 +86,7 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
     //                 continue;
     //             }
 
-    //             cv::Point2i pt2i = cv::Point2i(col, row);
+    //             cv::Point2f pt2f = cv::Point2f(col, row);
     //             auto it = std::find_if(img_0->keypoint_vector_.begin(), img_0->keypoint_vector_.end(), 
     //             [&](const std::shared_ptr<KeyPoint> &kp){
     //                     return kp->pt2i_ == pt2i;
@@ -119,7 +119,7 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
 
     int count_new_mappoint = 0;
 
-    for(int i=0; i<(int)camera_frame->map_point_vector_.size();i++){
+    for(size_t i=0; i<(int)camera_frame->map_point_vector_.size();i++){
         
             const std::shared_ptr<MapPoint> &mp = camera_frame->map_point_vector_.at(i);
             

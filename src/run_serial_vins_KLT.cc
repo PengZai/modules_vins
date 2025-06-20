@@ -8,15 +8,16 @@
 #include <rosbag/view.h>
 
 // #include "log/logging.h"
-#include "frontend/descriptor_match_frontend.h"
+#include "frontend/KLT_frontend.h"
 #include "backend/keyframe_manager.h"
 #include "system/vins_system.h"
 #include "system/system_config.h"
 #include "data/map.h"
 #include "data/dataloader.h"
 #include "log/evo_record.h"
-#include "init/descriptor_match_initializer.h"
-#include "tracking/descriptor_tracker.h"
+#include "init/KLT_initializer.h"
+#include "tracking/KLT_tracker.h"
+#include "data/preprocess.h"
 
 
 int main(int argc, char* argv[]) {
@@ -63,12 +64,16 @@ int main(int argc, char* argv[]) {
 
     sys.setConfig(sys_config);
 
+    std::shared_ptr<modules_vins::DataPreprocesor> data_preprocesor = std::make_shared<modules_vins::DataPreprocesor>();
+
     std::shared_ptr<modules_vins::FeaturePoint> feature_point = std::make_shared<modules_vins::GoodFeature>(sys_config);
     std::shared_ptr<modules_vins::Detector> detector = std::make_shared<modules_vins::Detector>(sys_config);
 
     detector->setFeaturePoint(feature_point);
 
-    std::shared_ptr<modules_vins::Tracker> tracker = std::make_shared<modules_vins::DescriptorTracker>(sys_config);
+    std::shared_ptr<modules_vins::Tracker> tracker = std::make_shared<modules_vins::KLTTracker>(sys_config);
+    tracker->setDetector(detector);
+
     std::shared_ptr<modules_vins::Reconstructor> reconstructor = std::make_shared<modules_vins::Reconstructor>(sys_config);
     reconstructor->setTracker(tracker);
     
@@ -80,7 +85,8 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<modules_vins::EVORecorder> evo_recorder = std::make_shared<modules_vins::EVORecorder>(sys_config);
     sys.setRecorder(evo_recorder);
 
-    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::DescriptorMatchInitializer>(sys_config);
+    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::KLTInitializer>(sys_config);
+    initializer->setDataProprocesor(data_preprocesor);
     initializer->setDetector(detector);
     initializer->setTracker(tracker);
     initializer->setReconstructor(reconstructor);
@@ -88,7 +94,8 @@ int main(int argc, char* argv[]) {
 
     sys.setInitializer(initializer);
 
-    std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::DescriptorMatchFrontend>(sys_config);
+    std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::KLTFrontend>(sys_config);
+    visual_frontend->setDataProprocesor(data_preprocesor);
     visual_frontend->setDetector(detector);
     visual_frontend->setTracker(tracker);
     visual_frontend->setReconstructor(reconstructor);

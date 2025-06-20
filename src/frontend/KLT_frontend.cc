@@ -1,11 +1,11 @@
-#include "descriptor_match_frontend.h"
+#include "KLT_frontend.h"
 
 
 
 namespace modules_vins{
 
 
-DescriptorMatchFrontend::DescriptorMatchFrontend(const std::shared_ptr<SystemConfig> &sys_config):
+KLTFrontend::KLTFrontend(const std::shared_ptr<SystemConfig> &sys_config):
 VisualFrontend(sys_config)
 {
 
@@ -15,7 +15,7 @@ VisualFrontend(sys_config)
 }
 
 
-void DescriptorMatchFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
+void KLTFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
 
     LOG(INFO) << "VisualFrontend Start with camera frame id: " << camera_frame->id_;
@@ -24,23 +24,14 @@ void DescriptorMatchFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_fram
 
     std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
-    this->detector_->pipeline(camera_frame);
-
-    if(camera_frame->id_ == 31){
-            LOG(INFO) << "just test";
-    }
     
     for(size_t i=0; i<this->ref_camera_frame_deque_.size();i++){
 
-        
         std::shared_ptr<CameraFrame> &ref_camera_frame = ref_camera_frame_deque_.at(i);
         ref_camera_frame->cleanTrackInTimeRelationship();
+
         LOG(INFO) << "estimating pose betweeen reference frame with id: " << ref_camera_frame->id_ << " and current frame with id: " << camera_frame->id_;
         camera_frame->ref_camera_frame_ = ref_camera_frame;
-        int ref_frame_matches_in_time_size = camera_frame->ref_camera_frame_->image_vector_.at(0)->matches_in_time_.size();
-        if(ref_camera_frame->id_ == 26){
-            LOG(INFO) << "just test";
-        }
 
         this->tracker_->pipeline(camera_frame);
         this->pose_estimator_->pipeline(camera_frame);
@@ -68,7 +59,10 @@ void DescriptorMatchFrontend::pipeline(std::shared_ptr<CameraFrame> &camera_fram
         }
     }
 
-    this->reconstructor_->pipeline(camera_frame);
+    if(camera_frame->image_vector_.at(0)->keypoint_vector_.size() < this->sys_config_->params_->num_feature_points_){
+        this->detector_->pipeline(camera_frame);
+        this->reconstructor_->pipeline(camera_frame);
+    }
 
     LOG(INFO) << "VisualFrontend End with camera frame id: " << camera_frame->id_;
 

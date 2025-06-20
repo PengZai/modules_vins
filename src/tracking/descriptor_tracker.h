@@ -12,10 +12,10 @@ class DescriptorTracker : public Tracker{
 
     public:
     DescriptorTracker(const std::shared_ptr<SystemConfig> &sys_config);
-    void matching(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1, std::vector<cv::DMatch> &matches);
+    void matching(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1, 
+        std::vector<cv::DMatch> &good_matches, 
+        const float error_threshold = -1.0, const float y_distance_threshold = -1.0) override;
 
-    void trackInFrame(std::shared_ptr<CameraFrame> &camera_frame) override;
-    void trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::shared_ptr<Image> &img_from_current_frame) override;
 
 
     protected:

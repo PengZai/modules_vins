@@ -29,16 +29,18 @@ void Reconstructor::setTracker(const std::shared_ptr<Tracker> &tracker){
     this->tracker_ = tracker;
 }
 
-void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
+void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
 
 
     // sensor depth reconstruction
-    for(int i=0;i<(int)camera_frame->image_vector_.size();i++){
+    for(size_t i=0;i<(int)camera_frame->image_vector_.size();i++){
 
         std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
-
+        if(img_i->id_ == 2){
+            LOG(INFO) << "just test";
+        }
         if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_sensor_depth_){
             this->sensor_depth_reconstructor_->reconstruct(img_i);
         }
@@ -57,7 +59,7 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         this->tracker_->trackInFrame(camera_frame);
 
         // two view reconstruction
-        for(int i=1;i<(int)camera_frame->image_vector_.size();i++){
+        for(size_t i=1;i<(int)camera_frame->image_vector_.size();i++){
 
             std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(1);
             this->two_view_reconstructor_->reconstruct(img_0, img_i);
@@ -83,7 +85,7 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
 
 
     // project 3d point in camera coordinate to map coordinate
-    // for(int i=0; i<(int)img_0->keypoint_vector_.size(); i++){
+    // for(size_t i=0; i<(int)img_0->keypoint_vector_.size(); i++){
 
     //     std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
 
@@ -114,7 +116,7 @@ void Reconstructor::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     //             continue;
     //         }
 
-    //         cv::Point2i pt2i = cv::Point2i(row, col);
+    //         cv::Point2f pt2i = cv::Point2f(row, col);
     //         auto it = std::find_if(img_0->keypoint_vector_.begin(), img_0->keypoint_vector_.end(), 
     //         [&](const std::shared_ptr<KeyPoint> &kp){
     //                 return kp->pt2i_ == pt2i;

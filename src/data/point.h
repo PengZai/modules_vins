@@ -45,8 +45,12 @@ class KeyPoint{
     KeyPoint(const cv::KeyPoint kp);
 
     void setCVKeyPoint(const cv::KeyPoint &kp);
-    void set2DKeyPoint(const cv::Point2i &pt2i);
-    void set2DKeyPoint(const int x, const int y);
+    template <typename T>
+    void set2DKeyPoint(const T x, const T y);
+    void set2DKeyPoint(const cv::Point2f &pt2f);
+
+    void setDescriptor(const cv::Mat &descriptor);
+
     void set3DKeyPoint(const cv::Point3d &pt3d);
     void set3DKeyPoint(const double x, const double y, const double z);
     void setMatchInTime(const cv::DMatch &match_in_time);
@@ -70,10 +74,19 @@ class KeyPoint{
     double timestamp_;
 
     
-    cv::Point2i pt2i_; // keypoint in pixel plane
     cv::Point3d pt3d_; // 3d keypoint in camera coordinate
 
     cv::KeyPoint cv_keypoint_;
+    // cv::KeyPoint(
+    //     cv::Point2f pt,     // 点的位置 (x, y)
+    //     float size,         // 该特征的感兴趣区域大小（直径）
+    //     float angle = -1,   // 特征方向（用于旋转不变性），-1 表示未知
+    //     float response = 0, // 特征的强度或重要性（响应值）
+    //     int octave = 0,     // 所在图像金字塔的层级
+    //     int class_id = -1   // 可选的类别ID（用于匹配或识别时）
+    // );
+
+    cv::Mat descriptor_;
 
     std::shared_ptr<MapPoint> map_point_ptr_;
 

@@ -22,8 +22,8 @@ class PoseEstimator{
 
     PoseEstimator(const std::shared_ptr<SystemConfig> &sys_config);
     bool checkEstimatedPose(const Sophus::SE3<double> &Transformation,const int num_inliers);
-    int epipolarGeometryEstimator(const std::vector<cv::Point2d> &ref_pt2is, 
-        const std::vector<cv::Point2d> &pt2is, 
+    int epipolarGeometryEstimator(const std::vector<cv::Point2d> &ref_pt2ds, 
+        const std::vector<cv::Point2d> &pt2ds, 
         cv::Mat &cv_R, 
         cv::Mat &translation_vec,
         const cv::Mat &cv_K);
@@ -38,7 +38,7 @@ class PoseEstimator{
     std::shared_ptr<SystemConfig> sys_config_;
 
    
-    void pipeline(std::shared_ptr<CameraFrame> &camera_frame);
+    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
 
 
 };

@@ -8,7 +8,7 @@ system:
   max_color_sensor_depth_pair_time_offset: 0.02 # max time offset for image pair for bgr and depth (unit: second)
 
   # feature detect and tracking
-  num_feature_points: 500
+  num_feature_points: 200
   scale_factor: 1.2
   level_pyramid: 8
   threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time

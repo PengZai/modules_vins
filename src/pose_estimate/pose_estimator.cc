@@ -127,7 +127,7 @@ int PoseEstimator::epipolarGeometryEstimator(
 
 
 
-void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
+void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
     std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
     if(ref_camera_frame == nullptr){
@@ -143,7 +143,7 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     std::shared_ptr<Image> &img_0_from_ref_frame = ref_camera_frame->image_vector_.at(0);
 
     std::vector<cv::Point2d> pt2ds;
-    std::vector<cv::Point2d> reprojected_pt2is;
+    std::vector<cv::Point2d> reprojected_pt2ds;
     std::vector<cv::Point2d> prev_pt2ds;
     std::vector<cv::Point3d> pt3ds;
     std::vector<int> used_idxes;
@@ -158,11 +158,11 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(0)->getCVDistortionCoeffs();
 
 
-    for(int i=0; i < (int)img_0_from_current_frame->matches_in_time_.size();i++){
+    for(size_t i=0; i < (int)img_0_from_ref_frame->matches_in_time_.size();i++){
 
-        cv::DMatch &match_in_time = img_0_from_current_frame->matches_in_time_.at(i);
-        const std::shared_ptr<KeyPoint> &kp_from_ref_frame = img_0_from_ref_frame->keypoint_vector_.at(match_in_time.trainIdx);
-        const std::shared_ptr<KeyPoint> &kp_from_current_frame = img_0_from_current_frame->keypoint_vector_.at(match_in_time.queryIdx);
+        cv::DMatch &match_in_time = img_0_from_ref_frame->matches_in_time_.at(i);
+        const std::shared_ptr<KeyPoint> &kp_from_ref_frame = img_0_from_ref_frame->keypoint_vector_.at(match_in_time.queryIdx);
+        const std::shared_ptr<KeyPoint> &kp_from_current_frame = img_0_from_current_frame->keypoint_vector_.at(match_in_time.trainIdx);
 
         double z = kp_from_ref_frame->pt3d_.z;
 
@@ -171,11 +171,11 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
         }
 
         used_idxes.push_back(i);
-        pt2ds.push_back(kp_from_current_frame->pt2i_);
-        reprojected_pt2is.push_back(camera2pixel(kp_from_ref_frame->pt3d_, cv_K));
-        prev_pt2ds.push_back(kp_from_ref_frame->pt2i_);
+        pt2ds.push_back(kp_from_current_frame->cv_keypoint_.pt);
+        reprojected_pt2ds.push_back(camera2pixel(kp_from_ref_frame->pt3d_, cv_K));
+        prev_pt2ds.push_back(kp_from_ref_frame->cv_keypoint_.pt);
         pt3ds.push_back(kp_from_ref_frame->pt3d_);
-        eigen_pt2ds.push_back(Eigen::Vector2d(kp_from_current_frame->pt2i_.x, kp_from_current_frame->pt2i_.y));
+        eigen_pt2ds.push_back(Eigen::Vector2d(kp_from_current_frame->cv_keypoint_.pt.x, kp_from_current_frame->cv_keypoint_.pt.y));
         eigen_pt3ds.push_back(Eigen::Vector3d(kp_from_ref_frame->pt3d_.x, kp_from_ref_frame->pt3d_.y, kp_from_ref_frame->pt3d_.z));
 
     }
@@ -216,7 +216,7 @@ void PoseEstimator::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
     // }
     
     // // update 3d points after BA
-    // for(int i=0 ; i<eigen_pt3ds.size();i++){
+    // for(size_t i=0 ; i<eigen_pt3ds.size();i++){
 
     //     img_0_from_ref_frame->keypoint_vector_.at(used_idxes[i])->pt3d_ = cv::Point3d(eigen_pt3ds[i](0),eigen_pt3ds[i](1),eigen_pt3ds[i](2));
     // }

@@ -7,10 +7,10 @@
 namespace modules_vins{
 
 
-class DescriptorMatchInitializer : public Initializer{
+class KLTInitializer : public Initializer{
 
     public:
-        DescriptorMatchInitializer(const std::shared_ptr<SystemConfig> &sys_config);
+        KLTInitializer(const std::shared_ptr<SystemConfig> &sys_config);
 
         void pipeline(const std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque) override;
 

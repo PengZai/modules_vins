@@ -21,13 +21,13 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();
 
 
-    for(int i=0; i < (int)img->keypoint_vector_.size(); i++){
+    for(size_t i=0; i < (int)img->keypoint_vector_.size(); i++){
 
-        cv::Point2i &tracked_pt2i_from_img = img->keypoint_vector_[i]->pt2i_;
+        cv::Point2f &tracked_pt2f_from_img = img->keypoint_vector_[i]->cv_keypoint_.pt;
         
-        double depth = img->getPointDepthFromSensor(tracked_pt2i_from_img);
+        double depth = img->getPointDepthFromSensor(tracked_pt2f_from_img);
 
-        cv::Point3d img_pt3d = pixel2camera(tracked_pt2i_from_img, depth, cv_K);
+        cv::Point3d img_pt3d = pixel2camera(tracked_pt2f_from_img, depth, cv_K);
 
         img->keypoint_vector_[i]->pt3d_ = img_pt3d;
 
@@ -37,7 +37,7 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
     for (int row = 0; row < img->color_data_.rows; ++row) {
         for (int col = 0; col < img->color_data_.cols; ++col) {
 
-            cv::Point2i pt = cv::Point2d(col, row);
+            cv::Point2f pt = cv::Point2d(col, row);
             double depth = img->getPointDepthFromSensor(pt);
             img->depth_.at<double>(row, col) = depth;
 

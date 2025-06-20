@@ -19,7 +19,7 @@
 list(APPEND LIBRARY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/visual_frontend.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/descriptor_match_frontend.cc
-
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/KLT_frontend.cc
 
 
 )

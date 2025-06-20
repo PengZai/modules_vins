@@ -13,123 +13,61 @@ Tracker(sys_config)
 }
 
 
-void DescriptorTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1, std::vector<cv::DMatch> &matches){
+void DescriptorTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_ptr<Image> &img1, std::vector<cv::DMatch> &good_matches, const float error_threshold, const float y_distance_threshold){
 
-    this->bf_->match(img0->descriptors_, img1->descriptors_, matches); // Find the two best matches
+
+    cv::Mat descriptors_from_img0, descriptors_from_img1;
+    std::vector<cv::DMatch> matches;
+
+    img0->getDescripots(descriptors_from_img0);
+    img1->getDescripots(descriptors_from_img1);
+
+    this->bf_->match(descriptors_from_img0, descriptors_from_img1, matches); // Find the two best matches
 
     // Sort matches based on distance (best matches first)
-    std::sort(matches.begin(), matches.end(), [](const cv::DMatch &a, const cv::DMatch &b) {
-        return a.distance < b.distance;
-    });
+    float min_distance = std::min_element (
+                        matches.begin(), matches.end(),
+                        [] ( const cv::DMatch& m1, const cv::DMatch& m2 )
+    {
+        return m1.distance < m2.distance;
+    } )->distance;
 
+    int min_match_queryIdx = 1e20;
+    int max_match_queryIdx = -1;
+    int min_match_trainIdx = 1e20;
+    int max_match_trainIdx = -1;
 
-}
+    for(size_t i=0; i< matches.size(); i++){
 
+        cv::DMatch &match = matches.at(i);
+        if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, error_threshold)){
+            // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
+            continue;
+        }
 
-void DescriptorTracker::trackInFrame(std::shared_ptr<CameraFrame> &camera_frame){
-
-
-    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
-
-    for(int j=1;j<(int)camera_frame->image_vector_.size();j++){
-
-        std::shared_ptr<Image> &img_j = camera_frame->image_vector_.at(j);
-        std::vector<cv::DMatch> matches;
-        this->matching(img_0, img_j, matches);
-
-        double min_distance = matches.front().distance;
-
-        for (int i=0; i < (int)matches.size(); i++) {
-            cv::DMatch &match = matches[i];
-            if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_frame_)){
-                // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
-                break;
-            }
-            // Manually assign `imgIdx`
-            // cv::Point2d pt21 = img_0->keypoint_vector_[match.queryIdx]->pt2i_;
-            // cv::KeyPoint cv_pt21 = img_0->cv_keypoint_vector_[match.queryIdx];
-
-            // cv::Point2d pt22 = img_j->keypoint_vector_[match.trainIdx]->pt2i_;
-
-            double y_distance = std::abs(img_0->keypoint_vector_[match.queryIdx]->pt2i_.y - img_j->keypoint_vector_[match.trainIdx]->pt2i_.y);
-            if(y_distance > 10){
+        if(y_distance_threshold != -1.0){
+            double y_distance = std::abs(img0->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt.y - img1->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt.y);
+            if(y_distance > y_distance_threshold){
                 continue;
             }
-
-            match.imgIdx = img_j->sensor_id_; // Store index of the train image
-            img_0->keypoint_vector_[match.queryIdx]->setMatchInFrame(match);
-            img_0->matches_in_frame_.push_back(match);
-
-            cv::DMatch match_for_img_j;
-            match_for_img_j.queryIdx = match.trainIdx;  // Index of keypoint in the first image (query image)
-            match_for_img_j.trainIdx = match.queryIdx;  // Index of keypoint in the second image (train image)
-            match_for_img_j.imgIdx = 0;    // Index of the image in the train set (useful in multi-image matching)
-            match_for_img_j.distance = match.distance; // Distance between the descriptors (lower is better)
-            img_j->keypoint_vector_[match.trainIdx]->setMatchInFrame(match_for_img_j);
-            img_j->matches_in_frame_.push_back(match_for_img_j);
-
-            std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
-            std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_j = img_j->keypoint_vector_[match.trainIdx];
-
-
-            tracked_keypoint_from_img_0->setRightKeyPointInFrame(tracked_keypoint_from_img_j);
-            tracked_keypoint_from_img_j->setLeftKeyPointInFrame(tracked_keypoint_from_img_0);
-            
         }
-        LOG(INFO) << GREEN << img_j->matches_in_frame_.size() << " points were trakced in frame between " << img_0->sensor_id_  << " and " << img_j->sensor_id_ << RESET; 
+        
 
+        match.imgIdx = img1->id_; // Store index of the train image
+        good_matches.emplace_back(match);
+        if(min_match_queryIdx > match.queryIdx) min_match_queryIdx = match.queryIdx;
+        if(max_match_queryIdx < match.queryIdx) max_match_queryIdx = match.queryIdx;
+        if(min_match_trainIdx > match.trainIdx) min_match_trainIdx = match.trainIdx;
+        if(max_match_trainIdx < match.trainIdx) max_match_trainIdx = match.trainIdx;
+
+   
     }
 
-
-    
-
-    
+ 
 }
 
 
-void DescriptorTracker::trackInTime(std::shared_ptr<Image> &img_from_ref_frame, std::shared_ptr<Image> &img_from_current_frame){
-    
 
-    std::vector<cv::DMatch> matches;
-    this->matching(img_from_current_frame, img_from_ref_frame, matches);
-    double min_distance = matches.front().distance;
-
-
-    for (int i=0; i < (int)matches.size(); i++) {
-        cv::DMatch &match = matches[i];
-        if(match.distance > std::max<double>(min_distance * this->sys_config_->params_->matching_ratio_, this->sys_config_->params_->threshold_for_tracking_descriptor_in_time_)){
-            // because mathces have been sorted, we no need to loop anymore once match distance larger than threshold
-            break;
-        }
-
-        // cv::Point2d pt21 = img_from_current_frame->keypoint_vector_[match.queryIdx]->pt2i_;
-        // cv::KeyPoint cv_pt21 = img_from_current_frame->cv_keypoint_vector_[match.queryIdx];
-        // cv::Point2d pt22 = img_from_ref_frame->keypoint_vector_[match.trainIdx]->pt2i_;
-        // double y_distance = std::abs(img_from_current_frame->keypoint_vector_[match.queryIdx]->pt2i_.y - img_from_ref_frame->keypoint_vector_[match.trainIdx]->pt2i_.y);
-
-        // Manually assign `imgIdx`
-        match.imgIdx = img_from_ref_frame->id_; // Store index of the train image
-
-        std::shared_ptr<KeyPoint> &tracked_keypoint_from_current_frame = img_from_current_frame->keypoint_vector_[match.queryIdx];
-        std::shared_ptr<KeyPoint> &tracked_keypoint_from_ref_frame = img_from_ref_frame->keypoint_vector_[match.trainIdx];
-
-        tracked_keypoint_from_current_frame->setMatchInTime(match);
-        img_from_current_frame->matches_in_time_.push_back(match);
-
-        tracked_keypoint_from_current_frame->setPrevKeyPointInTime(tracked_keypoint_from_ref_frame);
-        tracked_keypoint_from_ref_frame->setNextKeyPointInTime(tracked_keypoint_from_current_frame);
-        
-        tracked_keypoint_from_ref_frame->propagateMapPointPtr();
-    }   
-
-
-
-    LOG(INFO) << GREEN << img_from_current_frame->matches_in_time_.size() << " points were trakced in time" << RESET;
-
-    
-
-    
-}
 
 } //modules_vins
 

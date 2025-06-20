@@ -18,7 +18,7 @@ class FeaturePoint{
 
 
     virtual void detect(const std::shared_ptr<Image> &img) = 0;
-    virtual void compute(const std::shared_ptr<Image> &img) = 0;
+    virtual void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
 
     protected:
     int num_features_;
@@ -31,7 +31,7 @@ class ORBFeature : public FeaturePoint{
     ORBFeature(const std::shared_ptr<SystemConfig> &sys_config);
 
     void detect(const std::shared_ptr<Image> &img) override;
-    void compute(const std::shared_ptr<Image> &img) override;
+    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
 
     protected:
     int num_features_;
@@ -49,7 +49,7 @@ class GoodFeature : public FeaturePoint{
     public:
     GoodFeature(const std::shared_ptr<SystemConfig> &sys_config);
     void detect(const std::shared_ptr<Image> &img) override;
-    void compute(const std::shared_ptr<Image> &img) override;
+    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
 
 
     protected:

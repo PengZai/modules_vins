@@ -28,7 +28,7 @@ void SystemConfig::loadFromPath(const std::string &config_path){
     }
 
     cv::FileNodeIterator it = camera_config->file_storage_->root().begin();
-    for(int i = 0; i < this->params_->max_cameras_; i++, it++){
+    for(size_t i= 0; i < this->params_->max_cameras_; i++, it++){
         
         std::shared_ptr<CameraParameters> camera_params = std::make_shared<CameraParameters>();
         std::string node_name = (*it).name();

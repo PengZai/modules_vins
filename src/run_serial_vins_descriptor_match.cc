@@ -17,6 +17,8 @@
 #include "log/evo_record.h"
 #include "init/descriptor_match_initializer.h"
 #include "tracking/descriptor_tracker.h"
+#include "data/preprocess.h"
+
 
 
 int main(int argc, char* argv[]) {

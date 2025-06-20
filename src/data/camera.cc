@@ -37,7 +37,60 @@ color_data_(data)
 
 
 
-double Image::getPointDepthFromSensor(const cv::Point2i &pt){
+
+void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
+
+    for(size_t i=0; i < cv_key_points.size(); i++){
+        const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
+        this->keypoint_vector_.emplace_back(kp);
+    }
+
+}
+
+
+void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors){
+
+    for(size_t i=0; i < cv_key_points.size(); i++){
+        const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
+        kp->descriptor_ = descriptors.row(i);
+
+        this->keypoint_vector_.emplace_back(kp);
+    }
+
+}
+
+void Image::getCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
+    for(size_t i=0; i < this->keypoint_vector_.size(); i++){
+        if(this->keypoint_vector_.at(i) != nullptr){
+            cv_key_points.emplace_back(this->keypoint_vector_.at(i)->cv_keypoint_);
+        }
+        else{
+            cv_key_points.emplace_back(cv::KeyPoint());
+        }
+    }
+}
+
+void Image::getDescripots(cv::Mat &descriptors){
+    
+    std::vector<cv::Mat> descriptor_vec;
+    for(size_t i=0; i < this->keypoint_vector_.size(); i++){
+        const std::shared_ptr<KeyPoint> &kp = this->keypoint_vector_.at(i);
+
+        if (!kp->descriptor_.empty()) {
+            descriptor_vec.emplace_back(kp->descriptor_);
+        }
+        else{
+            LOG(INFO) << RED << "there is a empty descriptor for keypoint " << i << "in image " << this->id_;
+            return;
+        }
+    }
+
+    cv::vconcat(descriptor_vec, descriptors);  
+
+}
+
+
+double Image::getPointDepthFromSensor(const cv::Point2f &pt){
 
     int x = cvRound(pt.x);
     int y = cvRound(pt.y);
@@ -78,7 +131,7 @@ double Image::getPointDepthFromSensor(const cv::Point2i &pt){
 std::vector<Eigen::Vector3d> Image::getMapPoints() const {
     
     std::vector<Eigen::Vector3d> map_points;
-    for(int i = 0;i< (int)this->keypoint_vector_.size(); i++){
+    for(size_t i= 0;i< (int)this->keypoint_vector_.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = keypoint_vector_.at(i);
         if(kp->map_point_ptr_ != nullptr){
             map_points.push_back(kp->map_point_ptr_->pt3d_);
@@ -167,12 +220,12 @@ void CameraFrame::cleanTrackInTimeRelationship(){
 
 // Overload operator<< for logging
 std::ostream& operator<<(std::ostream& os, const Image &img) {
+
     os << "Image Info: \n" 
     << "Timestamp: " << img.timestamp_ << "\n" 
     << "Sensor ID: " << img.sensor_id_ << "\n"
     << "Data Size: " << img.color_data_.rows << "x" << img.color_data_.cols << "\n"
-    << "Keypoints Count: " << img.keypoint_vector_.size() << "\n"
-    << "Descriptor Size: " << img.descriptors_.rows << "x" << img.descriptors_.cols << "\n";
+    << "Keypoints Count: " << img.keypoint_vector_.size() << "\n";
     return os;
 }
 

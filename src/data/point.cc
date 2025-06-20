@@ -74,21 +74,27 @@ right_keypoint_in_frame_(nullptr)
 
 }
 
+
+
+
 KeyPoint::KeyPoint(const cv::KeyPoint kp):
 KeyPoint()
 {
 
-    this->pt2i_ = kp.pt; 
     this->cv_keypoint_ = kp; 
 
 }
 
 
 
+
 void KeyPoint::setCVKeyPoint(const cv::KeyPoint &kp){
     this->cv_keypoint_ = kp;
-    this->pt2i_ = kp.pt;
 
+}
+
+void KeyPoint::setDescriptor(const cv::Mat &descriptor){
+    this->descriptor_ = descriptor;
 }
 
 void KeyPoint::setNextKeyPointInTime(const std::shared_ptr<KeyPoint> &next_keypoint_in_time){
@@ -163,16 +169,18 @@ void KeyPoint::setMapPointPtrRightForward(const std::shared_ptr<MapPoint> &map_p
 
 
 
+template <typename T>
+void KeyPoint::set2DKeyPoint(const T x, const T y){
 
-void KeyPoint::set2DKeyPoint(const int x, const int y){
-    this->pt2i_.x = x;
-    this->pt2i_.y = y;
+    this->cv_keypoint_ = cv::KeyPoint(cv::Point2f(x, y), 1.0f);
+
 }
 
 
-void KeyPoint::set2DKeyPoint(const cv::Point2i &pt2i){
-    this->pt2i_.x = pt2i.x;
-    this->pt2i_.y = pt2i.y;
+void KeyPoint::set2DKeyPoint(const cv::Point2f &pt2f){
+    
+    this->cv_keypoint_ = cv::KeyPoint(pt2f, 1.0f);
+
 }
 
 void KeyPoint::set3DKeyPoint(const double x, const double y, const double z){

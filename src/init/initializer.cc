@@ -44,6 +44,9 @@ void Initializer::setPoseEstimator(const std::shared_ptr<PoseEstimator> &pose_es
 }
 
 
+void Initializer::setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor){
+    this->data_preprocesor_ = data_preprocesor;
+}
 
 Initializer::Status Initializer::getStatus(){
 

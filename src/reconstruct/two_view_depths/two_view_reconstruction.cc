@@ -154,17 +154,17 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
 
     int success_count = 0;
 
-    for(int i=0; i < (int)img_i->matches_in_frame_.size(); i++){
+    for(size_t i=0; i < (int)img_i->matches_in_frame_.size(); i++){
 
         std::vector<Eigen::Vector3d> normalized_pt3d;
         Eigen::Vector3d pt_world;
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
-        cv::Point2i &tracked_pt2i_from_img_i = img_i->keypoint_vector_[match.queryIdx]->pt2i_;
-        cv::Point2i &tracked_pt2i_from_img_j = img_j->keypoint_vector_[match.trainIdx]->pt2i_;
+        cv::Point2f &tracked_pt2f_from_img_i = img_i->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt;
+        cv::Point2f &tracked_pt2f_from_img_j = img_j->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt;
 
-        cv::Point2d normalized_pt2d_from_img_i = pixel2norm(tracked_pt2i_from_img_i, cv_Ki);
-        cv::Point2d normalized_pt2d_from_img_j = pixel2norm(tracked_pt2i_from_img_j, cv_Kj);
+        cv::Point2d normalized_pt2d_from_img_i = pixel2norm(tracked_pt2f_from_img_i, cv_Ki);
+        cv::Point2d normalized_pt2d_from_img_j = pixel2norm(tracked_pt2f_from_img_j, cv_Kj);
         
  
         normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_i.x, normalized_pt2d_from_img_i.y, 1.0));
@@ -199,21 +199,21 @@ void TwoViewReconstructor::twoViewTriangulationWithOpenCV(const std::shared_ptr<
 
     // we collected these tracked points haven't been triangulated yet
     std::vector<cv::Point2d> tracked_kps_from_img_i, tracked_kps_from_img_j;
-    std::vector<cv::Point2d> tracked_normalized_pt2is_from_img_i, tracked_normalized_pt2is_from_img_j;
+    std::vector<cv::Point2d> tracked_normalized_pt2fs_from_img_i, tracked_normalized_pt2fs_from_img_j;
 
-    for(int i=0; i < (int)img_i->matches_in_frame_.size(); i++){
+    for(size_t i=0; i < (int)img_i->matches_in_frame_.size(); i++){
 
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
-        cv::Point2i &tracked_pt2i_from_img_i = img_i->keypoint_vector_[match.queryIdx]->pt2i_;
-        cv::Point2i &tracked_pt2i_from_img_j = img_j->keypoint_vector_[match.trainIdx]->pt2i_;
+        cv::Point2f &tracked_pt2f_from_img_i = img_i->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt;
+        cv::Point2f &tracked_pt2f_from_img_j = img_j->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt;
 
-        tracked_normalized_pt2is_from_img_i.emplace_back(pixel2norm(tracked_pt2i_from_img_i, cv_Ki));
-        tracked_normalized_pt2is_from_img_j.emplace_back(pixel2norm(tracked_pt2i_from_img_j, cv_Kj));
+        tracked_normalized_pt2fs_from_img_i.emplace_back(pixel2norm(tracked_pt2f_from_img_i, cv_Ki));
+        tracked_normalized_pt2fs_from_img_j.emplace_back(pixel2norm(tracked_pt2f_from_img_j, cv_Kj));
     }
 
     // we can't find any tracked point that could be used for tirangulation
-    if(tracked_normalized_pt2is_from_img_i.size() == 0 || tracked_normalized_pt2is_from_img_j.size() == 0){
+    if(tracked_normalized_pt2fs_from_img_i.size() == 0 || tracked_normalized_pt2fs_from_img_j.size() == 0){
         return;
     }
 
@@ -233,7 +233,7 @@ void TwoViewReconstructor::twoViewTriangulationWithOpenCV(const std::shared_ptr<
     cv::eigen2cv(Tj, cv_Tj);
 
 
-    cv::triangulatePoints(cv_Ti, cv_Tj, tracked_normalized_pt2is_from_img_i, tracked_normalized_pt2is_from_img_j, points4D);
+    cv::triangulatePoints(cv_Ti, cv_Tj, tracked_normalized_pt2fs_from_img_i, tracked_normalized_pt2fs_from_img_j, points4D);
 
     // Step 9: Convert Homogeneous Coordinates to 3D
     for (int i = 0; i < points4D.cols; i++) {
@@ -251,11 +251,11 @@ void TwoViewReconstructor::twoViewTriangulationWithOpenCV(const std::shared_ptr<
         cv::Point3d img_i_pt3d = cv::Point3d(col.at<double>(0, 0), col.at<double>(1, 0), col.at<double>(2, 0));
 
         if(this->sys_config_->params_->check_triangulation_){
-            cv::Point2i &tracked_pt2i_from_img_i = img_i->keypoint_vector_[match.queryIdx]->pt2i_;
-            cv::Point2i &tracked_pt2i_from_img_j = img_j->keypoint_vector_[match.trainIdx]->pt2i_;
+            cv::Point2f &tracked_pt2f_from_img_i = img_i->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt;
+            cv::Point2f &tracked_pt2f_from_img_j = img_j->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt;
     
-            checkTriangulatedPointsWithReprojection(tracked_pt2i_from_img_i, img_i_pt3d, cv_Ti, cv_Ki);
-            checkTriangulatedPointsWithReprojection(tracked_pt2i_from_img_j, img_i_pt3d, cv_Tj, cv_Kj);
+            checkTriangulatedPointsWithReprojection(tracked_pt2f_from_img_i, img_i_pt3d, cv_Ti, cv_Ki);
+            checkTriangulatedPointsWithReprojection(tracked_pt2f_from_img_j, img_i_pt3d, cv_Tj, cv_Kj);
     
         }
       

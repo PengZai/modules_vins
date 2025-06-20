@@ -12,6 +12,8 @@
 #include "../system/state.h"
 #include "../data/camera.h"
 #include "../utils/utils.h"
+#include "../data/preprocess.h"
+
 
 namespace modules_vins{
 
@@ -43,13 +45,14 @@ class Initializer{
     const std::deque<std::shared_ptr<CameraFrame>> &getGoodInitializedReferenceCameraFrameDeque() const;
     double getCumulativeTranslationInCameraFrameDeque(const std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque);
     
+    void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);
     void setTracker(const std::shared_ptr<Tracker> &tracker);
     void setReconstructor(const std::shared_ptr<Reconstructor> &reconstructor);
     void setPoseEstimator(const std::shared_ptr<PoseEstimator> &pose_estimator);
 
     //interface 
-    virtual void pipeline(std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque) = 0;
+    virtual void pipeline(const std::deque<std::shared_ptr<CameraFrame>> &camera_frame_deque) = 0;
 
 
     std::shared_ptr<SystemConfig> sys_config_;
@@ -58,10 +61,12 @@ class Initializer{
 
     protected:
     Sophus::SE3<double> T_cam_GT_;
+    std::shared_ptr<DataPreprocesor> data_preprocesor_;
     std::shared_ptr<Detector> detector_;
     std::shared_ptr<Tracker> tracker_;
     std::shared_ptr<Reconstructor> reconstructor_;
     std::shared_ptr<PoseEstimator> pose_estimator_;
+
     std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
     std::deque<std::shared_ptr<CameraFrame>> good_ref_camera_frame_deque_;
 

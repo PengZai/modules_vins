@@ -14,7 +14,7 @@ ros_rate_(40)
 
 {
 
-    for(int i=0; i < this->sys_config_->params_->max_cameras_; i++){
+    for(size_t i=0; i < this->sys_config_->params_->max_cameras_; i++){
         this->output_image_pub_vector_.push_back(this->it_.advertise(this->sys_config_->camera_config_->params_vector_.at(i)->output_rostopic_, 1));
     }
 
@@ -72,7 +72,7 @@ void ROS1Visualizer::publishImages(const std::shared_ptr<CameraFrame> &camera_fr
 
     std_msgs::Header header;
 
-    for(int i=0; i < this->sys_config_->params_->max_cameras_; i++){
+    for(size_t i=0; i < this->sys_config_->params_->max_cameras_; i++){
         const std::shared_ptr<Image> &img = camera_frame->image_vector_.at(i);
         header.stamp = ros::Time::now();
         header.frame_id = "cam" + img->sensor_id_;

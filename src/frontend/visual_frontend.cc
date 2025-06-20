@@ -19,6 +19,10 @@ VisualFrontend::Status VisualFrontend::getStatus(){
 }
 
 
+void VisualFrontend::setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor){
+    this->data_preprocesor_ = data_preprocesor;
+}
+
 void VisualFrontend::setDetector(const std::shared_ptr<Detector> &detector){
 
     this->detector_ = detector;
@@ -59,7 +63,7 @@ void VisualFrontend::maintainRefCameraFrameDeque(){
     if(this->ref_camera_frame_deque_.size() > 0){
 
         double Tcw_translation_norm = this->ref_camera_frame_deque_.front()->image_vector_.at(0)->T_c_w_.translation().norm();
-        for(int i=1;i<this->ref_camera_frame_deque_.size();i++){
+        for(size_t i=1;i<this->ref_camera_frame_deque_.size();i++){
 
             const std::shared_ptr<CameraFrame> &prev_camera_frame = this->ref_camera_frame_deque_.at(i);
 

@@ -25,25 +25,6 @@ void Detector::setFeaturePoint(const std::shared_ptr<FeaturePoint> &feature_poin
 
 void Detector::detect(const std::shared_ptr<Image> &img){
     
-    if(img->color_data_.channels() == 3){
-        cv::cvtColor(img->color_data_, img->gray_data_, cv::COLOR_BGR2GRAY);
-
-    }
-    else if(img->color_data_.channels() == 1){
-        img->gray_data_ = img->color_data_;
-
-    }
-    else{
-        LOG(INFO) << "img is neither the bgr image nor gray image";
-        std::exit(EXIT_FAILURE);
-    }
-
-    // cv::equalizeHist(img->gray_data_, img->normalize_gray_data_);
-
-    this->feature_point_->detect(img);
-
-
-    LOG(INFO) << "Detect " << img->cv_keypoint_vector_.size() << " new features";
 
     #ifdef USE_LIBTORCH
 
@@ -64,29 +45,29 @@ void Detector::detect(const std::shared_ptr<Image> &img){
 
 }
 
-void Detector::computeDescriptor(const std::shared_ptr<Image> &img){
-
-    this->feature_point_->compute(img);
 
 
-}
 
-
-void Detector::pipeline(std::shared_ptr<CameraFrame> &camera_frame){
+void Detector::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     
     if(camera_frame->status_ != CameraFrame::Status::NORMAL){
         return;
     }
 
-    for(int i=0; i < (int)camera_frame->image_vector_.size();i++){
-        std::shared_ptr<Image> &img = camera_frame->image_vector_.at(i);
+    for(size_t i=0;i<camera_frame->image_vector_.size();i++){
+        
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
 
-        detect(img);
-
-        computeDescriptor(img);
-
+        detect(img_i);
 
     }
+    
+
+    this->feature_point_->pipeline(camera_frame);
+    
+
+
+
 
 }
     

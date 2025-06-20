@@ -211,7 +211,7 @@ void System::callbackVisualNavigation(){
                 const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque = this->initializer_->getGoodInitializedReferenceCameraFrameDeque();
                 visual_frontend_->setRefCameraFrameDeque(ref_camera_frame_deque);
                 this->initializer_->initializeGTTcwWithCameraFrame(ref_camera_frame_deque.back(), this->state_);
-                for(int i = ref_camera_frame_deque.size() - 1; i >= 0; i--){
+                for(int i = (int)ref_camera_frame_deque.size() - 1; i >= 0; i--){
                     const std::shared_ptr<CameraFrame> &ref_camera_frame  = ref_camera_frame_deque.at(i);
                     key_frame_manager_->updateKeyFrame(ref_camera_frame);                    
                     this->state_.map_->update(ref_camera_frame);

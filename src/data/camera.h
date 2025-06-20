@@ -39,7 +39,7 @@ class Image{
         void setTcw(const Sophus::SE3<double> T_c_w);
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
 
-        double getPointDepthFromSensor(const cv::Point2i &pt);
+        double getPointDepthFromSensor(const cv::Point2f &pt);
         void cleanTrackInTimeRelationship();
 
 
@@ -47,7 +47,11 @@ class Image{
         Eigen::Vector3d getPosition();
         
         bool isInImage(const cv::Point2d &pixel);
-        
+        void setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
+        void setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors);
+        void getCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
+        void getDescripots(cv::Mat &descriptors);
+
 
     public:
         static int id_counter_;
@@ -65,8 +69,7 @@ class Image{
         cv::Mat stereo_depth_;
         cv::Mat learned_stereo_depth_;
         cv::Mat sensor_depth_;
-        std::vector<cv::KeyPoint> cv_keypoint_vector_;
-        cv::Mat descriptors_;
+        // std::vector<cv::KeyPoint> cv_keypoint_vector_;
 
         std::vector<std::shared_ptr<KeyPoint>> keypoint_vector_;
 

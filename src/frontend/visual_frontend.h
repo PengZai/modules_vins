@@ -14,6 +14,7 @@
 #include "../data/camera.h"
 #include "../data/map.h"
 #include "../log/logging.h"
+#include "../data/preprocess.h"
 
 
 
@@ -43,6 +44,7 @@ class VisualFrontend{
     void maintainRefCameraFrameDeque();
     Status getStatus();
 
+    void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);
     void setTracker(const std::shared_ptr<Tracker> &tracker);
     void setReconstructor(const std::shared_ptr<Reconstructor> &reconstructor);
@@ -56,6 +58,7 @@ class VisualFrontend{
     int fail_pose_estimation_num_;
     std::shared_ptr<SystemConfig> sys_config_;
     std::shared_ptr<Map> map_;
+    std::shared_ptr<DataPreprocesor> data_preprocesor_;
     std::shared_ptr<Detector> detector_;
     std::shared_ptr<Tracker> tracker_;
     std::shared_ptr<Reconstructor> reconstructor_;
