@@ -1,0 +1,17 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+
+commond:
+  num_feature_points: 1000
+  min_distance: 5 # radius size for image block only containing one feature point, so that we can distribute feature points on (image size/ min_distance * 2) image block
+
+ORB:
+  scale_factor: 1.2
+  level_pyramid: 8
+  threshold_for_tracking_descriptor_in_time: 30.0 # for tracking cross time
+  threshold_for_tracking_descriptor_in_frame: 40.0 # for tracking cross images in same frame
+  matching_ratio: 2.0 # distance of matching point < min_distance * matching_ratio
+
+KLT:
+  max_count: 30 # Max number of iterations (used if COUNT is set)
+  epsilon: 0.01 # Min required accuracy / threshold (used if EPS is set)

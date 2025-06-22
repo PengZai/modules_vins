@@ -36,9 +36,20 @@ color_data_(data)
 }
 
 
-
-
 void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
+
+    this->keypoint_vector_.clear();
+    appendKeyPoints(cv_key_points);
+}
+
+void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors){
+
+    this->keypoint_vector_.clear();
+    appendKeyPoints(cv_key_points, descriptors);
+}
+
+
+void Image::appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
 
     for(size_t i=0; i < cv_key_points.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
@@ -48,7 +59,7 @@ void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
 }
 
 
-void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors){
+void Image::appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors){
 
     for(size_t i=0; i < cv_key_points.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
@@ -131,7 +142,7 @@ double Image::getPointDepthFromSensor(const cv::Point2f &pt){
 std::vector<Eigen::Vector3d> Image::getMapPoints() const {
     
     std::vector<Eigen::Vector3d> map_points;
-    for(size_t i= 0;i< (int)this->keypoint_vector_.size(); i++){
+    for(size_t i= 0;i< this->keypoint_vector_.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = keypoint_vector_.at(i);
         if(kp->map_point_ptr_ != nullptr){
             map_points.push_back(kp->map_point_ptr_->pt3d_);
@@ -169,6 +180,13 @@ void Image::cleanTrackInTimeRelationship(){
     }
 
 }
+
+void Image::cleanFeaturePoints(){
+
+    this->keypoint_vector_.clear();
+
+}
+
 
 Eigen::Matrix3d Image::getRotation(){
 
@@ -216,6 +234,45 @@ void CameraFrame::cleanTrackInTimeRelationship(){
         image->cleanTrackInTimeRelationship();
     }
 }
+
+void CameraFrame::cleanFeaturePoints(){
+
+    for( std::shared_ptr<Image> image : this->image_vector_){
+        image->cleanFeaturePoints();
+    }
+}
+
+void CameraFrame::setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches){
+
+    std::shared_ptr<Image> &img_0 = this->image_vector_.at(0);
+    img_0->matches_in_time_.clear();
+    for (size_t i=0; i < matches.size(); i++) {
+        const cv::DMatch &match = matches[i];
+        
+        std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
+
+
+        tracked_keypoint_from_img_0 ->setMatchInFrame(match);
+        img_0->matches_in_time_.push_back(match);
+
+    }
+}
+
+
+void CameraFrame::setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches){
+
+    std::shared_ptr<Image> &img_0 = this->image_vector_.at(0);
+    img_0->matches_in_frame_.clear();
+    for (size_t i=0; i < matches.size(); i++) {
+            
+            const cv::DMatch &match = matches[i];
+            std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
+
+            tracked_keypoint_from_img_0 ->setMatchInFrame(match);
+            img_0->matches_in_frame_.push_back(match);
+    }
+}
+
 
 
 // Overload operator<< for logging

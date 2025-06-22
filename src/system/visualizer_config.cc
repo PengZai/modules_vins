@@ -9,7 +9,7 @@ void OpenCVParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     this->node_ = node;
 
 
-
+    parse("cv_waitkey_num", this->cv_waitkey_num_);
     parse("show_projected_mappoint", this->show_projected_mappoint_);
 
     parse("show_matching_in_frame", this->show_matching_in_frame_);

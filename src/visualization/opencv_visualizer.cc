@@ -86,22 +86,22 @@ void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame>
         }
         
         
-        for(const std::shared_ptr<KeyPoint> &keypoint : img_i->keypoint_vector_){
+        // for(const std::shared_ptr<KeyPoint> &keypoint : img_i->keypoint_vector_){
 
-            if(keypoint == nullptr)
-            {
-                continue;
-            }
+        //     if(keypoint == nullptr)
+        //     {
+        //         continue;
+        //     }
 
-            if(keypoint->match_in_frame_.trainIdx != -1){
+        //     if(keypoint->match_in_frame_.trainIdx != -1){
 
-                drawTrackingPointPattern(img_i_data, keypoint, this->GreenColor_);
-            }
-            else{
+        //         drawTrackingPointPattern(img_i_data, keypoint, this->GreenColor_);
+        //     }
+        //     else{
 
-                drawTrackingPointPattern(img_i_data, keypoint, this->RedColor_);
-            }
-        }
+        //         drawTrackingPointPattern(img_i_data, keypoint, this->RedColor_);
+        //     }
+        // }
 
  
         if(i>0){
@@ -121,6 +121,7 @@ void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame>
                 cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
             );
 
+            // cv::imshow("matches in frame between img 0 and img " + std::to_string(i) + " in frame id:" + std::to_string(camera_frame->id_), img_0_matches_in_frame);
             cv::imshow("matches in frame between img 0 and img " + std::to_string(i), img_0_matches_in_frame);
 
         }
@@ -138,38 +139,39 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
     cv::Mat img_0_color_data = img_0->gray_data_.clone();
 
 
-    for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
+    // for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
 
-        if(keypoint->match_in_time_.trainIdx != -1){
+    //     if(keypoint->match_in_time_.trainIdx != -1){
 
-            drawTrackingPointPattern(img_0_color_data, keypoint, this->GreenColor_);
-        }
-        else{
+    //         drawTrackingPointPattern(img_0_color_data, keypoint, this->GreenColor_);
+    //     }
+    //     else{
 
-            drawTrackingPointPattern(img_0_color_data, keypoint, this->RedColor_);
-        }
+    //         drawTrackingPointPattern(img_0_color_data, keypoint, this->RedColor_);
+    //     }
         
-    }
+    // }
 
 
 
-    const std::shared_ptr<CameraFrame> &previous_camera_frame = camera_frame->ref_camera_frame_;
-    if(previous_camera_frame){
+    const std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
+    if(ref_camera_frame){
 
-        const std::shared_ptr<Image> &img_0_from_previous_camera_frame = previous_camera_frame->image_vector_.at(0);
-        cv::Mat img_0_color_data_from_previous_camera_frame = img_0_from_previous_camera_frame->gray_data_.clone();
+        const std::shared_ptr<Image> &img_0_from_ref_camera_frame = ref_camera_frame->image_vector_.at(0);
+        cv::Mat img_0_color_data_from_ref_camera_frame = img_0_from_ref_camera_frame->gray_data_.clone();
     
         cv::Mat img_0_matches_in_time;
-         std::vector<cv::KeyPoint> cv_key_points_from_img0, cv_key_points_from_img0_previous_frame;
+         std::vector<cv::KeyPoint> cv_key_points_from_img0, cv_key_points_from_img0_ref_frame;
         img_0->getCVKeyPoints(cv_key_points_from_img0);
-        img_0_from_previous_camera_frame->getCVKeyPoints(cv_key_points_from_img0_previous_frame);
+        img_0_from_ref_camera_frame->getCVKeyPoints(cv_key_points_from_img0_ref_frame);
 
-        cv::drawMatches(img_0_color_data_from_previous_camera_frame, cv_key_points_from_img0_previous_frame, img_0_color_data, cv_key_points_from_img0, img_0_from_previous_camera_frame->matches_in_time_, img_0_matches_in_time,
+        cv::drawMatches(img_0_color_data_from_ref_camera_frame, cv_key_points_from_img0_ref_frame, img_0_color_data, cv_key_points_from_img0, img_0_from_ref_camera_frame->matches_in_time_, img_0_matches_in_time,
             cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
         );
     
     
-        cv::imshow("img 0 matches in time", img_0_matches_in_time);
+        cv::imshow("img 0 matches in time between ref frame id: " +  std::to_string(ref_camera_frame->id_) + " and current frame id: " + std::to_string(camera_frame->id_) , img_0_matches_in_time);
+        // cv::imshow("img 0 matches in time", img_0_matches_in_time);
 
     }
 
@@ -185,7 +187,11 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
     cv::Mat img_0_color_data = img_0->color_data_.clone();
 
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
+    std::vector<double> valid_depths;
+    std::vector<cv::Point2d> valid_pts2d;
+    std::vector<Eigen::Vector3d> valid_pts3d_in_cam;
 
+    double max_depth = -1;
     // const std::shared_ptr<Map> &map = camera_frame.getMap();
     const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = this->map_->getMapPoints();
 
@@ -193,13 +199,49 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;
 
        const Eigen::Vector3d pt3d_in_cam = img_0->T_c_w_ * map_point->pt3d_;
-       cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
-       if(img_0->isInImage(reprojected_pixel) && pt3d_in_cam.z() > 0){
-        cv::circle (img_0_color_data, reprojected_pixel, 2, cv::Scalar (0,255,0), -1);
+       const cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
+       const double d = pt3d_in_cam.z();
+       if(img_0->isInImage(reprojected_pixel) && d > 0){
+
+        valid_depths.emplace_back(d);
+        valid_pts2d.emplace_back(reprojected_pixel);
+        valid_pts3d_in_cam.emplace_back(pt3d_in_cam);
+
        }
 
     }
 
+    if(valid_depths.size()>0){
+
+        std::sort(valid_depths.begin(), valid_depths.end());
+        size_t maximum_idx = static_cast<size_t>(0.99 * valid_depths.size());
+        float depth_threshold = valid_depths[std::min(maximum_idx, valid_depths.size() - 1)];
+
+
+
+        for(int i=0;i<valid_pts3d_in_cam.size();i++){
+
+            const cv::Point2d valid_pt2d = valid_pts2d.at(i);
+            const double d = valid_pts3d_in_cam.at(i).z();
+            cv::Scalar color;
+            if(d <= depth_threshold){
+
+                float norm_d = d / depth_threshold;
+
+                uchar blue  = static_cast<uchar>((1.0f - norm_d) * 255);
+                uchar red   = static_cast<uchar>(norm_d * 255);
+                uchar green = static_cast<uchar>((1.0f - std::abs(norm_d - 0.5f) * 2) * 255);
+                color = cv::Scalar(red, green, blue);
+            }
+            else{
+
+                color = cv::Scalar(255,255,255);
+            }
+            
+            cv::circle (img_0_color_data, valid_pt2d, 2, color, -1);
+
+        }
+    }
     cv::imshow("projected map point on img " + std::to_string(img_0->sensor_id_), img_0_color_data);
 
 
@@ -486,7 +528,7 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
     #endif
 
 
-    cv::waitKey(1);
+    cv::waitKey(this->sys_config_->visualizer_config_->opencv_params_->cv_waitkey_num_);
 
 
 

@@ -11,7 +11,8 @@ class KLTFrontend : public VisualFrontend{
         KLTFrontend(const std::shared_ptr<SystemConfig> &sys_config);
 
 
-        void pipeline(std::shared_ptr<CameraFrame> &camera_frame) override;
+        void initPipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
+        void normalPipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
 
 
 };

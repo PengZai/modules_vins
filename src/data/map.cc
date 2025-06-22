@@ -52,25 +52,25 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
     // project 3d point in camera coordinate to map coordinate
-    for(size_t i=0; i<(int)img_0->keypoint_vector_.size(); i++){
+    // for(size_t i=0; i<(int)img_0->keypoint_vector_.size(); i++){
 
-        std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
+    //     std::shared_ptr<KeyPoint> &kp = img_0->keypoint_vector_.at(i);
 
 
-        if(kp != nullptr && kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
+    //     if(kp != nullptr && kp->prev_keypoint_in_time_ == nullptr && kp->pt3d_.z > 0){
 
-            Eigen::Vector3d map_point = img_0->T_c_w_.inverse() * Eigen::Vector3d(kp->pt3d_.x, kp->pt3d_.y, kp->pt3d_.z);
-            std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);
-            cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(kp->cv_keypoint_.pt);
-            map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
+    //         Eigen::Vector3d map_point = img_0->T_c_w_.inverse() * Eigen::Vector3d(kp->pt3d_.x, kp->pt3d_.y, kp->pt3d_.z);
+    //         std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);
+    //         cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(kp->cv_keypoint_.pt);
+    //         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
-            kp->setMapPointPtr(map_point_ptr);
-            camera_frame->map_point_vector_.emplace_back(map_point_ptr);
+    //         kp->setMapPointPtr(map_point_ptr);
+    //         camera_frame->map_point_vector_.emplace_back(map_point_ptr);
             
-        }
+    //     }
         
 
-    }
+    // }
 
     // if(camera_frame->is_key_camera_frame_){
 
@@ -119,14 +119,19 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
 
     int count_new_mappoint = 0;
 
-    for(size_t i=0; i<(int)camera_frame->map_point_vector_.size();i++){
+    for(size_t i=0; i<camera_frame->image_vector_.size();i++){
         
-            const std::shared_ptr<MapPoint> &mp = camera_frame->map_point_vector_.at(i);
+            const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
             
-            if(!this->isExistedMapPoint(mp)){
-                this->insertMapPoint(mp);
-                count_new_mappoint++;
+            for(size_t j=0;j<img_i->keypoint_vector_.size();j++){
+                
+                const std::shared_ptr<MapPoint> &mp =  img_i->keypoint_vector_.at(j)->map_point_ptr_;
+                if(mp != nullptr && !this->isExistedMapPoint(mp)){
+                    this->insertMapPoint(mp);
+                    count_new_mappoint++;
+                }
             }
+   
         
 
     }

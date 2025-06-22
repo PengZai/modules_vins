@@ -142,17 +142,21 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
     cv::Mat cv_Ki = this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->getCVIntrinsicsMatrix();
     cv::Mat cv_Kj = this->sys_config_->camera_config_->params_vector_.at(img_j->sensor_id_)->getCVIntrinsicsMatrix();
 
+
+    const Eigen::Matrix<double, 4, 4> &T_cam_i_w = img_i->T_c_w_.matrix();
+
     Eigen::Matrix<double, 3, 4> Ti;
-    Ti.setZero();
-    Ti.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();  // Set top-left 3x3 to identity
+    Ti = T_cam_i_w.block<3,4>(0,0);
 
     Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_j->sensor_id_, img_i->sensor_id_);
-    Eigen::Matrix<double, 3, 4> Tj = T_cam_j_cam_i.topRows(3);
+    const Eigen::Matrix<double, 4, 4> &T_cam_j_w = T_cam_j_cam_i * T_cam_i_w;
+    Eigen::Matrix<double, 3, 4> Tj = T_cam_j_w.topRows(3);
 
     poses.emplace_back(Ti);
     poses.emplace_back(Tj);
 
-    int success_count = 0;
+    int existed_mappoint_count = 0;
+    int triangulated_point_count = 0;
 
     for(size_t i=0; i < (int)img_i->matches_in_frame_.size(); i++){
 
@@ -160,29 +164,47 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         Eigen::Vector3d pt_world;
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
-        cv::Point2f &tracked_pt2f_from_img_i = img_i->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt;
-        cv::Point2f &tracked_pt2f_from_img_j = img_j->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt;
+        const std::shared_ptr<KeyPoint> &kp_from_img_i = img_i->keypoint_vector_[match.queryIdx];
+        const std::shared_ptr<KeyPoint> &kp_from_img_j = img_j->keypoint_vector_[match.trainIdx];
+
+        if(kp_from_img_i->map_point_ptr_ != nullptr){
+
+            cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
+            kp_from_img_i->map_point_ptr_->setColor(bgr[0], bgr[1], bgr[2]);
+            
+            existed_mappoint_count++;
+            continue;
+        }
+
+        cv::Point2f &tracked_pt2f_from_img_i = kp_from_img_i->cv_keypoint_.pt;
+        cv::Point2f &tracked_pt2f_from_img_j = kp_from_img_j->cv_keypoint_.pt;
 
         cv::Point2d normalized_pt2d_from_img_i = pixel2norm(tracked_pt2f_from_img_i, cv_Ki);
         cv::Point2d normalized_pt2d_from_img_j = pixel2norm(tracked_pt2f_from_img_j, cv_Kj);
         
  
         normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_i.x, normalized_pt2d_from_img_i.y, 1.0));
-        normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_j.x, normalized_pt2d_from_img_j.y, 1));
+        normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_j.x, normalized_pt2d_from_img_j.y, 1.0));
         
         bool success = triangulatePoint(poses, normalized_pt3d, pt_world);
         if(success == false){
             continue;
         }
 
-        img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
+        // img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
         // LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
+        std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world(0), pt_world(1), pt_world(2)));
+        cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
+        map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
-        success_count++;
+        kp_from_img_i->map_point_ptr_ = map_point_ptr;
+        kp_from_img_j->map_point_ptr_ = map_point_ptr;
+
+        triangulated_point_count++;
 
     }
 
-    LOG(INFO) << GREEN << success_count << " triangulated points is successful" << RESET;
+    LOG(INFO) << GREEN << "there are " <<  existed_mappoint_count << " existed mappoints , " << triangulated_point_count << " and triangulated points is successful" << RESET;
 
 
 

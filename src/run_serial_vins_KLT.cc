@@ -15,7 +15,7 @@
 #include "data/map.h"
 #include "data/dataloader.h"
 #include "log/evo_record.h"
-#include "init/KLT_initializer.h"
+#include "init/initializer.h"
 #include "tracking/KLT_tracker.h"
 #include "data/preprocess.h"
 
@@ -72,8 +72,6 @@ int main(int argc, char* argv[]) {
     detector->setFeaturePoint(feature_point);
 
     std::shared_ptr<modules_vins::Tracker> tracker = std::make_shared<modules_vins::KLTTracker>(sys_config);
-    tracker->setDetector(detector);
-
     std::shared_ptr<modules_vins::Reconstructor> reconstructor = std::make_shared<modules_vins::Reconstructor>(sys_config);
     reconstructor->setTracker(tracker);
     
@@ -85,14 +83,13 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<modules_vins::EVORecorder> evo_recorder = std::make_shared<modules_vins::EVORecorder>(sys_config);
     sys.setRecorder(evo_recorder);
 
-    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::KLTInitializer>(sys_config);
-    initializer->setDataProprocesor(data_preprocesor);
-    initializer->setDetector(detector);
-    initializer->setTracker(tracker);
-    initializer->setReconstructor(reconstructor);
-    initializer->setPoseEstimator(pose_estimator);
-
+    std::shared_ptr<modules_vins::Initializer> initializer = std::make_shared<modules_vins::Initializer>(sys_config);
     sys.setInitializer(initializer);
+
+
+    std::shared_ptr<modules_vins::Visualizer> visualizer = std::make_shared<modules_vins::Visualizer>(sys_config, nh);
+    visualizer->setMap(map);
+    sys.setVisualizer(visualizer);
 
     std::shared_ptr<modules_vins::VisualFrontend> visual_frontend = std::make_shared<modules_vins::KLTFrontend>(sys_config);
     visual_frontend->setDataProprocesor(data_preprocesor);
@@ -101,6 +98,7 @@ int main(int argc, char* argv[]) {
     visual_frontend->setReconstructor(reconstructor);
     visual_frontend->setPoseEstimator(pose_estimator);
     visual_frontend->setMap(map);
+    visual_frontend->setVisualizer(visualizer);
 
 
     sys.setVisualFrontend(visual_frontend);
@@ -108,9 +106,6 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<modules_vins::KeyFrameManager> key_frame_manager = std::make_shared<modules_vins::KeyFrameManager>(sys_config);
     sys.setKeyFrameManager(key_frame_manager);
 
-    std::shared_ptr<modules_vins::Visualizer> visualizer = std::make_shared<modules_vins::Visualizer>(sys_config, nh);
-    visualizer->setMap(map);
-    sys.setVisualizer(visualizer);
 
 
     std::shared_ptr<modules_vins::ROSDataLoader> ros_dataloader = std::make_shared<modules_vins::ROSDataLoader>(sys_config, nh);

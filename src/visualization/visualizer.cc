@@ -40,6 +40,10 @@ Visualizer::~Visualizer(){
 }
 
 
+std::shared_ptr<OpenCVVisualizer> & Visualizer::getOpenCVVisualizer(){
+    return this->opencv_visualizer_;
+}
+
 
 void Visualizer::setMap(const std::shared_ptr<Map> &map){
     this->map_ = map;

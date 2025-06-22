@@ -9,6 +9,7 @@
 #include "camera_config.h"
 #include "imu_config.h"
 #include "visualizer_config.h"
+#include "feature_and_tracker_config.h"
 
 namespace modules_vins
 {   
@@ -45,6 +46,8 @@ class SystemParameters: public Parameters{
 
         double minimum_key_camera_frame_translation_;
 
+        std::string feature_and_tracker_config_name_;
+
         std::string imu_config_name_;
         std::string camera_config_name_;
         std::string visualizer_config_name_;
@@ -76,6 +79,7 @@ class SystemConfig: public Config
 
         void setCameraConfig(const std::shared_ptr<CameraConfig> &camera_config);
         void setVisualizerConfig(const std::shared_ptr<VisualizerConfig> &visualizer_config);
+        void setFeatureAndTrackerConfig(const std::shared_ptr<FeatureAndTrackerConfig> feature_and_tracker_config);
 
     
     public:
@@ -83,6 +87,7 @@ class SystemConfig: public Config
         std::shared_ptr<SystemParameters> params_ = nullptr;
         std::shared_ptr<CameraConfig> camera_config_ = nullptr;
         std::shared_ptr<VisualizerConfig> visualizer_config_ = nullptr;
+        std::shared_ptr<FeatureAndTrackerConfig> feature_and_tracker_config_ = nullptr;
 
     
 

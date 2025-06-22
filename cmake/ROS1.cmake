@@ -168,3 +168,5 @@ target_link_libraries(run_serial_vins_descriptor_match
 # )
 
 
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/test_examples)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/test_examples/test_examples.cmake)

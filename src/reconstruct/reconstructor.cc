@@ -29,6 +29,9 @@ void Reconstructor::setTracker(const std::shared_ptr<Tracker> &tracker){
     this->tracker_ = tracker;
 }
 
+
+
+
 void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
 
@@ -53,8 +56,8 @@ void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
     }
     
-    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
+    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
     if(camera_frame->image_vector_.size() > 1){
         this->tracker_->trackInFrame(camera_frame);
 

@@ -198,55 +198,38 @@ void System::callbackVisualNavigation(){
         
 
         std::shared_ptr<CameraFrame> &camera_frame = this->camera_frame_deque_.back();
+
+
+
+        camera_frame->status_ = CameraFrame::Status::NORMAL;
+
+        this->visual_frontend_->pipeline(camera_frame);
+
+        VisualFrontend::Status visual_frontend_status = this->visual_frontend_->getStatus();
+        if(visual_frontend_status  == VisualFrontend::Status::NORMAL && this->status_ == Status::NOT_INITIALIZED){
+
+            const std::deque<std::shared_ptr<CameraFrame>> &visual_frontend_ref_camera_frame_deque = this->visual_frontend_->getRefCameraFrameDeque();
+            this->initializer_->initializeGTTcwWithCameraFrame(visual_frontend_ref_camera_frame_deque.front(), this->state_);
+            this->status_ = Status::NORMAL;
+        }   
+
         
-        if(this->status_== Status::NOT_INITIALIZED){
+        if(this->status_ == Status::NORMAL && camera_frame->status_ == CameraFrame::Status::NORMAL){
+            key_frame_manager_->updateKeyFrame(camera_frame);                    
+            this->state_.map_->update(camera_frame);
+            updateState(camera_frame);
+        }
 
-            this->initializer_->pipeline(this->camera_frame_deque_);
+        if(visual_frontend_status == VisualFrontend::Status::GET_LOST){
 
-            Initializer::Status initializer_status = this->initializer_->getStatus();
-            if(initializer_status == Initializer::Status::SUCCESS){
-                this->status_ = Status::NORMAL;
-
-                // update map point in reference frame to map
-                const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque = this->initializer_->getGoodInitializedReferenceCameraFrameDeque();
-                visual_frontend_->setRefCameraFrameDeque(ref_camera_frame_deque);
-                this->initializer_->initializeGTTcwWithCameraFrame(ref_camera_frame_deque.back(), this->state_);
-                for(int i = (int)ref_camera_frame_deque.size() - 1; i >= 0; i--){
-                    const std::shared_ptr<CameraFrame> &ref_camera_frame  = ref_camera_frame_deque.at(i);
-                    key_frame_manager_->updateKeyFrame(ref_camera_frame);                    
-                    this->state_.map_->update(ref_camera_frame);
-                    updateState(ref_camera_frame);
-                }
-                return;
-            }
+            this->status_= Status::NOT_INITIALIZED;
+            LOG(INFO) << RED << "get lost, fail" << RESET;
+            std::exit(0);
 
         }
 
 
-        if(this->status_== Status::NORMAL){
-
-            camera_frame->status_ = CameraFrame::Status::NORMAL;
-
-            this->visual_frontend_->pipeline(camera_frame);
-
-            
-            if(camera_frame->status_ == CameraFrame::Status::NORMAL){
-                key_frame_manager_->updateKeyFrame(camera_frame);                    
-                this->state_.map_->update(camera_frame);
-                updateState(camera_frame);
-            }
-
-            VisualFrontend::Status visual_frontend_status = this->visual_frontend_->getStatus();
-            if(visual_frontend_status == VisualFrontend::Status::GET_LOST){
-
-                this->status_= Status::NOT_INITIALIZED;
-                LOG(INFO) << RED << "get lost, fail" << RESET;
-                std::exit(0);
-
-            }
-
-
-        }
+        
 
         if(camera_frame->is_key_camera_frame_){
             LOG(INFO) << "key camera frame";

@@ -40,13 +40,34 @@ void SystemConfig::loadFromPath(const std::string &config_path){
 
     camera_config->calculateExtrinsicsAndProjectionMatrixBetweenCameras();
 
+    // load feature and tracker configs and their parameters
+    std::string feature_and_tracker_config_path = relative_folder + this->params_->feature_and_tracker_config_name_;
+    std::shared_ptr<FeatureAndTrackerConfig> feature_and_tracker_config = std::make_shared<FeatureAndTrackerConfig>();
+    setFeatureAndTrackerConfig(feature_and_tracker_config);
+    feature_and_tracker_config->loadConfigFromPath(feature_and_tracker_config_path);
+
+    // load visualizer parameters
+    std::shared_ptr<FeatureAndTrackerParameters> feature_and_tracker_params = std::make_shared<FeatureAndTrackerParameters>();
+    feature_and_tracker_params->loadFromNode(std::make_shared<cv::FileNode>((*feature_and_tracker_config->file_storage_)["commond"]));
+    feature_and_tracker_config->params_ = feature_and_tracker_params;
+
+    // load opencv parameters
+    std::shared_ptr<ORBParameters> orb_params = std::make_shared<ORBParameters>();
+    orb_params->loadFromNode(std::make_shared<cv::FileNode>((*feature_and_tracker_config->file_storage_)["ORB"]));
+    feature_and_tracker_config->orb_params_ = orb_params;
+
+    // load opencv parameters
+    std::shared_ptr<KLTParameters> klt_params = std::make_shared<KLTParameters>();
+    klt_params->loadFromNode(std::make_shared<cv::FileNode>((*feature_and_tracker_config->file_storage_)["KLT"]));
+    feature_and_tracker_config->klt_params_ = klt_params;
+
     // load visualizer configs and their parameters
     std::string visualizer_config_path = relative_folder + this->params_->visualizer_config_name_;
     std::shared_ptr<VisualizerConfig> visualizer_config = std::make_shared<VisualizerConfig>();
     setVisualizerConfig(visualizer_config);
     visualizer_config->loadConfigFromPath(visualizer_config_path);
 
-
+    // load visualizer parameters
     std::shared_ptr<VisualizerParameters> visualizer_params = std::make_shared<VisualizerParameters>();
     visualizer_params->loadFromNode(std::make_shared<cv::FileNode>((*visualizer_config->file_storage_)["visualizer"]));
     visualizer_config->params_ = visualizer_params;
@@ -77,6 +98,10 @@ void SystemConfig::setCameraConfig(const std::shared_ptr<CameraConfig> &camera_c
 
 void SystemConfig::setVisualizerConfig(const std::shared_ptr<VisualizerConfig> &visualizer_config){
     this->visualizer_config_ = visualizer_config;
+}
+
+void SystemConfig::setFeatureAndTrackerConfig(const std::shared_ptr<FeatureAndTrackerConfig> feature_and_tracker_config){
+    this->feature_and_tracker_config_ = feature_and_tracker_config;
 }
 
 
@@ -128,6 +153,7 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);
     parse("visualizer_config_name", this->visualizer_config_name_);
+    parse("feature_and_tracker_config_name", this->feature_and_tracker_config_name_);
 
     parse("model_path", this->model_path_);
     parse("output_dir", this->output_dir_);

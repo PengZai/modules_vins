@@ -97,75 +97,75 @@ void KeyPoint::setDescriptor(const cv::Mat &descriptor){
     this->descriptor_ = descriptor;
 }
 
-void KeyPoint::setNextKeyPointInTime(const std::shared_ptr<KeyPoint> &next_keypoint_in_time){
-    this->next_keypoint_in_time_ = next_keypoint_in_time;
-}
-void KeyPoint::setPrevKeyPointInTime(const std::shared_ptr<KeyPoint> &prev_keypoint_in_time){
-    this->prev_keypoint_in_time_ = prev_keypoint_in_time;
-}
+// void KeyPoint::setNextKeyPointInTime(const std::shared_ptr<KeyPoint> &next_keypoint_in_time){
+//     this->next_keypoint_in_time_ = next_keypoint_in_time;
+// }
+// void KeyPoint::setPrevKeyPointInTime(const std::shared_ptr<KeyPoint> &prev_keypoint_in_time){
+//     this->prev_keypoint_in_time_ = prev_keypoint_in_time;
+// }
 
-void KeyPoint::setLeftKeyPointInFrame(const std::shared_ptr<KeyPoint> &left_keypoint_in_frame){
-    this->left_keypoint_in_frame_ = left_keypoint_in_frame;
+// void KeyPoint::setLeftKeyPointInFrame(const std::shared_ptr<KeyPoint> &left_keypoint_in_frame){
+//     this->left_keypoint_in_frame_ = left_keypoint_in_frame;
 
-}
-void KeyPoint::setRightKeyPointInFrame(const std::shared_ptr<KeyPoint> &right_keypoint_in_frame){
-    this->right_keypoint_in_frame_ = right_keypoint_in_frame;
+// }
+// void KeyPoint::setRightKeyPointInFrame(const std::shared_ptr<KeyPoint> &right_keypoint_in_frame){
+//     this->right_keypoint_in_frame_ = right_keypoint_in_frame;
 
-}
+// }
 
 
 
-void KeyPoint::setMapPointPtr(const std::shared_ptr<MapPoint> &map_point_ptr){
-    this->map_point_ptr_ = map_point_ptr;
-    setMapPointPtrForward(map_point_ptr);
-    setMapPointPtrBackward(map_point_ptr);
-    setMapPointPtrLeftForward(map_point_ptr);
-    setMapPointPtrRightForward(map_point_ptr);
+// void KeyPoint::setMapPointPtr(const std::shared_ptr<MapPoint> &map_point_ptr){
+//     this->map_point_ptr_ = map_point_ptr;
+//     setMapPointPtrForward(map_point_ptr);
+//     setMapPointPtrBackward(map_point_ptr);
+//     setMapPointPtrLeftForward(map_point_ptr);
+//     setMapPointPtrRightForward(map_point_ptr);
 
     
-}
+// }
 
-void KeyPoint::propagateMapPointPtr(){
-    if(this->map_point_ptr_ != nullptr){
-        setMapPointPtrForward(this->map_point_ptr_);
-        setMapPointPtrLeftForward(this->map_point_ptr_);
-        setMapPointPtrRightForward(this->map_point_ptr_);
-    }
-    else{
-        // LOG(INFO) << YELLOW << "trying propagate a null map point ptr";
-    }
-}
-
-
+// void KeyPoint::propagateMapPointPtr(){
+//     if(this->map_point_ptr_ != nullptr){
+//         setMapPointPtrForward(this->map_point_ptr_);
+//         setMapPointPtrLeftForward(this->map_point_ptr_);
+//         setMapPointPtrRightForward(this->map_point_ptr_);
+//     }
+//     else{
+//         // LOG(INFO) << YELLOW << "trying propagate a null map point ptr";
+//     }
+// }
 
 
-void KeyPoint::setMapPointPtrForward(const std::shared_ptr<MapPoint> &map_point_ptr){
-    this->map_point_ptr_ = map_point_ptr;
-    if(this->next_keypoint_in_time_ != nullptr){
-        this->next_keypoint_in_time_->setMapPointPtrForward(map_point_ptr);
-    }
-}
 
-void KeyPoint::setMapPointPtrBackward(const std::shared_ptr<MapPoint> &map_point_ptr){
-    this->map_point_ptr_ = map_point_ptr;
-    if(this->prev_keypoint_in_time_ != nullptr){
-        this->prev_keypoint_in_time_->setMapPointPtrBackward(map_point_ptr);
-    }
-}
 
-void KeyPoint::setMapPointPtrLeftForward(const std::shared_ptr<MapPoint> &map_point_ptr){
-    this->map_point_ptr_ = map_point_ptr;
-    if(this->left_keypoint_in_frame_ != nullptr){
-        this->left_keypoint_in_frame_->setMapPointPtrLeftForward(map_point_ptr);
-    }
-}
+// void KeyPoint::setMapPointPtrForward(const std::shared_ptr<MapPoint> &map_point_ptr){
+//     this->map_point_ptr_ = map_point_ptr;
+//     if(this->next_keypoint_in_time_ != nullptr){
+//         this->next_keypoint_in_time_->setMapPointPtrForward(map_point_ptr);
+//     }
+// }
 
-void KeyPoint::setMapPointPtrRightForward(const std::shared_ptr<MapPoint> &map_point_ptr){
-    this->map_point_ptr_ = map_point_ptr;
-    if(this->right_keypoint_in_frame_ != nullptr){
-        this->right_keypoint_in_frame_->setMapPointPtrRightForward(map_point_ptr);
-    }
-}
+// void KeyPoint::setMapPointPtrBackward(const std::shared_ptr<MapPoint> &map_point_ptr){
+//     this->map_point_ptr_ = map_point_ptr;
+//     if(this->prev_keypoint_in_time_ != nullptr){
+//         this->prev_keypoint_in_time_->setMapPointPtrBackward(map_point_ptr);
+//     }
+// }
+
+// void KeyPoint::setMapPointPtrLeftForward(const std::shared_ptr<MapPoint> &map_point_ptr){
+//     this->map_point_ptr_ = map_point_ptr;
+//     if(this->left_keypoint_in_frame_ != nullptr){
+//         this->left_keypoint_in_frame_->setMapPointPtrLeftForward(map_point_ptr);
+//     }
+// }
+
+// void KeyPoint::setMapPointPtrRightForward(const std::shared_ptr<MapPoint> &map_point_ptr){
+//     this->map_point_ptr_ = map_point_ptr;
+//     if(this->right_keypoint_in_frame_ != nullptr){
+//         this->right_keypoint_in_frame_->setMapPointPtrRightForward(map_point_ptr);
+//     }
+// }
 
 
 

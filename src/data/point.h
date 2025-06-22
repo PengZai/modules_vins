@@ -9,6 +9,8 @@
 
 namespace modules_vins{
 
+// forward declare
+class KeyPoint;
 
 class MapPoint{
 
@@ -31,6 +33,8 @@ class MapPoint{
 
     Eigen::Vector3d pt3d_; // x y z
     Eigen::Vector3i bgr_; // x y z
+
+    std::vector<std::shared_ptr<KeyPoint>> observation_vector_;
 
 
 
@@ -57,12 +61,12 @@ class KeyPoint{
     void setMatchInFrame(const cv::DMatch &match_in_frame);
 
     void setMapPointPtr(const std::shared_ptr<MapPoint> &map_point_ptr);
-    void propagateMapPointPtr();
-
-    void setNextKeyPointInTime(const std::shared_ptr<KeyPoint> &next_keypoint_in_time);
-    void setPrevKeyPointInTime(const std::shared_ptr<KeyPoint> &prev_keypoint_in_time);
-    void setLeftKeyPointInFrame(const std::shared_ptr<KeyPoint> &left_keypoint_in_frame);
-    void setRightKeyPointInFrame(const std::shared_ptr<KeyPoint> &right_keypoint_in_frame);
+    
+    // void propagateMapPointPtr();
+    // void setNextKeyPointInTime(const std::shared_ptr<KeyPoint> &next_keypoint_in_time);
+    // void setPrevKeyPointInTime(const std::shared_ptr<KeyPoint> &prev_keypoint_in_time);
+    // void setLeftKeyPointInFrame(const std::shared_ptr<KeyPoint> &left_keypoint_in_frame);
+    // void setRightKeyPointInFrame(const std::shared_ptr<KeyPoint> &right_keypoint_in_frame);
 
     void cleanTrackInTimeRelationship();
 
@@ -108,10 +112,10 @@ class KeyPoint{
     // std::shared_ptr<KeyPoint> next_keypoint_in_frame_;
 
     protected:
-    void setMapPointPtrForward(const std::shared_ptr<MapPoint> &map_point_ptr);
-    void setMapPointPtrBackward(const std::shared_ptr<MapPoint> &map_point_ptr);
-    void setMapPointPtrLeftForward(const std::shared_ptr<MapPoint> &map_point_ptr);
-    void setMapPointPtrRightForward(const std::shared_ptr<MapPoint> &map_point_ptr);
+    // void setMapPointPtrForward(const std::shared_ptr<MapPoint> &map_point_ptr);
+    // void setMapPointPtrBackward(const std::shared_ptr<MapPoint> &map_point_ptr);
+    // void setMapPointPtrLeftForward(const std::shared_ptr<MapPoint> &map_point_ptr);
+    // void setMapPointPtrRightForward(const std::shared_ptr<MapPoint> &map_point_ptr);
 
 
 };

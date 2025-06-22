@@ -14,6 +14,7 @@ class OpenCVParameters: public Parameters{
     void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
 
     public:
+    int cv_waitkey_num_;
     bool show_projected_mappoint_;
     bool show_matching_in_frame_;
     bool show_matching_in_time_;

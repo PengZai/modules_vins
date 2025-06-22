@@ -21,7 +21,9 @@ class FeaturePoint{
     virtual void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
 
     protected:
-    int num_features_;
+    int num_feature_points_;
+    int min_distance_;
+
 };
 
 
@@ -54,6 +56,7 @@ class GoodFeature : public FeaturePoint{
 
     protected:
     cv::Ptr<cv::GFTTDetector> gftt_;
+
 
 
 };

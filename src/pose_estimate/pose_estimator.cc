@@ -10,17 +10,22 @@ PoseEstimator::PoseEstimator(const std::shared_ptr<SystemConfig> &sys_config):
 sys_config_(sys_config)
 {
 
+    this->relative_T_curr_ref =  Sophus::SE3<double>();
+
 }
 
 
-bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation,const int num_inliers){
+bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &estimated_T,const Sophus::SE3<double> &initial_guess, const int num_inliers){
 
-    Sophus::Vector6d d = Transformation.log();
-    double d_norm = d.norm();
+
+
+    const Sophus::SE3<double> relative_T = estimated_T * initial_guess.inverse();
+    Sophus::Vector6d relative_d = relative_T.log();
+    double relative_d_norm = relative_d.norm();
 
     LOG(INFO) << "number of inliers: " << num_inliers;
-    LOG(INFO) << "estimated_Transformation: \n" << Transformation.matrix();
-    LOG(INFO) << "the norm of estimated_Transformation norm: " << d_norm;
+    LOG(INFO) << "estimated_Transformation: \n" << estimated_T.matrix();
+    LOG(INFO) << "the norm of estimated_Transformation norm: " << relative_d_norm;
     
     
 
@@ -30,9 +35,9 @@ bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation
         return false;
     }
 
-    if(d_norm > this->sys_config_->params_->threshold_for_pnp_pose_log_norm_){
+    if(relative_d_norm > this->sys_config_->params_->threshold_for_pnp_pose_log_norm_){
 
-        LOG(INFO) <<"reject because motion is too large: " << d_norm;
+        LOG(INFO) <<"reject because motion is too large: " << relative_d_norm;
         return false;
     }
 
@@ -40,13 +45,15 @@ bool PoseEstimator::checkEstimatedPose(const Sophus::SE3<double> &Transformation
     
 }
 
-bool PoseEstimator::PnpEstimator(
+int PoseEstimator::PnpEstimator(
     const std::vector<cv::Point3d> &pt3ds, 
     const std::vector<cv::Point2d> &pt2ds, 
     Sophus::SE3<double> &estimated_T,
     const cv::Mat &cv_K,
     const cv::Mat &cv_distortion_coeffs
 ){
+
+    Sophus::SE3<double> initial_guess_T = estimated_T;
 
     cv::Mat cv_R, rortation_vec, translation_vec;
     cv::eigen2cv(estimated_T.rotationMatrix(), cv_R);
@@ -82,16 +89,9 @@ bool PoseEstimator::PnpEstimator(
         Sophus::SO3<double>(estimated_rotation), estimated_translation
     );
 
-    LOG(INFO) << "Pnp:\n" << estimated_T.matrix();
+    // LOG(INFO) << "Pnp:\n" << estimated_T.matrix();
 
-    if(checkEstimatedPose(estimated_T, inliers.rows) == true){
-
-        return true;
-
-    }
-    else{
-        return false;
-    }
+    return inliers.rows;
 
 
 }
@@ -146,7 +146,7 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     std::vector<cv::Point2d> reprojected_pt2ds;
     std::vector<cv::Point2d> prev_pt2ds;
     std::vector<cv::Point3d> pt3ds;
-    std::vector<int> used_idxes;
+    std::vector<int> valid_idxes;
 
     std::vector<Eigen::Vector2d> eigen_pt2ds;
     std::vector<Eigen::Vector3d> eigen_pt3ds;
@@ -164,19 +164,28 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
         const std::shared_ptr<KeyPoint> &kp_from_ref_frame = img_0_from_ref_frame->keypoint_vector_.at(match_in_time.queryIdx);
         const std::shared_ptr<KeyPoint> &kp_from_current_frame = img_0_from_current_frame->keypoint_vector_.at(match_in_time.trainIdx);
 
-        double z = kp_from_ref_frame->pt3d_.z;
-
-        if(kp_from_ref_frame->pt3d_.z <= 0){
+        
+        if(kp_from_ref_frame->map_point_ptr_ == nullptr){
             continue;
         }
 
-        used_idxes.push_back(i);
+        Eigen::Vector3d &w_pt3d = kp_from_ref_frame->map_point_ptr_->pt3d_;
+        double z = w_pt3d(2);
+
+        if(z <= 0){
+            continue;
+        }
+
+        Eigen::Vector2d eigen_pt2d = Eigen::Vector2d(kp_from_current_frame->cv_keypoint_.pt.x, kp_from_current_frame->cv_keypoint_.pt.y);
+        cv::Point3d w_cv_pt3d = cv::Point3d(w_pt3d(0), w_pt3d(1), w_pt3d(2));
+
+        valid_idxes.push_back(match_in_time.queryIdx);
         pt2ds.push_back(kp_from_current_frame->cv_keypoint_.pt);
-        reprojected_pt2ds.push_back(camera2pixel(kp_from_ref_frame->pt3d_, cv_K));
+        reprojected_pt2ds.push_back(camera2pixel(w_cv_pt3d, cv_K));
         prev_pt2ds.push_back(kp_from_ref_frame->cv_keypoint_.pt);
-        pt3ds.push_back(kp_from_ref_frame->pt3d_);
-        eigen_pt2ds.push_back(Eigen::Vector2d(kp_from_current_frame->cv_keypoint_.pt.x, kp_from_current_frame->cv_keypoint_.pt.y));
-        eigen_pt3ds.push_back(Eigen::Vector3d(kp_from_ref_frame->pt3d_.x, kp_from_ref_frame->pt3d_.y, kp_from_ref_frame->pt3d_.z));
+        pt3ds.push_back(w_cv_pt3d);
+        eigen_pt2ds.push_back(eigen_pt2d);
+        eigen_pt3ds.push_back(w_pt3d);
 
     }
 
@@ -195,33 +204,38 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     }
 
 
-    Sophus::SE3<double> estimated_T_current_cam_ref_cam = Sophus::SE3<double>();
+    Sophus::SE3<double> estimated_T_c_w = this->relative_T_curr_ref * img_0_from_ref_frame->T_c_w_;
     bool success=false;
-    success = PnpEstimator(pt3ds, pt2ds, estimated_T_current_cam_ref_cam, cv_K, cv_distortion_coeffs);
-    if(success == false){
-        
-        camera_frame->status_=CameraFrame::Status::FAIL;
-        return;
-    }
-    img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
+    // int inlier_rows = PnpEstimator(pt3ds, pt2ds, estimated_T_c_w, cv_K, cv_distortion_coeffs);
 
-    LOG(INFO) << "before_BA\n" << img_0_from_current_frame->T_c_w_.matrix();
+    // if(checkEstimatedPose(estimated_T_c_w, img_0_from_ref_frame->T_c_w_, inlier_rows) == true){
+    //     success = true;
+    // }
 
-
-    // success = bundleAdjustment(estimated_T_current_cam_ref_cam, eigen_pt3ds, eigen_pt2ds, K, distortion_coeffs);
     // if(success == false){
         
     //     camera_frame->status_=CameraFrame::Status::FAIL;
     //     return;
     // }
+
+    // LOG(INFO) << "before_BA\n" << img_0_from_current_frame->T_c_w_.matrix();
+
+
+    success = bundleAdjustment(estimated_T_c_w, eigen_pt3ds, eigen_pt2ds, K, distortion_coeffs);
+    if(success == false){
+        
+        camera_frame->status_=CameraFrame::Status::FAIL;
+        return;
+    }
     
-    // // update 3d points after BA
-    // for(size_t i=0 ; i<eigen_pt3ds.size();i++){
+    // update 3d points after BA
+    for(size_t i=0 ; i<eigen_pt3ds.size();i++){
 
-    //     img_0_from_ref_frame->keypoint_vector_.at(used_idxes[i])->pt3d_ = cv::Point3d(eigen_pt3ds[i](0),eigen_pt3ds[i](1),eigen_pt3ds[i](2));
-    // }
+        const std::shared_ptr<MapPoint> & map_point_ptr = img_0_from_ref_frame->keypoint_vector_.at(valid_idxes[i])->map_point_ptr_;
+        map_point_ptr->setPosition(eigen_pt3ds.at(i));
+    }
 
-    // LOG(INFO) << "after BA\n" << estimated_T_current_cam_ref_cam.matrix();
+    LOG(INFO) << "after BA\n" << estimated_T_c_w.matrix();
 
     // img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
 
@@ -229,8 +243,13 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     // // LOG(INFO) << "estimated_translation_norm : " << estimated_translation.norm();
     // LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
-
+    img_0_from_current_frame->setTcw(estimated_T_c_w);
+    this->relative_T_curr_ref = img_0_from_ref_frame->T_c_w_.inverse() * estimated_T_c_w;
+    // double relative_T_curr_ref_norm = this->relative_T_curr_ref.log().norm();
+    // LOG(INFO) << "relative_T_curr_ref_norm : " << relative_T_curr_ref_norm;
     camera_frame->status_=CameraFrame::Status::NORMAL;
+    // camera_frame->status_=CameraFrame::Status::FAIL;
+
 
 }
 

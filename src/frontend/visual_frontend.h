@@ -15,8 +15,8 @@
 #include "../data/map.h"
 #include "../log/logging.h"
 #include "../data/preprocess.h"
-
-
+#include "../system/state.h"
+#include "../visualization/visualizer.h"
 
 
 
@@ -29,40 +29,60 @@ class VisualFrontend{
     enum Status{
         NOT_INITIALIZED=-1,
         NORMAL=0,
-        LOST_TRACKING,
-        FAIL_POSE_ESTIMATION,
         GET_LOST,
     };
+
+    void printfStatus();
+
+    inline const char* StatusToString(Status s) {
+        switch (s) {
+            case Status::NOT_INITIALIZED: return "NOT_INITIALIZED";
+            case Status::NORMAL:             return "NORMAL";
+            case Status::GET_LOST:             return "GET_LOST";
+            default:                  return "UNKNOWN_STATUS";
+        }
+    }
+
 
 
     VisualFrontend(const std::shared_ptr<SystemConfig> &sys_config);
     virtual ~VisualFrontend() = default;
 
     void updateMap(const CameraFrame &camera_frame);
-    virtual void pipeline(std::shared_ptr<CameraFrame> &camera_frame) = 0;
+    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
+    virtual void initPipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
+    virtual void normalPipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
     void setRefCameraFrameDeque(const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque);
     void maintainRefCameraFrameDeque();
     Status getStatus();
+    const std::deque<std::shared_ptr<CameraFrame>> &getRefCameraFrameDeque();
+    void updateStautsInitialized2Normal();
+    void checkInitializationAndUpdateStatusNotInitialized2Initialized(const std::shared_ptr<CameraFrame> &camera_frame);
+    void propogateMappointWitchMatchRelationship(const std::shared_ptr<CameraFrame> &camera_frame);
 
     void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);
     void setTracker(const std::shared_ptr<Tracker> &tracker);
     void setReconstructor(const std::shared_ptr<Reconstructor> &reconstructor);
     void setPoseEstimator(const std::shared_ptr<PoseEstimator> &pose_estimator);
-    void setMap(const std::shared_ptr<Map> &map);
+    void setVisualizer(const std::shared_ptr<Visualizer> &visualizer);
 
+    void setMap(const std::shared_ptr<Map> &map);
+    void setState(const std::shared_ptr<State> &state);
 
 
 
     protected:
     int fail_pose_estimation_num_;
     std::shared_ptr<SystemConfig> sys_config_;
+    std::shared_ptr<State> state_;
     std::shared_ptr<Map> map_;
     std::shared_ptr<DataPreprocesor> data_preprocesor_;
     std::shared_ptr<Detector> detector_;
     std::shared_ptr<Tracker> tracker_;
     std::shared_ptr<Reconstructor> reconstructor_;
     std::shared_ptr<PoseEstimator> pose_estimator_;
+    std::shared_ptr<Visualizer> visualizer_;
     std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
     std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
     Status status_;

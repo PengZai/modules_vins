@@ -41,7 +41,7 @@ class Image{
 
         double getPointDepthFromSensor(const cv::Point2f &pt);
         void cleanTrackInTimeRelationship();
-
+        void cleanFeaturePoints();
 
         Eigen::Matrix3d getRotation();
         Eigen::Vector3d getPosition();
@@ -49,6 +49,8 @@ class Image{
         bool isInImage(const cv::Point2d &pixel);
         void setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
         void setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors);
+        void appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
+        void appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors);
         void getCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
         void getDescripots(cv::Mat &descriptors);
 
@@ -106,12 +108,16 @@ class CameraFrame {
     CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
     
     void cleanTrackInTimeRelationship();
+    void setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches);
+    void setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches);
+
+    void cleanFeaturePoints();
+
     // CameraFrame(const CameraFrame &camera_frame);
 
     std::vector<std::shared_ptr<Image>> image_vector_;
     static int id_counter_;
     int id_;
-    std::vector<std::shared_ptr<MapPoint>> map_point_vector_;
     std::shared_ptr<CameraFrame> ref_camera_frame_;
 
 

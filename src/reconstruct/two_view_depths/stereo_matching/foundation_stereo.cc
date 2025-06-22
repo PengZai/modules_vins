@@ -121,7 +121,7 @@ void FoundationStereo::reconstruct(const std::shared_ptr<Image> &left_img, const
     cv::applyColorMap(depth_visual, depth_visual, cv::COLORMAP_JET); //COLORMAP_HOT, COLORMAP_JET
 
     cv::imshow("learned stereo disparity in frame for x " + std::to_string(0), depth_visual);
-    cv::waitKey(0);
+    // cv::waitKey(0);
     
     cv::resize(left_img->learned_stereo_depth_, left_img->learned_stereo_depth_, cv::Size(input_width, input_height));
 
