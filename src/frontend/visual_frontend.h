@@ -58,7 +58,7 @@ class VisualFrontend{
     const std::deque<std::shared_ptr<CameraFrame>> &getRefCameraFrameDeque();
     void updateStautsInitialized2Normal();
     void checkInitializationAndUpdateStatusNotInitialized2Initialized(const std::shared_ptr<CameraFrame> &camera_frame);
-    void propogateMappointWitchMatchRelationship(const std::shared_ptr<CameraFrame> &camera_frame);
+    void propogateMappointWitchMatchInTimeRelationship(const std::shared_ptr<CameraFrame> &camera_frame);
 
     void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);

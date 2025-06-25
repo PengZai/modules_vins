@@ -114,12 +114,14 @@ void DescriptorTracker::trackInFrame(const std::shared_ptr<CameraFrame> &camera_
 
     std::shared_ptr<Image> &img_1 = camera_frame->image_vector_.at(1);
     
+    camera_frame->cleanTrackInFrameRelationship();
     std::vector<cv::DMatch> matches;
     this->matching(img_0, img_1, matches, 
         this->sys_config_->feature_and_tracker_config_->orb_params_->threshold_for_tracking_descriptor_in_frame_, 10);
 
     camera_frame->setTrackInFrameRelationship(matches);   
 
+    LOG(INFO) << GREEN << img_0->matches_in_frame_.size() << " points were trakced in frame for camera frame " << camera_frame->id_  << RESET;
 
     
 }

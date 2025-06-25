@@ -170,8 +170,8 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
         );
     
     
-        cv::imshow("img 0 matches in time between ref frame id: " +  std::to_string(ref_camera_frame->id_) + " and current frame id: " + std::to_string(camera_frame->id_) , img_0_matches_in_time);
-        // cv::imshow("img 0 matches in time", img_0_matches_in_time);
+        // cv::imshow("img 0 matches in time between ref frame id: " +  std::to_string(ref_camera_frame->id_) + " and current frame id: " + std::to_string(camera_frame->id_) , img_0_matches_in_time);
+        cv::imshow("img 0 matches in time", img_0_matches_in_time);
 
     }
 

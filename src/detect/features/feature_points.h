@@ -21,6 +21,7 @@ class FeaturePoint{
     virtual void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
 
     protected:
+    std::shared_ptr<SystemConfig> sys_config_;
     int num_feature_points_;
     int min_distance_;
 

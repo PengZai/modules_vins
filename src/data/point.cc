@@ -212,8 +212,16 @@ void KeyPoint::cleanTrackInTimeRelationship(){
     this->match_in_time_.imgIdx   = -1;
     this->match_in_time_.distance = std::numeric_limits<float>::max();  // or 0.0f
 
-    next_keypoint_in_time_ = nullptr;
-    prev_keypoint_in_time_ = nullptr;
+
+}
+
+void KeyPoint::cleanTrackInFrameRelationship(){
+
+    this->match_in_frame_.queryIdx = -1;
+    this->match_in_frame_.trainIdx = -1;
+    this->match_in_frame_.imgIdx   = -1;
+    this->match_in_frame_.distance = std::numeric_limits<float>::max();  // or 0.0f
+
 
 }
 

@@ -69,7 +69,7 @@ class KeyPoint{
     // void setRightKeyPointInFrame(const std::shared_ptr<KeyPoint> &right_keypoint_in_frame);
 
     void cleanTrackInTimeRelationship();
-
+    void cleanTrackInFrameRelationship();
     // void setMatchInFrame(const cv::DMatch &match_in_frame);
 
     public:

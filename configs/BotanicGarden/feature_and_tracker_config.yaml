@@ -2,8 +2,8 @@
 
 
 commond:
-  num_feature_points: 1000
-  min_distance: 5 # radius size for image block only containing one feature point, so that we can distribute feature points on (image size/ min_distance * 2) image block
+  num_feature_points: 200
+  min_distance: 5 # min distance between two features
 
 ORB:
   scale_factor: 1.2

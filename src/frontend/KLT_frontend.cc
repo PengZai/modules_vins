@@ -43,9 +43,10 @@ void KLTFrontend::initPipeline(const std::shared_ptr<CameraFrame> &camera_frame)
 
          if(camera_frame->status_ == CameraFrame::NORMAL){
             this->status_ = Status::NORMAL;
-            this->ref_camera_frame_deque_.clear();
+            camera_frame->propogateMappointWitchMatchInTimeRelationship();
             this->detector_->pipeline(camera_frame);
             this->reconstructor_->pipeline(camera_frame);
+            this->ref_camera_frame_deque_.clear();
             this->ref_camera_frame_deque_.push_back(camera_frame);
             this->ref_camera_frame_deque_.push_back(camera_frame->ref_camera_frame_);
             return;
@@ -117,7 +118,7 @@ void KLTFrontend::normalPipeline(const std::shared_ptr<CameraFrame> &camera_fram
     }
 
     if(camera_frame->status_ == CameraFrame::Status::NORMAL){
-        propogateMappointWitchMatchRelationship(camera_frame);
+        camera_frame->propogateMappointWitchMatchInTimeRelationship();
         this->ref_camera_frame_deque_.push_front(camera_frame);
         maintainRefCameraFrameDeque();
         this->fail_pose_estimation_num_=0;
@@ -129,6 +130,7 @@ void KLTFrontend::normalPipeline(const std::shared_ptr<CameraFrame> &camera_fram
 
             this->status_ = Status::GET_LOST;
         }
+        return;
     }
 
     this->detector_->pipeline(camera_frame);

@@ -5,6 +5,7 @@ namespace modules_vins{
 
 FeaturePoint::FeaturePoint(const std::shared_ptr<SystemConfig> &sys_config){
 
+    this->sys_config_ = sys_config;
     this->num_feature_points_ = sys_config->feature_and_tracker_config_->params_->num_feature_points_;
     this->min_distance_ = sys_config->feature_and_tracker_config_->params_->min_distance_;
 

@@ -110,25 +110,6 @@ void VisualFrontend::maintainRefCameraFrameDeque(){
 }
 
 
-void VisualFrontend::propogateMappointWitchMatchRelationship(const std::shared_ptr<CameraFrame> &camera_frame){
-
-    if(camera_frame->ref_camera_frame_ != nullptr){
-        const std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
-        for(int i=0; i<ref_camera_frame->image_vector_.at(0)->matches_in_time_.size(); i++){
-
-            const std::shared_ptr<Image> img_0_from_ref_camera_frame = ref_camera_frame->image_vector_.at(0);
-            const std::shared_ptr<Image> img_0_from_camera_frame = camera_frame->image_vector_.at(0);
-            const cv::DMatch &match = img_0_from_ref_camera_frame->matches_in_time_.at(i);
-            const std::shared_ptr<KeyPoint> kp_from_img_0_ref_camera_frame = img_0_from_ref_camera_frame->keypoint_vector_.at(match.queryIdx);
-
-            if(kp_from_img_0_ref_camera_frame->map_point_ptr_ != nullptr){
-                const std::shared_ptr<KeyPoint> kp_from_img_0_camera_frame = img_0_from_camera_frame->keypoint_vector_.at(match.trainIdx);
-                kp_from_img_0_camera_frame->map_point_ptr_ = kp_from_img_0_ref_camera_frame->map_point_ptr_;
-            }
-        }
-    }
-    
-}
 
 
 void VisualFrontend::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){

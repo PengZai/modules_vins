@@ -169,9 +169,9 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
 
         if(kp_from_img_i->map_point_ptr_ != nullptr){
 
-            cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
-            kp_from_img_i->map_point_ptr_->setColor(bgr[0], bgr[1], bgr[2]);
-            
+            // cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
+            // kp_from_img_i->map_point_ptr_->setColor(bgr[0], bgr[1], bgr[2]);
+
             existed_mappoint_count++;
             continue;
         }

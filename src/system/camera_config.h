@@ -20,6 +20,7 @@ class CameraParameters : public Parameters
 
         CameraParameters();
 
+        void createMapFrompixel2UndistoredNormalizedPlane();
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
         const Eigen::Matrix3d getIntrinsicsMatrix();
         const cv::Mat getCVIntrinsicsMatrix();
@@ -32,7 +33,7 @@ class CameraParameters : public Parameters
         Eigen::VectorXd resolution_;
         Eigen::VectorXd distortion_coeffs_;
         Eigen::VectorXd intrinsics_;
-
+        Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic> MapVU2UndisYX_;
 
         std::string rgb_rostopic_;
 

@@ -46,8 +46,9 @@ void DescriptorMatchFrontend::initPipeline(const std::shared_ptr<CameraFrame> &c
 
         if(camera_frame->status_ == CameraFrame::NORMAL){
             this->status_ = Status::NORMAL;
-            this->ref_camera_frame_deque_.clear();
+            camera_frame->propogateMappointWitchMatchInTimeRelationship();
             this->reconstructor_->pipeline(camera_frame);
+            this->ref_camera_frame_deque_.clear();
             this->ref_camera_frame_deque_.push_back(camera_frame);
             this->ref_camera_frame_deque_.push_back(camera_frame->ref_camera_frame_);
             return;
@@ -127,7 +128,7 @@ void DescriptorMatchFrontend::normalPipeline(const std::shared_ptr<CameraFrame> 
     }
 
     if(camera_frame->status_ == CameraFrame::Status::NORMAL){
-        propogateMappointWitchMatchRelationship(camera_frame);
+        camera_frame->propogateMappointWitchMatchInTimeRelationship();
         this->ref_camera_frame_deque_.push_front(camera_frame);
         maintainRefCameraFrameDeque();
         this->fail_pose_estimation_num_=0;
@@ -138,6 +139,7 @@ void DescriptorMatchFrontend::normalPipeline(const std::shared_ptr<CameraFrame> 
         if(fail_pose_estimation_num_ > this->sys_config_->params_->maximum_num_fail_){
 
             this->status_ = Status::GET_LOST;
+            return;
         }
     }
 

@@ -181,6 +181,15 @@ void Image::cleanTrackInTimeRelationship(){
 
 }
 
+void Image::cleanTrackInFrameRelationship(){
+    this->matches_in_frame_.clear();
+    for(std::shared_ptr<KeyPoint> &keypoint : keypoint_vector_){
+        
+        keypoint->cleanTrackInFrameRelationship();
+    }
+
+}
+
 void Image::cleanFeaturePoints(){
 
     this->keypoint_vector_.clear();
@@ -227,6 +236,12 @@ CameraFrame()
 }
 
 
+void CameraFrame::cleanTrackInFrameRelationship(){
+
+    for( std::shared_ptr<Image> image : this->image_vector_){
+        image->cleanTrackInFrameRelationship();
+    }
+}
 
 void CameraFrame::cleanTrackInTimeRelationship(){
 
@@ -252,7 +267,7 @@ void CameraFrame::setTrackInTimeRelationship(const std::vector<cv::DMatch> &matc
         std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
 
 
-        tracked_keypoint_from_img_0 ->setMatchInFrame(match);
+        tracked_keypoint_from_img_0 ->setMatchInTime(match);
         img_0->matches_in_time_.push_back(match);
 
     }
@@ -271,6 +286,27 @@ void CameraFrame::setTrackInFrameRelationship(const std::vector<cv::DMatch> &mat
             tracked_keypoint_from_img_0 ->setMatchInFrame(match);
             img_0->matches_in_frame_.push_back(match);
     }
+}
+
+
+void CameraFrame::propogateMappointWitchMatchInTimeRelationship(){
+
+    if(this->ref_camera_frame_ != nullptr){
+        const std::shared_ptr<CameraFrame> &ref_camera_frame = this->ref_camera_frame_;
+        for(int i=0; i<ref_camera_frame->image_vector_.at(0)->matches_in_time_.size(); i++){
+
+            const std::shared_ptr<Image> img_0_from_ref_camera_frame = ref_camera_frame->image_vector_.at(0);
+            const std::shared_ptr<Image> img_0_from_camera_frame = this->image_vector_.at(0);
+            const cv::DMatch &match = img_0_from_ref_camera_frame->matches_in_time_.at(i);
+            const std::shared_ptr<KeyPoint> kp_from_img_0_ref_camera_frame = img_0_from_ref_camera_frame->keypoint_vector_.at(match.queryIdx);
+
+            if(kp_from_img_0_ref_camera_frame->map_point_ptr_ != nullptr){
+                const std::shared_ptr<KeyPoint> kp_from_img_0_camera_frame = img_0_from_camera_frame->keypoint_vector_.at(match.trainIdx);
+                kp_from_img_0_camera_frame->map_point_ptr_ = kp_from_img_0_ref_camera_frame->map_point_ptr_;
+            }
+        }
+    }
+    
 }
 
 

@@ -12,7 +12,7 @@ system:
 
   #initialization and visual frontend
   threshold_for_pnp_pose_log_norm: 0.5 # estimated pose can't too large
-  min_inliers: 40
+  min_inliers: 30
   minimum_cumulative_translation: 0.5
   maximum_num_fail: 2  # when number of fail of pose estimation  reach this, state turn to get lost.
 

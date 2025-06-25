@@ -221,7 +221,7 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     // LOG(INFO) << "before_BA\n" << img_0_from_current_frame->T_c_w_.matrix();
 
 
-    success = bundleAdjustment(estimated_T_c_w, eigen_pt3ds, eigen_pt2ds, K, distortion_coeffs);
+    success = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, K, estimated_T_c_w);
     if(success == false){
         
         camera_frame->status_=CameraFrame::Status::FAIL;
@@ -229,19 +229,14 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     }
     
     // update 3d points after BA
-    for(size_t i=0 ; i<eigen_pt3ds.size();i++){
+    // for(size_t i=0 ; i<eigen_pt3ds.size();i++){
 
-        const std::shared_ptr<MapPoint> & map_point_ptr = img_0_from_ref_frame->keypoint_vector_.at(valid_idxes[i])->map_point_ptr_;
-        map_point_ptr->setPosition(eigen_pt3ds.at(i));
-    }
+    //     const std::shared_ptr<MapPoint> & map_point_ptr = img_0_from_ref_frame->keypoint_vector_.at(valid_idxes[i])->map_point_ptr_;
+    //     map_point_ptr->setPosition(eigen_pt3ds.at(i));
+    // }
 
-    LOG(INFO) << "after BA\n" << estimated_T_c_w.matrix();
+    // LOG(INFO) << "after BA\n" << estimated_T_c_w.matrix();
 
-    // img_0_from_current_frame->setTcw(estimated_T_current_cam_ref_cam * img_0_from_ref_frame->T_c_w_);
-
-    // // LOG(INFO) << "estimated_translation_vec \n" << translation_vec;
-    // // LOG(INFO) << "estimated_translation_norm : " << estimated_translation.norm();
-    // LOG(INFO) << "current_T_c_w: \n" << img_0_from_current_frame->T_c_w_ .matrix();
 
     img_0_from_current_frame->setTcw(estimated_T_c_w);
     this->relative_T_curr_ref = img_0_from_ref_frame->T_c_w_.inverse() * estimated_T_c_w;

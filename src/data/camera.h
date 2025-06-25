@@ -41,6 +41,7 @@ class Image{
 
         double getPointDepthFromSensor(const cv::Point2f &pt);
         void cleanTrackInTimeRelationship();
+        void cleanTrackInFrameRelationship();
         void cleanFeaturePoints();
 
         Eigen::Matrix3d getRotation();
@@ -108,8 +109,10 @@ class CameraFrame {
     CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
     
     void cleanTrackInTimeRelationship();
+    void cleanTrackInFrameRelationship();
     void setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches);
     void setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches);
+    void propogateMappointWitchMatchInTimeRelationship();
 
     void cleanFeaturePoints();
 

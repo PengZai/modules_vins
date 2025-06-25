@@ -133,12 +133,15 @@ void KLTTracker::trackInFrame(const std::shared_ptr<CameraFrame> &camera_frame){
 
     std::shared_ptr<Image> &img_1 = camera_frame->image_vector_.at(1);
     
+        
+    camera_frame->cleanTrackInFrameRelationship();
+
     std::vector<cv::DMatch> matches;
     this->matching(img_0, img_1, matches, 
         this->sys_config_->feature_and_tracker_config_->klt_params_->max_count_,
         this->sys_config_->feature_and_tracker_config_->klt_params_->epsilon_,
         10);
-        
+
     camera_frame->setTrackInFrameRelationship(matches);   
 
 
