@@ -192,7 +192,7 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_i.x, normalized_pt2d_from_img_i.y, 1.0));
         normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_j.x, normalized_pt2d_from_img_j.y, 1.0));
         
-        bool success_ = triangulatePoint(poses, normalized_pt3d_, pt_world_);
+        // bool success_ = triangulatePoint(poses, normalized_pt3d_, pt_world_);
 
 
         bool success = triangulatePoint(poses, normalized_pt3d, pt_world);
@@ -203,7 +203,7 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         // img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
         // LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
         std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world(0), pt_world(1), pt_world(2)));
-        std::shared_ptr<MapPoint> map_point_ptr2 = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world_(0), pt_world_(1), pt_world_(2)));
+        // std::shared_ptr<MapPoint> map_point_ptr2 = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world_(0), pt_world_(1), pt_world_(2)));
 
         cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
@@ -211,8 +211,8 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         kp_from_img_i->map_point_ptr_ = map_point_ptr;
         kp_from_img_j->map_point_ptr_ = map_point_ptr;
         
-        kp_from_img_i->map_point_ptr2_ = map_point_ptr2;
-        kp_from_img_j->map_point_ptr2_ = map_point_ptr2;
+        // kp_from_img_i->map_point_ptr2_ = map_point_ptr2;
+        // kp_from_img_j->map_point_ptr2_ = map_point_ptr2;
 
         triangulated_point_count++;
 

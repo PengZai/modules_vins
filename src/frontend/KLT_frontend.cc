@@ -22,7 +22,7 @@ void KLTFrontend::initPipeline(const std::shared_ptr<CameraFrame> &camera_frame)
 
     this->data_preprocesor_->pipeline(camera_frame);
 
-
+    int num_inliner = -1;
 
     for(size_t i = 0; i < (int)this->ref_camera_frame_deque_.size(); i++){
 
@@ -34,7 +34,7 @@ void KLTFrontend::initPipeline(const std::shared_ptr<CameraFrame> &camera_frame)
         camera_frame->ref_camera_frame_ = ref_camera_frame;
 
         this->tracker_->pipeline(camera_frame);
-        this->pose_estimator_->pipeline(camera_frame);
+        num_inliner = this->pose_estimator_->pipeline(camera_frame);
 
         // std::shared_ptr<OpenCVVisualizer> & opencv_visualizer = this->visualizer_->getOpenCVVisualizer();
         // opencv_visualizer->publishMatchingInTime(camera_frame);
@@ -44,8 +44,10 @@ void KLTFrontend::initPipeline(const std::shared_ptr<CameraFrame> &camera_frame)
          if(camera_frame->status_ == CameraFrame::NORMAL){
             this->status_ = Status::NORMAL;
             camera_frame->propogateMappointWitchMatchInTimeRelationship();
-            this->detector_->pipeline(camera_frame);
-            this->reconstructor_->pipeline(camera_frame);
+            if (num_inliner < 80) {
+                this->detector_->pipeline(camera_frame);
+                this->reconstructor_->pipeline(camera_frame);
+            }
             this->ref_camera_frame_deque_.clear();
             this->ref_camera_frame_deque_.push_back(camera_frame);
             this->ref_camera_frame_deque_.push_back(camera_frame->ref_camera_frame_);
@@ -54,8 +56,11 @@ void KLTFrontend::initPipeline(const std::shared_ptr<CameraFrame> &camera_frame)
 
     }
 
-    this->detector_->pipeline(camera_frame);
-    this->reconstructor_->pipeline(camera_frame);
+    if (num_inliner < 80) {
+        this->detector_->pipeline(camera_frame);
+        this->reconstructor_->pipeline(camera_frame);
+    }
+
 
 
 
@@ -87,6 +92,9 @@ void KLTFrontend::normalPipeline(const std::shared_ptr<CameraFrame> &camera_fram
     if(camera_frame->id_ == 31){
             LOG(INFO) << "just test";
     }
+
+    int num_inliner = -1;
+
     
     for(size_t i=0; i<this->ref_camera_frame_deque_.size();i++){
 
@@ -100,7 +108,7 @@ void KLTFrontend::normalPipeline(const std::shared_ptr<CameraFrame> &camera_fram
         }
 
         this->tracker_->pipeline(camera_frame);
-        this->pose_estimator_->pipeline(camera_frame);
+        num_inliner = this->pose_estimator_->pipeline(camera_frame);
 
         if(camera_frame->status_ == CameraFrame::Status::NORMAL){
             break;
@@ -133,8 +141,11 @@ void KLTFrontend::normalPipeline(const std::shared_ptr<CameraFrame> &camera_fram
         return;
     }
 
-    this->detector_->pipeline(camera_frame);
-    this->reconstructor_->pipeline(camera_frame);
+    if (num_inliner < 80) {
+
+        this->detector_->pipeline(camera_frame);
+        this->reconstructor_->pipeline(camera_frame);
+    }
 
     LOG(INFO) << "VisualFrontend End with camera frame id: " << camera_frame->id_;
 

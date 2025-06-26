@@ -35,7 +35,7 @@ system:
 
   #groundtruth path
   max_tolerant_gt_time_offset:0.05
-  groundtruth_path: /root/datasets/BotanicGarden/1018-00/1018_00_GT_output.txt
+  groundtruth_path: /root/datasets2/BotanicGarden/1018-00/1018_00_GT_output.txt
   T_cam_GT: #transformation from camera to GT, we only need rotation actually
     - [0.0238743541600432, -0.999707744440396, 0.00360642510766516, 0.138922870923538]
     - [-0.00736968896588375, -0.00378431903190059, -0.999965147452649, -0.177101909101325]

@@ -196,13 +196,13 @@ int PoseEstimator::epipolarGeometryEstimator(
 
 
 
-void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+int PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
     std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
     if(ref_camera_frame == nullptr){
 
         LOG(INFO) << RED << "ref_camera_frame is nullptr" << RESET;
-        return ;
+        return -1;
     }
 
 
@@ -220,7 +220,7 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     std::vector<Eigen::Vector2d> eigen_pt2ds;
     std::vector<Eigen::Vector3d> eigen_pt3ds;
 
-    // const Eigen::Matrix3d K = this->sys_config_->camera_config_->params_vector_.at(0)->getIntrinsicsMatrix();
+    const Eigen::Matrix3d K = this->sys_config_->camera_config_->params_vector_.at(0)->getIntrinsicsMatrix();
     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0_from_current_frame->sensor_id_)->getCVIntrinsicsMatrix();         
 
     const Eigen::VectorXd distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img_0_from_current_frame->sensor_id_)->getDistortionCoeffs();
@@ -240,16 +240,20 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
         Eigen::Vector3d &w_pt3d = kp_from_ref_frame->map_point_ptr_->pt3d_;
         double z = w_pt3d(2);
-        Eigen::Vector3d &w_pt3d_ = kp_from_ref_frame->map_point_ptr2_->pt3d_;
-        double z2 = w_pt3d_(2);
+        // Eigen::Vector3d &w_pt3d_ = kp_from_ref_frame->map_point_ptr2_->pt3d_;
+        // double z2 = w_pt3d_(2);
 
-        if(z <= 0 || z2 <= 0){
+        // if(z <= 0 || z2 <= 0){
+        //     continue;
+        // }
+        if(z <= 0){
             continue;
         }
 
-        Eigen::Vector2d eigen_pt2d = Eigen::Vector2d(kp_from_current_frame->undistorted_pt2d_.x, kp_from_current_frame->undistorted_pt2d_.y);
+        // Eigen::Vector2d eigen_pt2d = Eigen::Vector2d(kp_from_current_frame->undistorted_pt2d_.x, kp_from_current_frame->undistorted_pt2d_.y);
+        Eigen::Vector2d eigen_pt2d = Eigen::Vector2d(kp_from_current_frame->cv_keypoint_.pt.x, kp_from_current_frame->cv_keypoint_.pt.y);
         cv::Point3d w_cv_pt3d = cv::Point3d(w_pt3d(0), w_pt3d(1), w_pt3d(2));
-        cv::Point3d w_cv_pt3d_ = cv::Point3d(w_pt3d_(0), w_pt3d_(1), w_pt3d_(2));
+        // cv::Point3d w_cv_pt3d_ = cv::Point3d(w_pt3d_(0), w_pt3d_(1), w_pt3d_(2));
 
         valid_idxes.push_back(match_in_time.queryIdx);
         pt2ds_.push_back(kp_from_current_frame->cv_keypoint_.pt);
@@ -258,7 +262,7 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
         // reprojected_pt2ds.push_back(camera2pixel(w_cv_pt3d, cv_K));
         // prev_pt2ds.push_back(kp_from_ref_frame->cv_keypoint_.pt);
         pt3ds.push_back(w_cv_pt3d);
-        pt3ds_.push_back(w_cv_pt3d_);
+        // pt3ds_.push_back(w_cv_pt3d_);
         eigen_pt2ds.push_back(eigen_pt2d);
         eigen_pt3ds.push_back(w_pt3d);
 
@@ -271,12 +275,12 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     // checkImages(img_0_from_previous_frame, img_0_from_current_frame);
 
     int pt3ds_size = pt3ds.size();
-    if(pt3ds_size < this->sys_config_->params_->min_inliers_){
-        camera_frame->status_ = CameraFrame::FAIL;
-        LOG(INFO) << "number of 3d points " << pt3ds_size << " , is less then : " << this->sys_config_->params_->min_inliers_ << " in pnp estimation";
+    // if(pt3ds_size < this->sys_config_->params_->min_inliers_){
+    //     camera_frame->status_ = CameraFrame::FAIL;
+    //     LOG(INFO) << "number of 3d points " << pt3ds_size << " , is less then : " << this->sys_config_->params_->min_inliers_ << " in pnp estimation";
 
-        return;
-    }
+    //     return;
+    // }
 
 
     Sophus::SE3<double> estimated_T_c_w_ = this->relative_T_curr_ref * img_0_from_ref_frame->T_c_w_;
@@ -293,7 +297,7 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     // LOG(INFO) << "K" << cv_K;
     // LOG(INFO) << "cv_distortion_coeffs" << cv_distortion_coeffs;
 
-    // int inlier_rows_ = PnpEstimator(pt3ds_, pt2ds_, estimated_T_c_w_, cv_K, cv_distortion_coeffs);
+    // int inlier_rows_ = PnpEstimator(pt3ds, pt2ds, estimated_T_c_w_, cv_K, cv_distortion_coeffs);
 
     // if(checkEstimatedPose(estimated_T_c_w, img_0_from_ref_frame->T_c_w_, inlier_rows) == true){
     //     success = true;
@@ -308,14 +312,16 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     LOG(INFO) << "before_BA\n" << img_0_from_current_frame->T_c_w_.matrix();
 
 
-    success = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, estimated_T_c_w);
+    success = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, K, estimated_T_c_w);
+    // success = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, estimated_T_c_w);
+
     if(success == false){
         
         camera_frame->status_=CameraFrame::Status::FAIL;
-        return;
+        return eigen_pt3ds.size();;
     }
 
-    int inlier_rows = PnpEstimator(pt3ds_, pt2ds_, test_estimated_T_c_w, cv_K, cv_distortion_coeffs);
+    // int inlier_rows = PnpEstimator(pt3ds_, pt2ds_, test_estimated_T_c_w, cv_K, cv_distortion_coeffs);
 
     
     // update 3d points after BA
@@ -334,6 +340,8 @@ void PoseEstimator::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     // LOG(INFO) << "relative_T_curr_ref_norm : " << relative_T_curr_ref_norm;
     camera_frame->status_=CameraFrame::Status::NORMAL;
     // camera_frame->status_=CameraFrame::Status::FAIL;
+
+    return eigen_pt3ds.size();
 
 
 }

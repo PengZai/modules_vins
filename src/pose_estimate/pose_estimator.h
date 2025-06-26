@@ -43,7 +43,7 @@ class PoseEstimator{
     std::shared_ptr<SystemConfig> sys_config_;
     Sophus::SE3<double> relative_T_curr_ref;
    
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
+    int pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
 
 
 };

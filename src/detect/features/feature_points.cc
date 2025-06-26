@@ -83,6 +83,9 @@ GoodFeature::GoodFeature(const std::shared_ptr<SystemConfig> &sys_config):
 FeaturePoint(sys_config)
 {
 
+    this->gftt_ = cv::GFTTDetector::create(this->num_feature_points_, 0.01, this->min_distance_*2);
+
+
 }
 
 
@@ -90,7 +93,8 @@ void GoodFeature::detect(const std::shared_ptr<Image> &img){
 
 
     std::vector<cv::KeyPoint> cv_key_points;
-    this->gftt_ = cv::GFTTDetector::create(this->num_feature_points_ - img->keypoint_vector_.size(), 0.01, this->min_distance_*2);
+    // this->gftt_ = cv::GFTTDetector::create(this->num_feature_points_ - img->keypoint_vector_.size(), 0.01, this->min_distance_*2);
+
 
     cv::Mat mask(img->gray_data_.size(), CV_8UC1, 255);
     for (auto &kp : img->keypoint_vector_) {
@@ -119,10 +123,13 @@ void GoodFeature::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
 
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
-    if(img_0->keypoint_vector_.size() < this->num_feature_points_ ){
-        detect(img_0);
-    }
+    // if(img_0->keypoint_vector_.size() < this->num_feature_points_ ){
+    //     detect(img_0);
+    // }
     
+    detect(img_0);
+
+
     LOG(INFO) << "Detected " << img_0->keypoint_vector_.size() << " features";
 
     

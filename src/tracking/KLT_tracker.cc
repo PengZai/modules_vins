@@ -25,10 +25,27 @@ void KLTTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_
     int min_match_trainIdx = 1e20;
     int max_match_trainIdx = -1;
 
+    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img0->sensor_id_, img1->sensor_id_);
+    Eigen::Matrix<double, 3, 3> K_j = this->sys_config_->camera_config_->params_vector_.at(img1->sensor_id_)->getIntrinsicsMatrix();         
+
+
     for(size_t i=0; i<img0->keypoint_vector_.size();i++){
         std::shared_ptr<KeyPoint> &kp = img0->keypoint_vector_.at(i);
         pt2fs_from_img0.push_back(kp->cv_keypoint_.pt);
-        pt2fs_from_img1.push_back(kp->cv_keypoint_.pt);
+
+        if(kp->map_point_ptr_){
+            std::shared_ptr<MapPoint> mp = kp->map_point_ptr_;
+            Eigen::Matrix<double, 4,4> T_j_w = T_cam_j_cam_i * img0->T_c_w_.matrix();
+            Eigen::Vector4d pt4d;
+            pt4d << mp->pt3d_, 1.0;
+            Eigen::Vector3d pj =  T_j_w.block<3,4>(0,0) * pt4d;
+            Eigen::Vector2d reprojected_pt = camera2pixel(pj, K_j);
+            pt2fs_from_img1.push_back(cv::Point2f(reprojected_pt(0), reprojected_pt(1)));
+
+        }
+        else{
+            pt2fs_from_img1.push_back(kp->cv_keypoint_.pt);
+        }
     }
 
     cv::calcOpticalFlowPyrLK(
@@ -39,25 +56,27 @@ void KLTTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_
     3,
     cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS,
     max_count,
-    epsilon),
+    0.01),
     cv::OPTFLOW_USE_INITIAL_FLOW
     );
 
     int match_idx_for_img1 = 0;
+    std::vector<size_t> lost_track_ids;
     for(size_t i=0; i < status.size(); i++){
 
         
         if (!status[i]) {
+            lost_track_ids.push_back(i);
             continue;
 
         }
 
-        if(y_distance_threshold != -1){
-            double y_distance = std::abs(pt2fs_from_img0.at(i).y - pt2fs_from_img1.at(i).y);
-            if(y_distance > y_distance_threshold){
-                continue;
-            }
-        }
+        // if(y_distance_threshold != -1){
+        //     double y_distance = std::abs(pt2fs_from_img0.at(i).y - pt2fs_from_img1.at(i).y);
+        //     if(y_distance > y_distance_threshold){
+        //         continue;
+        //     }
+        // }
 
         // if(img1->isInImage(pt2fs_from_img1[i]) == false){
         //     continue;
@@ -88,6 +107,8 @@ void KLTTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_
     //     if(max_match_trainIdx < match.trainIdx) max_match_trainIdx = match.trainIdx;
 
     // }
+
+    LOG(INFO) << "Just test";
     
 
 }

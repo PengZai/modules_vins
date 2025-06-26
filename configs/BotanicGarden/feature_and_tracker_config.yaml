@@ -2,7 +2,7 @@
 
 
 commond:
-  num_feature_points: 200
+  num_feature_points: 150
   min_distance: 10 # min distance between two features
 
 ORB:

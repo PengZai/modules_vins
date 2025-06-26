@@ -7,7 +7,7 @@
 #include "../data/camera.h"
 #include "../system/system_config.h"
 #include "../reconstruct/two_view_depths/two_view_reconstruction.h"
-
+#include "../utils/utils.h"
 
 namespace modules_vins{
 

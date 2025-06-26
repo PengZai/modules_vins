@@ -28,7 +28,7 @@ cv::Point2d pixel2norm(const cv::Point2d &pt2d, const cv::Mat &K ){
 
 
 // convert keypoint from pixel image plane to camera coordinate
-cv::Point3d pixel2camera(const cv::Point2d &pt2d, double depth, cv::Mat &K)
+cv::Point3d pixel2camera(const cv::Point2d &pt2d, double depth, const cv::Mat &K)
 {
     return cv::Point3d (
         ( pt2d.x - K.at<double>(0,2) ) *depth / K.at<double>(0,0), 
@@ -39,11 +39,21 @@ cv::Point3d pixel2camera(const cv::Point2d &pt2d, double depth, cv::Mat &K)
 
 
 // convert keypoint from pixel image plane to camera coordinate
-cv::Point2d camera2pixel(const cv::Point3d &pt3d, cv::Mat &K)
+cv::Point2d camera2pixel(const cv::Point3d &pt3d, const cv::Mat &K)
 {
     return cv::Point2d(
         ( pt3d.x * K.at<double>(0,0) ) / pt3d.z + K.at<double>(0,2), 
         ( pt3d.y * K.at<double>(1,1) ) / pt3d.z + K.at<double>(1,2)
+    );
+}
+
+
+// convert keypoint from pixel image plane to camera coordinate
+Eigen::Vector2d camera2pixel(const Eigen::Vector3d &pt3d, const Eigen::Matrix<double, 3, 3> &K)
+{
+    return Eigen::Vector2d(
+        ( pt3d(0) * K(0,0) ) / pt3d(2) + K(0,2), 
+        ( pt3d(1) * K(1,1) ) / pt3d(2) + K(1,2)
     );
 }
 
