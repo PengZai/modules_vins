@@ -33,7 +33,7 @@ class CameraParameters : public Parameters
         Eigen::VectorXd resolution_;
         Eigen::VectorXd distortion_coeffs_;
         Eigen::VectorXd intrinsics_;
-        Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic> MapVU2UndisYX_;
+        std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> MapVU2UndisXY_;
 
         std::string rgb_rostopic_;
 

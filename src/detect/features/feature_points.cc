@@ -13,6 +13,7 @@ FeaturePoint::FeaturePoint(const std::shared_ptr<SystemConfig> &sys_config){
 }
 
 
+
 ORBFeature::ORBFeature(const std::shared_ptr<SystemConfig> &sys_config):
 FeaturePoint(sys_config)
 {
@@ -40,8 +41,11 @@ void ORBFeature::detect(const std::shared_ptr<Image> &img){
     cv::Mat descriptors;
     this->orb_->compute(img->gray_data_, cv_key_points, descriptors);
 
-    img->appendKeyPoints(cv_key_points, descriptors);
+    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVDistortionCoeffs();
 
+
+    img->appendAndUndistotKeyPoints(cv_key_points, descriptors, cv_K, cv_distortion_coeffs);
     LOG(INFO) << " we leave " << img->keypoint_vector_.size() << " features after descriptor computation";
 
     
@@ -96,7 +100,10 @@ void GoodFeature::detect(const std::shared_ptr<Image> &img){
 
     this->gftt_->detect(img->gray_data_, cv_key_points, mask);
 
-    img->appendKeyPoints(cv_key_points);
+    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVDistortionCoeffs();
+
+    img->appendAndUndistotKeyPoints(cv_key_points, cv_K, cv_distortion_coeffs);
 
 
 }

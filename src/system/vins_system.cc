@@ -104,7 +104,7 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
         cv_bridge::CvImageConstPtr cv_ptr;
         RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["bgr"], cv_ptr, "bgr8");
         std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
-
+        img->setMapVU2UndisXY(this->config_->camera_config_->params_vector_.at(img->sensor_id_)->MapVU2UndisXY_);
         if(this->config_->camera_config_->params_vector_.at(cam_id)->use_sensor_depth_){
             RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["depth"], cv_ptr);
             img->setSensorDepth(cv_ptr->image.clone());

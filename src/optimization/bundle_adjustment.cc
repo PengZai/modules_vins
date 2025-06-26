@@ -11,7 +11,6 @@ namespace modules_vins
 bool bundleAdjustmentPoseOnlyCeres(
   std::vector<Eigen::Vector3d> &points_3d,
   std::vector<Eigen::Vector2d> &points_2d,
-  const Eigen::Matrix<double, 3, 3> &K,
   Sophus::SE3d &pose
 ) {
   
@@ -23,7 +22,7 @@ bool bundleAdjustmentPoseOnlyCeres(
   for(int idx=0;idx<points_2d.size();idx++){
 
 
-    ceres::CostFunction *cost_function = new reprojectionCostFunctionForPoseOnly(points_3d[idx], points_2d[idx], K);
+    ceres::CostFunction *cost_function = new reprojectionCostFunctionForPoseOnly(points_3d[idx], points_2d[idx]);
     problem.AddResidualBlock(cost_function, loss_function, se3_vec.data());
   }
   

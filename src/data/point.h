@@ -79,7 +79,7 @@ class KeyPoint{
 
     
     cv::Point3d pt3d_; // 3d keypoint in camera coordinate
-
+    cv::Point2d undistorted_pt2d_;
     cv::KeyPoint cv_keypoint_;
     // cv::KeyPoint(
     //     cv::Point2f pt,     // 点的位置 (x, y)
@@ -93,6 +93,7 @@ class KeyPoint{
     cv::Mat descriptor_;
 
     std::shared_ptr<MapPoint> map_point_ptr_;
+    std::shared_ptr<MapPoint> map_point_ptr2_;
 
 
     // struct cv::DMatch {

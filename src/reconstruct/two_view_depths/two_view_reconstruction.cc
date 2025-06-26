@@ -158,10 +158,10 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
     int existed_mappoint_count = 0;
     int triangulated_point_count = 0;
 
-    for(size_t i=0; i < (int)img_i->matches_in_frame_.size(); i++){
+    for(size_t i=0; i < img_i->matches_in_frame_.size(); i++){
 
-        std::vector<Eigen::Vector3d> normalized_pt3d;
-        Eigen::Vector3d pt_world;
+        std::vector<Eigen::Vector3d> normalized_pt3d, normalized_pt3d_;
+        Eigen::Vector3d pt_world, pt_world_;
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
         const std::shared_ptr<KeyPoint> &kp_from_img_i = img_i->keypoint_vector_[match.queryIdx];
@@ -179,13 +179,22 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         cv::Point2f &tracked_pt2f_from_img_i = kp_from_img_i->cv_keypoint_.pt;
         cv::Point2f &tracked_pt2f_from_img_j = kp_from_img_j->cv_keypoint_.pt;
 
-        cv::Point2d normalized_pt2d_from_img_i = pixel2norm(tracked_pt2f_from_img_i, cv_Ki);
-        cv::Point2d normalized_pt2d_from_img_j = pixel2norm(tracked_pt2f_from_img_j, cv_Kj);
+        cv::Point2d normalized_pt2d_from_img_i_ = pixel2norm(tracked_pt2f_from_img_i, cv_Ki);
+        cv::Point2d normalized_pt2d_from_img_j_ = pixel2norm(tracked_pt2f_from_img_j, cv_Kj);
         
+        normalized_pt3d_.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_i_.x, normalized_pt2d_from_img_i_.y, 1.0));
+        normalized_pt3d_.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_j_.x, normalized_pt2d_from_img_j_.y, 1.0));
+
+        cv::Point2d normalized_pt2d_from_img_i = kp_from_img_i->undistorted_pt2d_;
+        cv::Point2d normalized_pt2d_from_img_j = kp_from_img_j->undistorted_pt2d_;     
+
  
         normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_i.x, normalized_pt2d_from_img_i.y, 1.0));
         normalized_pt3d.emplace_back(Eigen::Vector3d(normalized_pt2d_from_img_j.x, normalized_pt2d_from_img_j.y, 1.0));
         
+        bool success_ = triangulatePoint(poses, normalized_pt3d_, pt_world_);
+
+
         bool success = triangulatePoint(poses, normalized_pt3d, pt_world);
         if(success == false){
             continue;
@@ -194,11 +203,16 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         // img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
         // LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
         std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world(0), pt_world(1), pt_world(2)));
+        std::shared_ptr<MapPoint> map_point_ptr2 = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world_(0), pt_world_(1), pt_world_(2)));
+
         cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
         kp_from_img_i->map_point_ptr_ = map_point_ptr;
         kp_from_img_j->map_point_ptr_ = map_point_ptr;
+        
+        kp_from_img_i->map_point_ptr2_ = map_point_ptr2;
+        kp_from_img_j->map_point_ptr2_ = map_point_ptr2;
 
         triangulated_point_count++;
 

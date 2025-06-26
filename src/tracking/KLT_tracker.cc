@@ -57,11 +57,15 @@ void KLTTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_
             if(y_distance > y_distance_threshold){
                 continue;
             }
-
         }
+
+        // if(img1->isInImage(pt2fs_from_img1[i]) == false){
+        //     continue;
+        // }
 
 
         std::shared_ptr<KeyPoint> kp = std::make_shared<KeyPoint>(cv::KeyPoint(pt2fs_from_img1[i], 3));
+
         img1->keypoint_vector_.emplace_back(kp);
         cv::DMatch match;
         match.queryIdx = i;
@@ -114,6 +118,19 @@ void KLTTracker::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
         this->sys_config_->feature_and_tracker_config_->klt_params_->max_count_, 
         this->sys_config_->feature_and_tracker_config_->klt_params_->epsilon_);
 
+    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img0_from_current_frame->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img0_from_current_frame->sensor_id_)->getCVDistortionCoeffs();
+
+
+    for(int i=0; i < matches.size(); i++){
+        const cv::DMatch &match = matches.at(i);
+        const std::shared_ptr<KeyPoint> &kp = img0_from_current_frame->keypoint_vector_.at(match.trainIdx);
+        std::vector<cv::Point2f> pt_distorted = {kp->cv_keypoint_.pt};
+        std::vector<cv::Point2f> pt_undistorted;
+        cv::undistortPoints(pt_distorted, pt_undistorted, cv_K, cv_distortion_coeffs);
+        kp->undistorted_pt2d_ = pt_undistorted[0];
+    }
+
     ref_camera_frame->setTrackInTimeRelationship(matches);
 
     LOG(INFO) << GREEN << img0_from_ref_frame->matches_in_time_.size() << " points were trakced in time for camera frame bewteen ref " << ref_camera_frame->id_ << " and curr " << camera_frame->id_  << RESET;
@@ -142,9 +159,32 @@ void KLTTracker::trackInFrame(const std::shared_ptr<CameraFrame> &camera_frame){
         this->sys_config_->feature_and_tracker_config_->klt_params_->epsilon_,
         10);
 
+
+    cv::Mat cv_K_from_img_0 = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs_from_img_0 = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVDistortionCoeffs();
+    cv::Mat cv_K_from_img_1 = this->sys_config_->camera_config_->params_vector_.at(img_1->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs_from_img_1 = this->sys_config_->camera_config_->params_vector_.at(img_1->sensor_id_)->getCVDistortionCoeffs();
+
+
+    for(int i=0; i < matches.size(); i++){
+        const cv::DMatch &match = matches.at(i);
+        const std::shared_ptr<KeyPoint> &kp_from_img_0 = img_0->keypoint_vector_.at(match.queryIdx);
+        const std::shared_ptr<KeyPoint> &kp_from_img_1 = img_1->keypoint_vector_.at(match.trainIdx);
+        std::vector<cv::Point2f> pt_distorted_from_img_0 = {kp_from_img_0->cv_keypoint_.pt};
+        std::vector<cv::Point2f> pt_distorted_from_img_1 = {kp_from_img_1->cv_keypoint_.pt};
+        std::vector<cv::Point2f> pt_undistorted_from_img_0, pt_undistorted_from_img_1;
+        cv::undistortPoints(pt_distorted_from_img_0, pt_undistorted_from_img_0, cv_K_from_img_0, cv_distortion_coeffs_from_img_0);
+        cv::undistortPoints(pt_distorted_from_img_1, pt_undistorted_from_img_1, cv_K_from_img_1, cv_distortion_coeffs_from_img_1);
+
+        kp_from_img_0->undistorted_pt2d_ = pt_undistorted_from_img_0[0];
+        kp_from_img_1->undistorted_pt2d_ = pt_undistorted_from_img_1[0];
+
+    }
+
     camera_frame->setTrackInFrameRelationship(matches);   
 
 
+    LOG(INFO) << GREEN << img_0->matches_in_frame_.size() << " points were trakced in frame for camera frame " << camera_frame->id_  << RESET;
 
     
 }

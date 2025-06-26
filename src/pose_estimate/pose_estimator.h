@@ -30,10 +30,15 @@ class PoseEstimator{
     int PnpEstimator(
         const std::vector<cv::Point3d> &pt3ds, 
         const std::vector<cv::Point2d> &pt2ds, 
-        Sophus::SE3<double> &estimated_T,
-        const cv::Mat &cv_K,
-        const cv::Mat &cv_distortion_coeffs
+        Sophus::SE3<double> &estimated_T
     );
+
+    int PnpEstimator(
+        const std::vector<cv::Point3d> &pt3ds, 
+        const std::vector<cv::Point2d> &pt2ds, 
+        Sophus::SE3<double> &estimated_T,
+        const cv::Mat K,
+        const cv::Mat cv_distortion_coeffs);
 
     std::shared_ptr<SystemConfig> sys_config_;
     Sophus::SE3<double> relative_T_curr_ref;

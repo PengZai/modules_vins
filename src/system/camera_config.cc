@@ -47,7 +47,6 @@ CameraParameters::CameraParameters():
     use_learned_semantic_segmentation_(false)
 {
 
-    createMapFrompixel2UndistoredNormalizedPlane();
 }
 
 
@@ -71,7 +70,7 @@ void CameraParameters::createMapFrompixel2UndistoredNormalizedPlane(){
     std::vector<cv::Point2f> pixels;
     std::vector<cv::Point2f> undistorted_points;
 
-    MapVU2UndisYX_.resize(h, w);
+    MapVU2UndisXY_ = std::make_shared<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>>(h, w);
 
     for(int v=0;v<h;v++){
         for(int u=0;u<w;u++){
@@ -83,7 +82,7 @@ void CameraParameters::createMapFrompixel2UndistoredNormalizedPlane(){
     int idx = 0;
     for(int v=0;v<h;v++){
         for(int u=0;u<w;u++){
-            MapVU2UndisYX_(v,u) = Eigen::Vector2d(undistorted_points[idx].x, undistorted_points[idx].y);
+            (*MapVU2UndisXY_)(v,u) = Eigen::Vector2d(undistorted_points[idx].x, undistorted_points[idx].y);
             idx++;
         }
     }
@@ -173,6 +172,9 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("intrinsics", this->intrinsics_);
 
     parse("T_imu_cam", this->T_imu_cam_);
+
+    createMapFrompixel2UndistoredNormalizedPlane();
+
 
 }
 

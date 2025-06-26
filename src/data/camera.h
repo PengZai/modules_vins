@@ -38,6 +38,7 @@ class Image{
         void setSensorDepth(const cv::Mat &sensor_depth);
         void setTcw(const Sophus::SE3<double> T_c_w);
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
+        void setMapVU2UndisXY(const std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> &MapVU2UndisXY);
 
         double getPointDepthFromSensor(const cv::Point2f &pt);
         void cleanTrackInTimeRelationship();
@@ -52,6 +53,9 @@ class Image{
         void setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors);
         void appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
         void appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors);
+        void appendAndUndistotKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs);
+        void appendAndUndistotKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs);
+        void undistortPointsWithCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, std::vector<cv::Point2d> &undistorted_points, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs);
         void getCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points);
         void getDescripots(cv::Mat &descriptors);
 
@@ -73,6 +77,8 @@ class Image{
         cv::Mat learned_stereo_depth_;
         cv::Mat sensor_depth_;
         // std::vector<cv::KeyPoint> cv_keypoint_vector_;
+
+        std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> MapVU2UndisXY_;
 
         std::vector<std::shared_ptr<KeyPoint>> keypoint_vector_;
 

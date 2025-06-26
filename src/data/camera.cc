@@ -58,6 +58,22 @@ void Image::appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
 
 }
 
+void Image::appendAndUndistotKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs){
+
+    std::vector<cv::Point2d> undistorted_points;
+    undistortPointsWithCVKeyPoints(cv_key_points, undistorted_points, cv_K, cv_distortion_coeffs);
+
+
+    for(size_t i=0; i < cv_key_points.size(); i++){
+        const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
+        kp->undistorted_pt2d_ = undistorted_points[i];
+        this->keypoint_vector_.emplace_back(kp);
+
+    }
+
+}
+
+
 
 void Image::appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors){
 
@@ -67,6 +83,33 @@ void Image::appendKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::
 
         this->keypoint_vector_.emplace_back(kp);
     }
+
+}
+
+void Image::appendAndUndistotKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, const cv::Mat &descriptors, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs){
+
+    std::vector<cv::Point2d> undistorted_points;
+    undistortPointsWithCVKeyPoints(cv_key_points, undistorted_points, cv_K, cv_distortion_coeffs);
+
+    for(size_t i=0; i < cv_key_points.size(); i++){
+        const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
+        kp->descriptor_ = descriptors.row(i);
+        Eigen::Vector2d norm_xy = (*this->MapVU2UndisXY_)(int(kp->cv_keypoint_.pt.y), int(kp->cv_keypoint_.pt.x));
+        kp->undistorted_pt2d_ = undistorted_points[i];
+        this->keypoint_vector_.emplace_back(kp);
+    }
+
+}
+
+void Image::undistortPointsWithCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, std::vector<cv::Point2d> &undistorted_points, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs){
+
+    std::vector<cv::Point2d> pt2ds;
+    for (const auto& kp : cv_key_points) {
+        pt2ds.push_back(kp.pt);
+    }
+
+    cv::undistortPoints(pt2ds, undistorted_points, cv_K, cv_distortion_coeffs);
+
 
 }
 
@@ -99,6 +142,8 @@ void Image::getDescripots(cv::Mat &descriptors){
     cv::vconcat(descriptor_vec, descriptors);  
 
 }
+
+
 
 
 double Image::getPointDepthFromSensor(const cv::Point2f &pt){
@@ -172,6 +217,10 @@ void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
 }
 
 
+void Image::setMapVU2UndisXY(const std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> &MapVU2UndisXY){
+    this->MapVU2UndisXY_ = MapVU2UndisXY;
+}
+
 void Image::cleanTrackInTimeRelationship(){
     this->matches_in_time_.clear();
     for(std::shared_ptr<KeyPoint> &keypoint : keypoint_vector_){
@@ -209,7 +258,7 @@ Eigen::Vector3d Image::getPosition(){
 
 bool Image::isInImage(const cv::Point2d &pixel){
 
-    return pixel.x > 0 && pixel.x < this->color_data_.cols && pixel.y >0 && pixel.y < this->color_data_.rows;
+    return pixel.x >= 0 && pixel.x < this->color_data_.cols && pixel.y >= 0 && pixel.y < this->color_data_.rows;
 
 }
 
@@ -303,6 +352,11 @@ void CameraFrame::propogateMappointWitchMatchInTimeRelationship(){
             if(kp_from_img_0_ref_camera_frame->map_point_ptr_ != nullptr){
                 const std::shared_ptr<KeyPoint> kp_from_img_0_camera_frame = img_0_from_camera_frame->keypoint_vector_.at(match.trainIdx);
                 kp_from_img_0_camera_frame->map_point_ptr_ = kp_from_img_0_ref_camera_frame->map_point_ptr_;
+            }
+
+            if(kp_from_img_0_ref_camera_frame->map_point_ptr2_ != nullptr){
+                const std::shared_ptr<KeyPoint> kp_from_img_0_camera_frame = img_0_from_camera_frame->keypoint_vector_.at(match.trainIdx);
+                kp_from_img_0_camera_frame->map_point_ptr2_ = kp_from_img_0_ref_camera_frame->map_point_ptr2_;
             }
         }
     }
