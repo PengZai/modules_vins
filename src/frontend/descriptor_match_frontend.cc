@@ -25,7 +25,8 @@ void DescriptorMatchFrontend::initPipeline(const std::shared_ptr<CameraFrame> &c
     this->data_preprocesor_->pipeline(camera_frame);
 
     this->detector_->pipeline(camera_frame);
-
+    
+    int num_inliner = 0;
 
     for(size_t i = 0; i < (int)this->ref_camera_frame_deque_.size(); i++){
 
@@ -36,8 +37,10 @@ void DescriptorMatchFrontend::initPipeline(const std::shared_ptr<CameraFrame> &c
 
         camera_frame->ref_camera_frame_ = ref_camera_frame;
 
+
         this->tracker_->pipeline(camera_frame);
-        this->pose_estimator_->pipeline(camera_frame);
+        double maximum_motion_norm = (camera_frame->id_ - ref_camera_frame->id_) * this->sys_config_->params_->threshold_for_pnp_pose_log_norm_;
+        bool success = this->pose_estimator_->pipeline(camera_frame, num_inliner, maximum_motion_norm);
 
         // std::shared_ptr<OpenCVVisualizer> & opencv_visualizer = this->visualizer_->getOpenCVVisualizer();
         // opencv_visualizer->publishMatchingInTime(camera_frame);
@@ -47,6 +50,8 @@ void DescriptorMatchFrontend::initPipeline(const std::shared_ptr<CameraFrame> &c
         if(camera_frame->status_ == CameraFrame::NORMAL){
             this->status_ = Status::NORMAL;
             camera_frame->propogateMappointWitchMatchInTimeRelationship();
+            initializeGTTcwWithCameraFrame(camera_frame);
+
             this->reconstructor_->pipeline(camera_frame);
             this->ref_camera_frame_deque_.clear();
             this->ref_camera_frame_deque_.push_back(camera_frame);
@@ -89,6 +94,9 @@ void DescriptorMatchFrontend::normalPipeline(const std::shared_ptr<CameraFrame> 
     if(camera_frame->id_ == 31){
             LOG(INFO) << "just test";
     }
+
+    int num_inliner = -1;
+
     
     for(size_t i=0; i<this->ref_camera_frame_deque_.size();i++){
 
@@ -97,15 +105,16 @@ void DescriptorMatchFrontend::normalPipeline(const std::shared_ptr<CameraFrame> 
         ref_camera_frame->cleanTrackInTimeRelationship();
         LOG(INFO) << "estimating pose betweeen reference frame with id: " << ref_camera_frame->id_ << " and current frame with id: " << camera_frame->id_;
         camera_frame->ref_camera_frame_ = ref_camera_frame;
+        camera_frame->initializeTcwWithVelocity();
+
+
         int ref_frame_matches_in_time_size = camera_frame->ref_camera_frame_->image_vector_.at(0)->matches_in_time_.size();
-        if(ref_camera_frame->id_ == 26){
-            LOG(INFO) << "just test";
-        }
+  
 
         this->tracker_->pipeline(camera_frame);
-        this->pose_estimator_->pipeline(camera_frame);
+        double maximum_motion_norm = (camera_frame->id_ - ref_camera_frame->id_) * this->sys_config_->params_->threshold_for_pnp_pose_log_norm_;
+        bool success = this->pose_estimator_->pipeline(camera_frame, num_inliner, maximum_motion_norm);
         
-
 
         if(camera_frame->status_ == CameraFrame::Status::NORMAL){
             break;

@@ -23,7 +23,6 @@ class FeaturePoint{
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
     int num_feature_points_;
-    int min_distance_;
 
 };
 
@@ -37,11 +36,12 @@ class ORBFeature : public FeaturePoint{
     void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
 
     protected:
-    int num_features_;
-    double scale_factor_;
-    int level_pyramid_;
+    int block_size_;
+    int fastThreshold_;
+    bool useNonmaxSuppression_;
+    // double scale_factor_;
+    // int level_pyramid_;
     cv::Ptr<cv::ORB> orb_;
-    cv::Ptr<cv::GFTTDetector> gftt_;
 
 
 };
@@ -57,6 +57,7 @@ class GoodFeature : public FeaturePoint{
 
     protected:
     cv::Ptr<cv::GFTTDetector> gftt_;
+    int min_distance_;
 
 
 

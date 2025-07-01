@@ -8,7 +8,6 @@ sys_config_(sys_config),
 fail_pose_estimation_num_(0),
 status_(Status::NOT_INITIALIZED)
 {
-    
 
 
 }
@@ -109,7 +108,18 @@ void VisualFrontend::maintainRefCameraFrameDeque(){
 
 }
 
+bool VisualFrontend::initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame){
 
+    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+
+    if(!img_0){
+        return false;
+    }
+
+    this->state_->SynchronizeAndTransformComparisonPoseToTcw(img_0->timestamp_);
+
+    return true;
+}
 
 
 void VisualFrontend::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){

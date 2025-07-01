@@ -18,6 +18,11 @@ void System::setConfig(const std::shared_ptr<SystemConfig> &config){
     this->config_ = config;
 }
 
+void System::setState(const std::shared_ptr<State> &state){
+    this->state_ = state;
+}
+
+
 void System::setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh){
     this->nh_ = nh;
 }
@@ -44,7 +49,7 @@ void System::setKeyFrameManager(const std::shared_ptr<KeyFrameManager> &key_fram
 
 
 void System::setMap(const std::shared_ptr<Map> &map){
-    this->state_.map_ = map;
+    this->state_->map_ = map;
 }
 
 void System::setRecorder(const std::shared_ptr<EVORecorder> &evo_recorder){
@@ -104,7 +109,10 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
         cv_bridge::CvImageConstPtr cv_ptr;
         RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["bgr"], cv_ptr, "bgr8");
         std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
-        img->setMapVU2UndisXY(this->config_->camera_config_->params_vector_.at(img->sensor_id_)->MapVU2UndisXY_);
+
+        Eigen::Matrix<double, 4, 4> T_cam_j_cam_0 = this->config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(cam_id, 0);
+        img->setTcc0Extrinsic(Sophus::SE3d::fitToSE3(T_cam_j_cam_0));
+
         if(this->config_->camera_config_->params_vector_.at(cam_id)->use_sensor_depth_){
             RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["depth"], cv_ptr);
             img->setSensorDepth(cv_ptr->image.clone());
@@ -115,10 +123,13 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
     }
 
     
-    const State &state = getState();
+    const std::shared_ptr<State> &state = getState();
 
     std::shared_ptr<CameraFrame>camera_frame = std::make_shared<CameraFrame>(image_vector);
     camera_frame->status_ = CameraFrame::Status::NORMAL;
+    camera_frame->use_comparison_pose_for_pose_estimation_ = this->config_->params_->use_comparison_pose_for_pose_estimation_;
+    camera_frame->comparison_pose_idx_for_pose_estimation_ = this->config_->params_->comparison_pose_idx_for_pose_estimation_;
+
     this->camera_frame_deque_.push_back(camera_frame);
 
 
@@ -134,15 +145,16 @@ void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
 
     const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
-    this->state_.timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
+    this->state_->timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
     LOG(INFO) << GREEN << "new state has been added to system" << RESET;
 
     if(camera_frame->is_key_camera_frame_){
-        this->state_.timestamp_key_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
+        this->state_->timestamp_key_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
         LOG(INFO) << GREEN << "new key camera frame has been added to system" << RESET;
     }
 
-    // T_w_c is actual position and orientation of camera in world, for visualization
+    // T_w_c is actual position and orientation of camera in world, because Pw = T_w_c * Pc, 
+    // that means T_w_c is far away from origin
     Sophus::SE3<double> T_w_c_ = img_0->T_c_w_.inverse();
     this->evo_recorder_->writeTrajectoryOnce(img_0->timestamp_, T_w_c_.translation(), T_w_c_.unit_quaternion());
 
@@ -150,17 +162,13 @@ void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
 }
 
 
-const State &System::getState() const{
+const std::shared_ptr<State> &System::getState() const{
     return this->state_;
 }
 
 
 
 
-void System::setGTState(const std::map<double, Sophus::SE3<double>> timestamp_GT_T_map){
-    this->state_.timestamp_GT_T_full_map_ = timestamp_GT_T_map;
-
-}
 
 
 void System::callbackVisualNavigation(){
@@ -209,14 +217,13 @@ void System::callbackVisualNavigation(){
         if(visual_frontend_status  == VisualFrontend::Status::NORMAL && this->status_ == Status::NOT_INITIALIZED){
 
             const std::deque<std::shared_ptr<CameraFrame>> &visual_frontend_ref_camera_frame_deque = this->visual_frontend_->getRefCameraFrameDeque();
-            this->initializer_->initializeGTTcwWithCameraFrame(visual_frontend_ref_camera_frame_deque.front(), this->state_);
             this->status_ = Status::NORMAL;
         }   
 
         
         if(this->status_ == Status::NORMAL && camera_frame->status_ == CameraFrame::Status::NORMAL){
             key_frame_manager_->updateKeyFrame(camera_frame);                    
-            this->state_.map_->update(camera_frame);
+            this->state_->map_->update(camera_frame);
             updateState(camera_frame);
         }
 
@@ -232,11 +239,11 @@ void System::callbackVisualNavigation(){
         
 
         if(camera_frame->is_key_camera_frame_){
-            LOG(INFO) << "key camera frame";
+            LOG(INFO) <<  "camera_id: " << camera_frame->id_ << " is a key camera frame";
         }
 
         this->visualizer_->publish(camera_frame, this->state_);
-
+        LOG(INFO) << GREEN << "finished process camera frame " << camera_frame->id_ << RESET;
 
     }
 

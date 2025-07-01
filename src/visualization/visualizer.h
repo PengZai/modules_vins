@@ -19,7 +19,7 @@ class Visualizer{
     Visualizer(const std::shared_ptr<SystemConfig> &sys_config, const std::shared_ptr<ros::NodeHandle> &nh);
     ~Visualizer();
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
-    void publish(const std::shared_ptr<CameraFrame> &camera_frame,  const State &state);
+    void publish(const std::shared_ptr<CameraFrame> &camera_frame,  const std::shared_ptr<State> &state);
     void setMap(const std::shared_ptr<Map> &map);
     std::shared_ptr<OpenCVVisualizer> &getOpenCVVisualizer();
 

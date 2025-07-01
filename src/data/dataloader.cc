@@ -12,8 +12,19 @@ sys_config_(sys_config)
 }
 
 
-void FileDataLoader::load_groundtruth(const std::string &path_to_file, std::map<double, Sophus::SE3<double>> &timestamp_GT_T_map){
+void FileDataLoader::load_trajectories(const std::shared_ptr<State> &state){
+    
+    for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
+        std::shared_ptr<ComparisonParameters> comparison_params = this->sys_config_->comparison_config_->params_vector_.at(idx);
+        std::string path = comparison_params->path_;
+        std::map<double, Sophus::SE3<double>> timestamp_T_w_c_full_map;
+        this->load_trajectory(path, timestamp_T_w_c_full_map);
+        state->timestamp_comparison_T_w_c_full_map_vector_.emplace_back(timestamp_T_w_c_full_map);
+    }
+}
+
+void FileDataLoader::load_trajectory(const std::string &path_to_file, std::map<double, Sophus::SE3<double>> &timestamp_T_w_c_full_map){
 
 
     std::ifstream file_in(path_to_file);
@@ -23,6 +34,7 @@ void FileDataLoader::load_groundtruth(const std::string &path_to_file, std::map<
 
     std::string line;
 
+    std::map<double, Sophus::SE3<double>> timestamp_origin_GT_T_map;
 
     while(std::getline(file_in, line)){
         //Skip comments
@@ -36,11 +48,9 @@ void FileDataLoader::load_groundtruth(const std::string &path_to_file, std::map<
         Eigen::Quaterniond q(qw, qx, qy, qz);
         Eigen::Vector3d t(tx, ty, tz);
 
-        Sophus::SE3<double> T_c_w(q,t);
-        timestamp_GT_T_map[timestamp] = T_c_w;
+        Sophus::SE3<double> T_w_c(q,t);
+        timestamp_T_w_c_full_map[timestamp] = T_w_c; // T_world_comparison
     }
-
-
 
 }
 

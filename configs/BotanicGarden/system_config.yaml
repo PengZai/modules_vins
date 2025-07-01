@@ -12,36 +12,39 @@ system:
 
   #initialization and visual frontend
   threshold_for_pnp_pose_log_norm: 0.5 # estimated pose can't too large
-  min_inliers: 30
-  minimum_cumulative_translation: 0.5
+  min_inliers: 20
+  minimum_cumulative_translation: 0.2
   maximum_num_fail: 2  # when number of fail of pose estimation  reach this, state turn to get lost.
 
+  #depth (unit meter)
+  maximum_estimated_depth: 120 # exceced this threshold, will be ignored
+  minimum_estimated_depth: 0.1 # exceced this threshold, will be ignored
 
 
   # backend
   minimum_key_camera_frame_translation: 0.5
 
+  #robot base
+  robot_base: imu0
 
   # map
-  max_num_local_map_size: 100000
+  max_num_local_map_size: 2000000
 
   # relative config file name
   imu_config_name: "imu_config.yaml"
   camera_config_name: "camera_config.yaml"
   visualizer_config_name: "visualizer_config.yaml"
+  comparison_config_name: "comparison.yaml"
 
   # model
   model_path: /root/catkin_ws/src/modules_vins/models
 
-  #groundtruth path
-  max_tolerant_gt_time_offset:0.05
-  groundtruth_path: /root/datasets2/BotanicGarden/1018-00/1018_00_GT_output.txt
-  T_cam_GT: #transformation from camera to GT, we only need rotation actually
-    - [0.0238743541600432, -0.999707744440396, 0.00360642510766516, 0.138922870923538]
-    - [-0.00736968896588375, -0.00378431903190059, -0.999965147452649, -0.177101909101325]
-    - [0.999687515506770, 0.0238486947027063, -0.00745791352160211, -0.126685267545513]
-    - [0.0,0.0,0.0,1.0]
+  #robot_base, it have to be the name of each sensor, like imu0, cam0, cam1, or even comparison, like GT, VINSFUSION
+  robot_base: "imu0"
 
+  #groundtruth path
+  use_comparison_pose_for_pose_estimation: 0 #if you set this to 1, then set robot_base to corresponding frame
+  # comparison_pose_idx_for_pose_estimation: 0 # GT means ground truth
 
   # output
   output_dir: /root/catkin_ws/src/modules_vins/evaluation_results

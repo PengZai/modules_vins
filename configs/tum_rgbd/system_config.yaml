@@ -8,22 +8,14 @@ system:
   max_color_sensor_depth_pair_time_offset: 0.02 # max time offset for image pair for bgr and depth (unit: second)
 
   # feature detect and tracking
-  num_feature_points: 500
-  scale_factor: 1.2
-  level_pyramid: 8
-  threshold_for_tracking_descriptor_in_time:30.0 # for tracking cross time
-  matching_ratio: 2.0 # distance of matching point < min_distance * matching_ratio
+  feature_and_tracker_config_name: feature_and_tracker_config.yaml
 
   #initialization and visual frontend
-  maximum_num_fail: 2
-  minimum_camera_frame_num_in_ref_camera_frame: 2
-  minimum_cumulative_translation: 0.1
+  threshold_for_pnp_pose_log_norm: 0.2 # estimated pose can't too large
+  min_inliers: 20
+  minimum_cumulative_translation: 0.2
+  maximum_num_fail: 2  # when number of fail of pose estimation  reach this, state turn to get lost.
 
-
-  # initialized pose estimation
-  threshold_for_pnp_pose_log_norm: 1.0 # estimated pose can't too large
-  min_inliers: 10
-  max_num_backward_reference: 5 #when pose estimation fail, max number of frame we could take as reference in backward
 
 
   # backend
@@ -42,10 +34,13 @@ system:
   # model
   model_path: /root/catkin_ws/src/modules_vins/models
 
+  # ground truth
+  use_groundtruth_pose: 1
+  set_first_GT_pose_in_origin: 1
   #groundtruth path
-  max_tolerant_gt_time_offset:0.02
+  max_tolerant_gt_time_offset: 0.02
   # please remember switch gt file
-  groundtruth_path: /root/datasets/tum/rgbd_dataset_freiburg1_desk/groundtruth.txt
+  groundtruth_path: /root/datasets2/tum/rgbd_dataset_freiburg1_desk/groundtruth.txt
   T_cam_GT: #transformation from camera to GT, we only need rotation actually
     - [1, 0, 0, 0]
     - [0, 1, 0, 0]

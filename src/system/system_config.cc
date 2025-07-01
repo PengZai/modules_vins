@@ -27,11 +27,11 @@ void SystemConfig::loadFromPath(const std::string &config_path){
         std::exit(EXIT_FAILURE);
     }
 
-    cv::FileNodeIterator it = camera_config->file_storage_->root().begin();
-    for(size_t i= 0; i < this->params_->max_cameras_; i++, it++){
+    cv::FileNodeIterator camera_params_it = camera_config->file_storage_->root().begin();
+    for(size_t i= 0; i < this->params_->max_cameras_; i++, camera_params_it++){
         
         std::shared_ptr<CameraParameters> camera_params = std::make_shared<CameraParameters>();
-        std::string node_name = (*it).name();
+        std::string node_name = (*camera_params_it).name();
         camera_params->loadFromNode(std::make_shared<cv::FileNode>((*camera_config->file_storage_)[node_name]));
         camera_config->params_vector_.emplace_back(camera_params);
         
@@ -39,6 +39,25 @@ void SystemConfig::loadFromPath(const std::string &config_path){
 
 
     camera_config->calculateExtrinsicsAndProjectionMatrixBetweenCameras();
+
+    // load benchmark configs and parameters
+    std::string comparison_config_path = relative_folder + this->params_->comparison_config_name_;
+    std::shared_ptr<ComparisonConfig> comparison_config = std::make_shared<ComparisonConfig>();
+    setComparisonConfig(comparison_config);
+    comparison_config->loadConfigFromPath(comparison_config_path);
+
+    for (cv::FileNodeIterator comparison_params_it = comparison_config->file_storage_->root().begin(); comparison_params_it != comparison_config->file_storage_->root().end(); ++comparison_params_it) {
+
+        std::shared_ptr<ComparisonParameters> comparison_params = std::make_shared<ComparisonParameters>();
+        std::string node_name = (*comparison_params_it).name(); 
+        comparison_params->setName(node_name);
+        comparison_params->loadFromNode(std::make_shared<cv::FileNode>((*comparison_config->file_storage_)[node_name]));
+        comparison_config->params_vector_.emplace_back(comparison_params);
+
+        LOG(INFO) << GREEN << "loaded comparison : " << node_name << RESET;
+    }
+
+
 
     // load feature and tracker configs and their parameters
     std::string feature_and_tracker_config_path = relative_folder + this->params_->feature_and_tracker_config_name_;
@@ -104,6 +123,11 @@ void SystemConfig::setFeatureAndTrackerConfig(const std::shared_ptr<FeatureAndTr
     this->feature_and_tracker_config_ = feature_and_tracker_config;
 }
 
+void SystemConfig::setComparisonConfig(const std::shared_ptr<ComparisonConfig> benchmark_config){
+    this->comparison_config_ = benchmark_config;
+}
+
+
 
 void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     
@@ -116,16 +140,6 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     parse("max_stereo_time_offset", this->max_stereo_time_offset_);
     parse("max_color_sensor_depth_pair_time_offset", this->max_color_sensor_depth_pair_time_offset_);
 
-
-    // feature detect and tracking
-    parse("num_feature_points", this->num_feature_points_);
-    parse("scale_factor", this->scale_factor_);
-    parse("level_pyramid", this->level_pyramid_);
-
-    
-    parse("threshold_for_tracking_descriptor_in_time", this->threshold_for_tracking_descriptor_in_time_);
-    parse("threshold_for_tracking_descriptor_in_frame", this->threshold_for_tracking_descriptor_in_frame_);
-    parse("matching_ratio", this->matching_ratio_);
 
 
     // initialized pose estimation
@@ -142,25 +156,27 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     //backend
     parse("minimum_key_camera_frame_translation", this->minimum_key_camera_frame_translation_);
 
-    
-
-
     //map
     parse("max_num_local_map_size", this->max_num_local_map_size_);
 
-    
+    //depth
+    parse("maximum_estimated_depth", this->maximum_estimated_depth_);
+    parse("minimum_estimated_depth", this->minimum_estimated_depth_);
 
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);
     parse("visualizer_config_name", this->visualizer_config_name_);
     parse("feature_and_tracker_config_name", this->feature_and_tracker_config_name_);
+    parse("comparison_config_name", this->comparison_config_name_);
 
     parse("model_path", this->model_path_);
+
+    parse("use_comparison_pose_for_pose_estimation", this->use_comparison_pose_for_pose_estimation_);
+    parse("comparison_pose_idx_for_pose_estimation", this->comparison_pose_idx_for_pose_estimation_);
+
     parse("output_dir", this->output_dir_);
 
-    parse("max_tolerant_gt_time_offset", this->max_tolerant_gt_time_offset_);
-    parse("groundtruth_path", this->groundtruth_path_);
-    parse("T_cam_GT", this->T_cam_GT_);
+     
 
     
     parse("check_triangulation", this->check_triangulation_);

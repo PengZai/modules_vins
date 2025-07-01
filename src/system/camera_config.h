@@ -20,7 +20,6 @@ class CameraParameters : public Parameters
 
         CameraParameters();
 
-        void createMapFrompixel2UndistoredNormalizedPlane();
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
         const Eigen::Matrix3d getIntrinsicsMatrix();
         const cv::Mat getCVIntrinsicsMatrix();
@@ -33,7 +32,6 @@ class CameraParameters : public Parameters
         Eigen::VectorXd resolution_;
         Eigen::VectorXd distortion_coeffs_;
         Eigen::VectorXd intrinsics_;
-        std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> MapVU2UndisXY_;
 
         std::string rgb_rostopic_;
 
@@ -58,14 +56,11 @@ class CameraParameters : public Parameters
         bool use_learned_semantic_segmentation_;
         std::string model_name_learned_semantic_segmentation_;
         std::string learned_semantic_segmentation_rostopic_;
-
      
         std::string output_rostopic_;
         std::string camera_model_;
         std::string distortion_model_;
         
-
-
 
 };
 

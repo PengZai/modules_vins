@@ -25,13 +25,13 @@ class PangolinVisualizer{
 
     PangolinVisualizer(const std::shared_ptr<SystemConfig> &sys_config);
     void setMap(const std::shared_ptr<Map> &map);
-    void publish(const State& state);
-    void publishPoses(const State &state);
-    void publishKeyPoses(const State &state);
+    void publish(const std::shared_ptr<State> &state);
+    void publishPoses(const std::shared_ptr<State> &state);
+    void publishKeyPoses(const std::shared_ptr<State> &state);
     void drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Vector3i &bgr, bool drawAxis = true);
-    void publishMapPoints(const State& state);
+    void publishMapPoints(const std::shared_ptr<State> &state);
     void drawPoint(const Eigen::Vector3d &pt3d, const Eigen::Vector3i &bgr);
-    void publishTrajectories(const State &state);
+    void publishTrajectories(const std::shared_ptr<State> &state);
     void publishTrajectory(std::map<double, Sophus::SE3<double>> timestamp_T_c_w_map, const Eigen::Vector3i &bgr);
     void publishGTTrajectory(std::map<double, Sophus::SE3<double>> timestamp_T_c_w_map, const Eigen::Vector3i &bgr);
     void drawLine(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2, const Eigen::Vector3i &bgr);

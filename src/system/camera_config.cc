@@ -51,44 +51,44 @@ CameraParameters::CameraParameters():
 
 
 
-void CameraParameters::createMapFrompixel2UndistoredNormalizedPlane(){
+// void CameraParameters::createMapFrompixel2UndistoredNormalizedPlane(){
 
-    const int w = resolution_(0);
-    const int h = resolution_(1);
-    // const double fx = intrinsics_(0);
-    // const double fy = intrinsics_(1);
-    // const double cx = intrinsics_(2);
-    // const double cy = intrinsics_(3);
+//     const int w = resolution_(0);
+//     const int h = resolution_(1);
+//     // const double fx = intrinsics_(0);
+//     // const double fy = intrinsics_(1);
+//     // const double cx = intrinsics_(2);
+//     // const double cy = intrinsics_(3);
 
-    // const double k1 = distortion_coeffs_(0);
-    // const double k2 = distortion_coeffs_(1);
-    // const double p1 = distortion_coeffs_(2);
-    // const double p2 = distortion_coeffs_(3);
+//     // const double k1 = distortion_coeffs_(0);
+//     // const double k2 = distortion_coeffs_(1);
+//     // const double p1 = distortion_coeffs_(2);
+//     // const double p2 = distortion_coeffs_(3);
 
-    cv::Mat cv_K = getCVIntrinsicsMatrix();
-    cv::Mat cv_distortion_coeffs = getCVDistortionCoeffs();
-    std::vector<cv::Point2f> pixels;
-    std::vector<cv::Point2f> undistorted_points;
+//     cv::Mat cv_K = getCVIntrinsicsMatrix();
+//     cv::Mat cv_distortion_coeffs = getCVDistortionCoeffs();
+//     std::vector<cv::Point2f> pixels;
+//     std::vector<cv::Point2f> undistorted_points;
 
-    MapVU2UndisXY_ = std::make_shared<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>>(h, w);
+//     MapVU2UndisXY_ = std::make_shared<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>>(h, w);
 
-    for(int v=0;v<h;v++){
-        for(int u=0;u<w;u++){
-            pixels.push_back(cv::Point2f(u, v));
-        }
-    }
-    cv::undistortPoints(pixels, undistorted_points, cv_K, cv_distortion_coeffs);
+//     for(int v=0;v<h;v++){
+//         for(int u=0;u<w;u++){
+//             pixels.push_back(cv::Point2f(u, v));
+//         }
+//     }
+//     cv::undistortPoints(pixels, undistorted_points, cv_K, cv_distortion_coeffs);
 
-    int idx = 0;
-    for(int v=0;v<h;v++){
-        for(int u=0;u<w;u++){
-            (*MapVU2UndisXY_)(v,u) = Eigen::Vector2d(undistorted_points[idx].x, undistorted_points[idx].y);
-            idx++;
-        }
-    }
+//     int idx = 0;
+//     for(int v=0;v<h;v++){
+//         for(int u=0;u<w;u++){
+//             (*MapVU2UndisXY_)(v,u) = Eigen::Vector2d(undistorted_points[idx].x, undistorted_points[idx].y);
+//             idx++;
+//         }
+//     }
 
 
-}
+// }
 
 
 const Eigen::VectorXd CameraParameters::getDistortionCoeffs(){
@@ -173,7 +173,6 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
 
     parse("T_imu_cam", this->T_imu_cam_);
 
-    createMapFrompixel2UndistoredNormalizedPlane();
 
 
 }

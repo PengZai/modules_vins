@@ -4,17 +4,18 @@
 #include <ceres/rotation.h> 
 #include <sophus/se3.hpp>
 #include <sophus/so3.hpp>
+#include "../log/logging.h"
 
 namespace modules_vins
 {
 
-bool bundleAdjustmentPoseOnlyCeres(
-  std::vector<Eigen::Vector3d> &points_3d,
-  std::vector<Eigen::Vector2d> &points_2d,
-  Sophus::SE3d &pose
-);
+// int bundleAdjustmentPoseOnlyCeres(
+//   std::vector<Eigen::Vector3d> &points_3d,
+//   std::vector<Eigen::Vector2d> &points_2d,
+//   Sophus::SE3d &pose
+// );
 
-bool bundleAdjustmentPoseOnlyCeres(
+int bundleAdjustmentPoseOnlyCeres(
   std::vector<Eigen::Vector3d> &points_3d,
   std::vector<Eigen::Vector2d> &points_2d,
   const Eigen::Matrix<double, 3, 3> &K,

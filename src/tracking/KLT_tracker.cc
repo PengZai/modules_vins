@@ -25,20 +25,20 @@ void KLTTracker::matching(const std::shared_ptr<Image> &img0, const std::shared_
     int min_match_trainIdx = 1e20;
     int max_match_trainIdx = -1;
 
-    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img0->sensor_id_, img1->sensor_id_);
     Eigen::Matrix<double, 3, 3> K_j = this->sys_config_->camera_config_->params_vector_.at(img1->sensor_id_)->getIntrinsicsMatrix();         
 
 
     for(size_t i=0; i<img0->keypoint_vector_.size();i++){
         std::shared_ptr<KeyPoint> &kp = img0->keypoint_vector_.at(i);
-        pt2fs_from_img0.push_back(kp->cv_keypoint_.pt);
+        cv::Point2f &pt2f_from_img0 = kp->cv_keypoint_.pt;
+        pt2fs_from_img0.push_back(pt2f_from_img0);
 
         if(kp->map_point_ptr_){
             std::shared_ptr<MapPoint> mp = kp->map_point_ptr_;
-            Eigen::Matrix<double, 4,4> T_j_w = T_cam_j_cam_i * img0->T_c_w_.matrix();
+            Eigen::Matrix<double, 4,4> T_1_w = img1->T_c_w_.matrix();
             Eigen::Vector4d pt4d;
             pt4d << mp->pt3d_, 1.0;
-            Eigen::Vector3d pj =  T_j_w.block<3,4>(0,0) * pt4d;
+            Eigen::Vector3d pj =  T_1_w.block<3,4>(0,0) * pt4d;
             Eigen::Vector2d reprojected_pt = camera2pixel(pj, K_j);
             pt2fs_from_img1.push_back(cv::Point2f(reprojected_pt(0), reprojected_pt(1)));
 
@@ -126,13 +126,15 @@ void KLTTracker::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
         return ;
     }
 
+    ref_camera_frame->cleanTrackInTimeRelationship();
+    camera_frame->cleanFeaturePoints();
+    camera_frame->cleanTrackInTimeRelationship();
+
     std::shared_ptr<Image> &img0_from_current_frame = camera_frame->image_vector_.at(0);
 
     std::shared_ptr<Image> &img0_from_ref_frame = ref_camera_frame->image_vector_.at(0);
     
-    ref_camera_frame->cleanTrackInTimeRelationship();
-    camera_frame->cleanFeaturePoints();
-    camera_frame->cleanTrackInTimeRelationship();
+
     // we track feature according to the feature in camera 0(left camera)
     std::vector<cv::DMatch> matches;
     this->matching(img0_from_ref_frame, img0_from_current_frame, matches, 

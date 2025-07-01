@@ -3,7 +3,7 @@
 visualizer:
   # visualization tool
   use_opencv_vis: 1
-  use_pangolin_vis: 0
+  use_pangolin_vis: 1
   use_rviz_vis: 1
 
 opencv_visualizer:
@@ -27,8 +27,8 @@ pangolin_visualizer:
   viewer_eye_positionX: 0.0
   viewer_eye_positionY: -0.7
   viewer_eye_positionZ: -1.8
-  show_groundtruth_trajectory: 1
-  show_groundtruth_pose: 1
+  show_comparison_trajectory: 1
+  show_comparison_pose: 1
 
 
 rviz_visualizer:
@@ -36,10 +36,10 @@ rviz_visualizer:
   output_key_frame_poses_rostopic: /output/key_camera_poses
   output_trajectory_rostopic: /output/trajectory
   output_tracked_map_points_rostopic: /output/tracked_points
-  show_groundtruth_trajectory: 1
-  output_groundtruth_trajectory_rostopic: /output/groundtruth_trajectory
-  show_groundtruth_pose: 1
-  output_groundtruth_pose_rostopic: /output/groundtruth_pose
+  show_comparison_trajectory: 1
+  output_comparison_trajectory_rostopic: /output/comparison_trajectory
+  show_comparison_pose: 1
+  output_comparison_pose_rostopic: /output/comparison_pose
 
 
   

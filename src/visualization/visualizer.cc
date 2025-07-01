@@ -64,7 +64,7 @@ void Visualizer::setMap(const std::shared_ptr<Map> &map){
 
 
 
-void Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const State &state){
+void Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state){
 
     
     if(this->sys_config_->visualizer_config_->params_->use_opencv_vis_){

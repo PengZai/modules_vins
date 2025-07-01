@@ -11,13 +11,13 @@
     <arg name="config_path" default="$(find modules_vins)/configs/$(arg config)/system_config.yaml" />
 
     <arg name="dataset" default="rgbd_dataset_freiburg1_desk"/>
-    <arg name="bag_path" default="/root/datasets/tum/rgbd_dataset_freiburg1_desk/$(arg dataset).bag"/> -->
+    <arg name="bag_path" default="/root/datasets2/tum/rgbd_dataset_freiburg1_desk/$(arg dataset).bag"/> -->
 
     <!-- <arg name="config"      default="tum_rgbd" /> 
     <arg name="config_path" default="$(find modules_vins)/configs/$(arg config)/system_config.yaml" />
 
     <arg name="dataset" default="rgbd_dataset_freiburg2_rpy"/>
-    <arg name="bag_path" default="/root/datasets/tum/rgbd_dataset_freiburg2_rpy/$(arg dataset).bag"/> -->
+    <arg name="bag_path" default="/root/datasets2/tum/rgbd_dataset_freiburg2_rpy/$(arg dataset).bag"/> -->
 
 
 

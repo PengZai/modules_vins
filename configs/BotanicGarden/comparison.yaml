@@ -1,0 +1,31 @@
+%YAML:1.0 # need to specify the file type at the top!
+
+
+GT:
+  enable: 1
+  max_tolerant_time_offset: 1
+  color: [255, 0, 0]
+  set_first_pose_in_origin: 0
+  path: /root/datasets2/BotanicGarden/1018-00/1018_00_GT_output.txt
+  T_cam_comparison: #transformation from camera to comparison, we only need rotation actually
+    # - [0.02387435, -0.00736969,  0.99968752,  0.1220238]
+    # - [-0.99970774, -0.00378432,  0.02384869,  0.14123334]
+    # - [0.00360643, -0.99996515, -0.00745791, -0.17854156]
+    # - [0.0,0.0,0.0,1.0]
+    - [0.0238743541600432, -0.999707744440396, 0.00360642510766516, 0.138922870923538]
+    - [-0.00736968896588375, -0.00378431903190059, -0.999965147452649, -0.177101909101325]
+    - [0.999687515506770, 0.0238486947027063, -0.00745791352160211, -0.126685267545513]
+    - [0.0,0.0,0.0,1.0]
+
+VINSFUSION:
+  enable: 1
+  max_tolerant_time_offset: 1
+  color: [0, 0, 255]
+  set_first_pose_in_origin: 0
+  path: /root/datasets2/BotanicGarden/1018-00/1018_00_GT_output.txt
+  T_cam_comparison: #transformation from camera to comparison, we only need rotation actually
+    - [0.0238743541600432, -0.999707744440396, 0.00360642510766516, 0.138922870923538]
+    - [-0.00736968896588375, -0.00378431903190059, -0.999965147452649, -0.177101909101325]
+    - [0.999687515506770, 0.0238486947027063, -0.00745791352160211, -0.126685267545513]
+    - [0.0,0.0,0.0,1.0]
+  

@@ -201,7 +201,9 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
        const Eigen::Vector3d pt3d_in_cam = img_0->T_c_w_ * map_point->pt3d_;
        const cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
        const double d = pt3d_in_cam.z();
-       if(img_0->isInImage(reprojected_pixel) && d > 0){
+       if(img_0->isInImage(reprojected_pixel) && 
+        d > this->sys_config_->params_->minimum_estimated_depth_ && 
+        d < this->sys_config_->params_->maximum_estimated_depth_){
 
         valid_depths.emplace_back(d);
         valid_pts2d.emplace_back(reprojected_pixel);
@@ -234,11 +236,11 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
                 color = cv::Scalar(red, green, blue);
             }
             else{
-
+                // just want to show most of point, these white point also valid
                 color = cv::Scalar(255,255,255);
             }
             
-            cv::circle (img_0_color_data, valid_pt2d, 2, color, -1);
+            cv::circle(img_0_color_data, valid_pt2d, 4, color, -1);
 
         }
     }
@@ -443,24 +445,30 @@ void OpenCVVisualizer::publishSemanticSegmentation(const std::shared_ptr<CameraF
 
 void OpenCVVisualizer::publishTrackingInTime(const std::shared_ptr<CameraFrame> &camera_frame){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
-    cv::Mat img_0_color_data = img_0->color_data_.clone();
+
+    if(camera_frame->ref_camera_frame_){
+
+        const std::shared_ptr<Image> &img_0 = camera_frame->ref_camera_frame_->image_vector_.at(0);
+        cv::Mat img_0_color_data = img_0->color_data_.clone();
 
 
-    for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
+        for(const std::shared_ptr<KeyPoint> &keypoint : img_0->keypoint_vector_){
 
-        if(keypoint->match_in_time_.trainIdx != -1){
+            if(keypoint->match_in_time_.trainIdx != -1){
 
-            drawTrackingPointPattern(img_0_color_data, keypoint, this->GreenColor_);
+                drawTrackingPointPattern(img_0_color_data, keypoint, this->GreenColor_);
+            }
+            else{
+
+                drawTrackingPointPattern(img_0_color_data, keypoint, this->RedColor_);
+            }
+            
         }
-        else{
 
-            drawTrackingPointPattern(img_0_color_data, keypoint, this->RedColor_);
-        }
-        
+        cv::imshow("tracking point in time for img 0 from reference frame", img_0_color_data);
+
     }
-
-    cv::imshow("tracking point in time for image 0", img_0_color_data);
+    
 
 }
 

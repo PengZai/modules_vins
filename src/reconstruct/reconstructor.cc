@@ -41,9 +41,7 @@ void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     for(size_t i=0;i<(int)camera_frame->image_vector_.size();i++){
 
         std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
-        if(img_i->id_ == 2){
-            LOG(INFO) << "just test";
-        }
+
         if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_sensor_depth_){
             this->sensor_depth_reconstructor_->reconstruct(img_i);
         }

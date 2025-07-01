@@ -64,6 +64,9 @@ int main(int argc, char* argv[]) {
 
     sys.setConfig(sys_config);
 
+    std::shared_ptr<modules_vins::State> state = std::make_shared<modules_vins::State>(sys_config);
+    sys.setState(state);
+
     std::shared_ptr<modules_vins::DataPreprocesor> data_preprocesor = std::make_shared<modules_vins::DataPreprocesor>();
 
     std::shared_ptr<modules_vins::FeaturePoint> feature_point = std::make_shared<modules_vins::GoodFeature>(sys_config);
@@ -99,6 +102,7 @@ int main(int argc, char* argv[]) {
     visual_frontend->setPoseEstimator(pose_estimator);
     visual_frontend->setMap(map);
     visual_frontend->setVisualizer(visualizer);
+    visual_frontend->setState(state);
 
 
     sys.setVisualFrontend(visual_frontend);
@@ -117,9 +121,7 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<modules_vins::FileDataLoader> file_dataloader = std::make_shared<modules_vins::FileDataLoader>(sys_config);
 
-    std::map<double, Sophus::SE3<double>> timestamp_GT_T_full_map;
-    file_dataloader->load_groundtruth(sys_config->params_->groundtruth_path_, timestamp_GT_T_full_map);
-    sys.setGTState(timestamp_GT_T_full_map);
+    file_dataloader->load_trajectories(state);
 
     for(size_t i=0; i < msg_groups_ready_for_process.size(); i++){
 

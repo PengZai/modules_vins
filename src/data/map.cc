@@ -131,8 +131,20 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
                     count_new_mappoint++;
                 }
             }
-   
+    }
+
+    for(size_t i=0; i < camera_frame->image_vector_.size();i++){
         
+        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+
+        for(size_t j=0;j<img_i->mappoint_vector_.size();j++){
+                
+                const std::shared_ptr<MapPoint> &mp =  img_i->mappoint_vector_.at(j);
+                if(mp != nullptr && !this->isExistedMapPoint(mp)){
+                    this->insertMapPoint(mp);
+                    count_new_mappoint++;
+                }
+            }
 
     }
 

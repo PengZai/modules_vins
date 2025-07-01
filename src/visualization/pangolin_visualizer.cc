@@ -62,7 +62,7 @@ void PangolinVisualizer::setMap(const std::shared_ptr<Map> &map){
 }
 
 
-void PangolinVisualizer::publish(const State &state){
+void PangolinVisualizer::publish(const std::shared_ptr<State> &state){
 
 
     if(!pangolin::ShouldQuit()){
@@ -86,11 +86,11 @@ void PangolinVisualizer::publish(const State &state){
 }
 
 
-void PangolinVisualizer::publishKeyPoses(const State &state){
+void PangolinVisualizer::publishKeyPoses(const std::shared_ptr<State> &state){
 
-    if(!state.timestamp_key_T_c_w_map_.empty()){
+    if(!state->timestamp_key_T_c_w_map_.empty()){
 
-        for (const auto& [timestamp, T_c_w] : state.timestamp_key_T_c_w_map_) {
+        for (const auto& [timestamp, T_c_w] : state->timestamp_key_T_c_w_map_) {
 
             drawFrame(T_c_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
 
@@ -102,12 +102,12 @@ void PangolinVisualizer::publishKeyPoses(const State &state){
 
 
 
-void PangolinVisualizer::publishPoses(const State &state){
+void PangolinVisualizer::publishPoses(const std::shared_ptr<State> &state){
 
 
-    if(!state.timestamp_T_c_w_map_.empty()){
+    if(!state->timestamp_T_c_w_map_.empty()){
 
-        auto it = state.timestamp_T_c_w_map_.rbegin();
+        auto it = state->timestamp_T_c_w_map_.rbegin();
         const double newest_timestamp = it->first;
         const Sophus::SE3<double> &newest_T_c_w = it->second;
 
@@ -118,39 +118,58 @@ void PangolinVisualizer::publishPoses(const State &state){
         }
 
 
-        if(this->sys_config_->visualizer_config_->pangolin_params_->show_groundtruth_trajectory_){
-            
-            double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
-            if(synchronized_gt_timestamp == -1){
-                return;
-            }
+         if(this->sys_config_->visualizer_config_->rviz_params_->show_comparison_pose_){
 
-            const Sophus::SE3<double> &synchronized_GT_T_c_w = state.timestamp_GT_T_c_w_map_.at(synchronized_gt_timestamp);
-            drawFrame(synchronized_GT_T_c_w.matrix(), Eigen::Vector3i(0,0,255));
+            for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
+
+                std::map<double, Sophus::SE3<double>>  timestamp_comparison_T_c_w_map = state->timestamp_comparison_T_c_w_map_vector_.at(idx);
+
+                double synchronized_gt_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
+                    this->sys_config_->comparison_config_->params_vector_.at(idx)->max_tolerant_time_offset_, 
+                    state->timestamp_comparison_T_w_c_full_map_vector_.at(idx));
+
+                if(synchronized_gt_timestamp == -1){
+                    return;
+                }
+                const Sophus::SE3<double> &synchronized_GT_T_c_w = timestamp_comparison_T_c_w_map.at(synchronized_gt_timestamp);
+
+                Eigen::VectorXd color = this->sys_config_->comparison_config_->params_vector_.at(idx)->color_;
+                drawFrame(synchronized_GT_T_c_w.inverse().matrix(), Eigen::Vector3i(color(0), color(1), color(2)));
+            }
 
         }
     }
 }
 
-void PangolinVisualizer::publishTrajectories(const State &state){
+void PangolinVisualizer::publishTrajectories(const std::shared_ptr<State> &state){
 
-    if(!state.timestamp_T_c_w_map_.empty()){
-        publishTrajectory(state.timestamp_T_c_w_map_, Eigen::Vector3i(0,255,0));
-        if(this->sys_config_->visualizer_config_->pangolin_params_->show_groundtruth_trajectory_){
+    if(!state->timestamp_T_c_w_map_.empty()){
+         publishTrajectory(state->timestamp_T_c_w_map_, Eigen::Vector3i(0,255,0));
+         if(this->sys_config_->visualizer_config_->pangolin_params_->show_comparison_trajectory_){
 
-            auto it = state.timestamp_T_c_w_map_.rbegin();
+            auto it = state->timestamp_T_c_w_map_.rbegin();
             const double newest_timestamp = it->first;
-            double synchronized_gt_timestamp = state.findSynchronizedPoseTimestamp(newest_timestamp, this->sys_config_->params_->max_tolerant_gt_time_offset_);
-            if(synchronized_gt_timestamp == -1){
-                return;
-            }
-    
-            auto it_end = state.timestamp_GT_T_c_w_map_.find(synchronized_gt_timestamp);
-    
-            std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_sub_map(state.timestamp_GT_T_c_w_map_.begin(), it_end);
-            
-            publishGTTrajectory(timestamp_GT_T_c_w_sub_map, Eigen::Vector3i(0,0,255));
-        }   
+
+            for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
+
+                std::map<double, Sophus::SE3<double>>  timestamp_comparison_T_c_w_map = state->timestamp_comparison_T_c_w_map_vector_.at(idx);
+
+                double synchronized_gt_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
+                    this->sys_config_->comparison_config_->params_vector_.at(idx)->max_tolerant_time_offset_, 
+                    state->timestamp_comparison_T_w_c_full_map_vector_.at(idx));
+                    
+                if(synchronized_gt_timestamp == -1){
+                    return;
+                }
+
+                auto it_end = timestamp_comparison_T_c_w_map.find(synchronized_gt_timestamp);
+
+                std::map<double, Sophus::SE3<double>> timestamp_comparison_T_c_w_sub_map(timestamp_comparison_T_c_w_map.begin(), it_end);
+                
+                Eigen::VectorXd color = this->sys_config_->comparison_config_->params_vector_.at(idx)->color_;
+                publishGTTrajectory(timestamp_comparison_T_c_w_sub_map, Eigen::Vector3i(color(0), color(1), color(2)));
+            }  
+         } 
     }
 
 }
@@ -195,7 +214,7 @@ void PangolinVisualizer::publishGTTrajectory(std::map<double, Sophus::SE3<double
 
         for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
             
-            const Eigen::Vector3d &translation = T_c_w.translation();
+            const Eigen::Vector3d &translation = T_c_w.inverse().translation();
             drawPoint(translation, bgr);
 
             if(is_first == true){
@@ -288,10 +307,10 @@ void PangolinVisualizer::drawFrame(const Eigen::Matrix4d &T_w_c, const Eigen::Ve
 }
 
 
-void PangolinVisualizer::publishMapPoints(const State &state){
+void PangolinVisualizer::publishMapPoints(const std::shared_ptr<State> &state){
 
 
-    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = state.map_->getMapPoints();
+    const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = state->map_->getMapPoints();
 
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;

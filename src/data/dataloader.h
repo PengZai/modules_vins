@@ -28,7 +28,8 @@ class FileDataLoader{
 
     public:
     FileDataLoader(const std::shared_ptr<SystemConfig> &sys_config);
-    void load_groundtruth(const std::string &path_to_file, std::map<double, Sophus::SE3<double>> &timestamp_GT_T_map);
+    void load_trajectories(const std::shared_ptr<State> &state);
+    void load_trajectory(const std::string &path_to_file, std::map<double, Sophus::SE3<double>> &timestamp_T_full_map);
 
     public:
     std::shared_ptr<SystemConfig> sys_config_;

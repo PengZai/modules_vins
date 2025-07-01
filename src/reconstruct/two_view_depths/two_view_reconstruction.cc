@@ -126,7 +126,11 @@ bool TwoViewReconstructor::triangulatePoint(const std::vector<Eigen::Matrix<doub
     // return false;
     // std::cout << "condition number : " << svd.singularValues()[0] / svd.singularValues()[3] << std::endl;
 
-    if (svd.singularValues()[3] / svd.singularValues()[2] > 1e-2 || pt_world[2] <= 0) {
+    if (svd.singularValues()[3] / svd.singularValues()[2] > 1e-2 
+        || pt_world[2] < 0
+        || pt_world[2] < this->sys_config_->params_->minimum_estimated_depth_
+        || pt_world[2] > this->sys_config_->params_->maximum_estimated_depth_
+    ) {
         // solution qualtiy is not good, give up
         return false;
     }
@@ -169,8 +173,9 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
 
         if(kp_from_img_i->map_point_ptr_ != nullptr){
 
-            // cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
-            // kp_from_img_i->map_point_ptr_->setColor(bgr[0], bgr[1], bgr[2]);
+            cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);
+            kp_from_img_i->map_point_ptr_->setColor(bgr[0], bgr[1], bgr[2]);
+            kp_from_img_j->map_point_ptr_ = kp_from_img_i->map_point_ptr_;
 
             existed_mappoint_count++;
             continue;
@@ -218,7 +223,7 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
 
     }
 
-    LOG(INFO) << GREEN << "there are " <<  existed_mappoint_count << " existed mappoints , " << triangulated_point_count << " and triangulated points is successful" << RESET;
+    LOG(INFO) << GREEN << "there are " <<  existed_mappoint_count << " existed mappoints , and " << triangulated_point_count << " triangulated points is successful" << RESET;
 
 
 

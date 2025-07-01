@@ -25,14 +25,11 @@ class Initializer{
 
     Initializer(const std::shared_ptr<SystemConfig> sys_config);
     ~Initializer() = default;
-    bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame, State &state);
+    bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state);
 
     std::shared_ptr<SystemConfig> sys_config_;
 
 
-
-    protected:
-    Sophus::SE3<double> T_cam_GT_;
 
 
 };

@@ -38,7 +38,8 @@ class Image{
         void setSensorDepth(const cv::Mat &sensor_depth);
         void setTcw(const Sophus::SE3<double> T_c_w);
         void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
-        void setMapVU2UndisXY(const std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> &MapVU2UndisXY);
+        void setVelocityTcw(const Sophus::Vector6d Velocity_T_c_w);
+        void setTcc0Extrinsic(const Sophus::SE3<double> T_c_c0);
 
         double getPointDepthFromSensor(const cv::Point2f &pt);
         void cleanTrackInTimeRelationship();
@@ -78,9 +79,9 @@ class Image{
         cv::Mat sensor_depth_;
         // std::vector<cv::KeyPoint> cv_keypoint_vector_;
 
-        std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> MapVU2UndisXY_;
 
         std::vector<std::shared_ptr<KeyPoint>> keypoint_vector_;
+        std::vector<std::shared_ptr<MapPoint>> mappoint_vector_;
 
         // for yolo object detection
         std::vector<BoxOutput> box_outputs_;
@@ -96,7 +97,8 @@ class Image{
 
         // Eigen::Matrix<double, 4, 4> T_c_w_;
         Sophus::SE3<double> T_c_w_;
-
+        Sophus::Vector6d Velocity_T_c_w_;
+        Sophus::SE3<double> T_c_c0_; // extrinsics between camera i to camera 0
 
 
         friend std::ostream& operator<<(std::ostream& os, const Image& img);
@@ -118,6 +120,9 @@ class CameraFrame {
     void cleanTrackInFrameRelationship();
     void setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches);
     void setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches);
+    void setTcwWithCamera0(const Sophus::SE3d &Tc0w);
+    void setCamera0VelocityWithCamera0Tcw();
+    void initializeTcwWithVelocity();
     void propogateMappointWitchMatchInTimeRelationship();
 
     void cleanFeaturePoints();
@@ -136,6 +141,10 @@ class CameraFrame {
         FAIL
     };
 
+
+    bool use_comparison_pose_for_pose_estimation_;
+    size_t comparison_pose_idx_for_pose_estimation_; 
+    
     bool is_key_camera_frame_;
 
     Status status_;

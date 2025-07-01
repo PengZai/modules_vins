@@ -39,13 +39,13 @@ class System {
         void setMap(const std::shared_ptr<Map> &map);
         void setRecorder(const std::shared_ptr<EVORecorder> &evo_recorder);
         void pushbackGTState(const Sophus::SE3<double> &GT_T_c_w);
-        void GT2CameraCoordinateAndSet(const std::map<double, Sophus::SE3<double>> &timestamp_GT_T_full_map);
+        void setState(const std::shared_ptr<State> &state);
         void setGTState(const std::map<double, Sophus::SE3<double>> timestamp_GT_T_c_w_map);
 
         void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr, const std::string &to_cv_dtype);
         void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr);
         
-        const State &getState() const;
+        const std::shared_ptr<State> &getState() const;
         void updateState(const std::shared_ptr<CameraFrame> &camera_frame);
         // msg0 and msg1 come from camera 0 and camera 1 respectively, 
         // in which msg0 and msg1 have been software synchronized
@@ -70,7 +70,7 @@ class System {
         std::shared_ptr<ros::NodeHandle> nh_;
         std::shared_ptr<EVORecorder> evo_recorder_;
 
-        State state_;
+        std::shared_ptr<State> state_;
 
 
         enum Status{

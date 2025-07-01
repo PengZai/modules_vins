@@ -41,9 +41,8 @@ class PoseEstimator{
         const cv::Mat cv_distortion_coeffs);
 
     std::shared_ptr<SystemConfig> sys_config_;
-    Sophus::SE3<double> relative_T_curr_ref;
    
-    int pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
+    bool pipeline(const std::shared_ptr<CameraFrame> &camera_frame, int &num_inlier, double maximum_motion_norm);
 
 
 };

@@ -8,7 +8,7 @@ DescriptorTracker::DescriptorTracker(const std::shared_ptr<SystemConfig> &sys_co
 Tracker(sys_config)
 {
 
-    this->bf_ = std::make_shared<cv::BFMatcher>(cv::NORM_HAMMING);
+    this->bf_ = std::make_shared<cv::BFMatcher>(cv::NORM_HAMMING, true);
 
 }
 
@@ -50,12 +50,12 @@ void DescriptorTracker::matching(const std::shared_ptr<Image> &img0, const std::
             continue;
         }
 
-        if(y_distance_threshold != -1.0){
-            double y_distance = std::abs(img0->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt.y - img1->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt.y);
-            if(y_distance > y_distance_threshold){
-                continue;
-            }
-        }
+        // if(y_distance_threshold != -1.0){
+        //     double y_distance = std::abs(img0->keypoint_vector_[match.queryIdx]->cv_keypoint_.pt.y - img1->keypoint_vector_[match.trainIdx]->cv_keypoint_.pt.y);
+        //     if(y_distance > y_distance_threshold){
+        //         continue;
+        //     }
+        // }
         
 
         match.imgIdx = img1->id_; // Store index of the train image

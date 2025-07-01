@@ -59,6 +59,7 @@ class VisualFrontend{
     void updateStautsInitialized2Normal();
     void checkInitializationAndUpdateStatusNotInitialized2Initialized(const std::shared_ptr<CameraFrame> &camera_frame);
     void propogateMappointWitchMatchInTimeRelationship(const std::shared_ptr<CameraFrame> &camera_frame);
+    bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame);
 
     void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);
@@ -74,6 +75,7 @@ class VisualFrontend{
 
     protected:
     int fail_pose_estimation_num_;
+
     std::shared_ptr<SystemConfig> sys_config_;
     std::shared_ptr<State> state_;
     std::shared_ptr<Map> map_;

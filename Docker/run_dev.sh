@@ -3,7 +3,7 @@
 PROJECT_NAME="modules_vins"
 IMAGE_NAME="${PROJECT_NAME}:12.4.0-devel-ubuntu20.04"
 DATA_PATH="/media/${USER}/zhipeng_usb/datasets"
-DATA_PATH2="/media/${USER}/zhipeng_8t/datasets"
+DATA_PATH2="/media/${USER}/zhipeng_8t1/datasets"
 
 # Pick up config image key if specified
 if [[ ! -z "${CONFIG_DATA_PATH}" ]]; then

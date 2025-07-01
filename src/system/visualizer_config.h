@@ -40,10 +40,10 @@ class RVisParameters: public Parameters{
     std::string output_key_frame_poses_rostopic_;
     std::string output_trajectory_rostopic_;
     std::string output_tracked_map_points_rostopic_; 
-    bool show_groundtruth_trajectory_;
-    std::string output_groundtruth_trajectory_rostopic_;
-    bool show_groundtruth_pose_;
-    std::string output_groundtruth_pose_rostopic_;
+    bool show_comparison_trajectory_;
+    std::string output_comparison_trajectory_rostopic_;
+    bool show_comparison_pose_;
+    std::string output_comparison_pose_rostopic_;
     
 };
 
@@ -59,8 +59,8 @@ class PangolinParameters: public Parameters{
     double viewer_eye_positionX_;
     double viewer_eye_positionY_;
     double viewer_eye_positionZ_;
-    bool show_groundtruth_trajectory_;
-    bool show_groundtruth_pose_;
+    bool show_comparison_trajectory_;
+    bool show_comparison_pose_;
 };
 
 

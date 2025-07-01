@@ -10,6 +10,7 @@
 #include "imu_config.h"
 #include "visualizer_config.h"
 #include "feature_and_tracker_config.h"
+#include "comparison_config.h"
 
 namespace modules_vins
 {   
@@ -24,9 +25,6 @@ class SystemParameters: public Parameters{
         int max_cameras_; // number of cameras, 2 for stereo, 1 for monocular
         int max_imus_; // number of IMUs
 
-        int num_feature_points_;
-        double scale_factor_;
-        int level_pyramid_;
 
         int maximum_num_fail_;
         int minimum_num_in_ref_camera_frame_;
@@ -44,20 +42,25 @@ class SystemParameters: public Parameters{
         int max_fail_num_;
         int max_num_local_map_size_;
 
+        double maximum_estimated_depth_;
+        double minimum_estimated_depth_;
+
+
         double minimum_key_camera_frame_translation_;
 
         std::string feature_and_tracker_config_name_;
-
         std::string imu_config_name_;
         std::string camera_config_name_;
         std::string visualizer_config_name_;
+        std::string comparison_config_name_;
 
         std::string model_path_;
-        std::string output_dir_;
+        
 
-        double max_tolerant_gt_time_offset_;
-        std::string groundtruth_path_;
-        Eigen::Matrix4d T_cam_GT_;
+        bool use_comparison_pose_for_pose_estimation_;
+        int comparison_pose_idx_for_pose_estimation_;
+
+        std::string output_dir_;
 
 
         bool check_triangulation_;
@@ -80,6 +83,7 @@ class SystemConfig: public Config
         void setCameraConfig(const std::shared_ptr<CameraConfig> &camera_config);
         void setVisualizerConfig(const std::shared_ptr<VisualizerConfig> &visualizer_config);
         void setFeatureAndTrackerConfig(const std::shared_ptr<FeatureAndTrackerConfig> feature_and_tracker_config);
+        void setComparisonConfig(const std::shared_ptr<ComparisonConfig> comparison_config);
 
     
     public:
@@ -88,6 +92,8 @@ class SystemConfig: public Config
         std::shared_ptr<CameraConfig> camera_config_ = nullptr;
         std::shared_ptr<VisualizerConfig> visualizer_config_ = nullptr;
         std::shared_ptr<FeatureAndTrackerConfig> feature_and_tracker_config_ = nullptr;
+        std::shared_ptr<ComparisonConfig> comparison_config_ = nullptr;
+
 
     
 

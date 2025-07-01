@@ -30,6 +30,8 @@ sensor_id_(sensor_id),
 color_data_(data)
 {
     this->T_c_w_ = Sophus::SE3<double>();
+    this->T_c_c0_ = Sophus::SE3<double>();
+    this->Velocity_T_c_w_.setZero();
     this->depth_.create(this->color_data_.rows, this->color_data_.cols, CV_64FC1);
     this->depth_.setTo(-1);
 
@@ -94,7 +96,6 @@ void Image::appendAndUndistotKeyPoints(std::vector<cv::KeyPoint> &cv_key_points,
     for(size_t i=0; i < cv_key_points.size(); i++){
         const std::shared_ptr<KeyPoint> &kp = std::make_shared<KeyPoint>(cv_key_points[i]);
         kp->descriptor_ = descriptors.row(i);
-        Eigen::Vector2d norm_xy = (*this->MapVU2UndisXY_)(int(kp->cv_keypoint_.pt.y), int(kp->cv_keypoint_.pt.x));
         kp->undistorted_pt2d_ = undistorted_points[i];
         this->keypoint_vector_.emplace_back(kp);
     }
@@ -104,6 +105,9 @@ void Image::appendAndUndistotKeyPoints(std::vector<cv::KeyPoint> &cv_key_points,
 void Image::undistortPointsWithCVKeyPoints(std::vector<cv::KeyPoint> &cv_key_points, std::vector<cv::Point2d> &undistorted_points, const cv::Mat &cv_K, const cv::Mat &cv_distortion_coeffs){
 
     std::vector<cv::Point2d> pt2ds;
+    if(cv_key_points.size() == 0){
+        return;
+    }
     for (const auto& kp : cv_key_points) {
         pt2ds.push_back(kp.pt);
     }
@@ -216,10 +220,17 @@ void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
     this->T_c_w_ = Sophus::SE3<double>(Sophus::SO3<double>(rotation), position);
 }
 
-
-void Image::setMapVU2UndisXY(const std::shared_ptr<Eigen::Matrix<Eigen::Vector2d, Eigen::Dynamic, Eigen::Dynamic>> &MapVU2UndisXY){
-    this->MapVU2UndisXY_ = MapVU2UndisXY;
+void Image::setVelocityTcw(const Sophus::Vector6d Velocity_T_c_w){
+    this->Velocity_T_c_w_ = Velocity_T_c_w;
 }
+
+
+// set extrinsics from this camera to camera 0
+void Image::setTcc0Extrinsic(const Sophus::SE3<double> T_c_c0){
+    this->T_c_c0_ = T_c_c0;
+}
+
+
 
 void Image::cleanTrackInTimeRelationship(){
     this->matches_in_time_.clear();
@@ -284,6 +295,21 @@ CameraFrame()
 
 }
 
+// initialized Tcw with veclocity according to reference frame;
+void CameraFrame::initializeTcwWithVelocity(){
+
+    if(this->ref_camera_frame_ != nullptr){
+        const std::shared_ptr<Image> img_0_from_current_frame = this->image_vector_.at(0);
+        const std::shared_ptr<Image> img_0_from_ref_frame = this->ref_camera_frame_->image_vector_.at(0);
+        const double dt = img_0_from_current_frame->timestamp_ - img_0_from_ref_frame->timestamp_;
+        // const double dt = 1;
+        Sophus::SE3d relative_T_curr_ref = Sophus::SE3d::exp( img_0_from_ref_frame->Velocity_T_c_w_ * dt);
+        this->setTcwWithCamera0(relative_T_curr_ref * img_0_from_ref_frame->T_c_w_);
+
+        LOG(INFO) << GREEN << "initialize Tcw with velocity with :\n" << img_0_from_current_frame->T_c_w_.matrix() << RESET;
+    }
+
+}
 
 void CameraFrame::cleanTrackInFrameRelationship(){
 
@@ -337,6 +363,41 @@ void CameraFrame::setTrackInFrameRelationship(const std::vector<cv::DMatch> &mat
     }
 }
 
+void CameraFrame::setTcwWithCamera0(const Sophus::SE3d &Tc0w){
+
+    std::shared_ptr<Image> &img_0 = image_vector_.at(0);
+    img_0->setTcw(Tc0w);
+    
+    for(size_t i=1; i<this->image_vector_.size();i++){
+
+        std::shared_ptr<Image> &img_i = image_vector_.at(i);
+        img_i->setTcw(img_i->T_c_c0_ * img_0->T_c_w_);
+    }
+}
+
+void CameraFrame::setCamera0VelocityWithCamera0Tcw(){
+
+    if(this->ref_camera_frame_){
+
+        const std::shared_ptr<Image> img_0_from_current_frame = this->image_vector_.at(0);
+        const std::shared_ptr<Image> img_0_from_ref_frame = this->ref_camera_frame_->image_vector_.at(0);
+
+        const Sophus::SE3d T_c_r =  img_0_from_current_frame->T_c_w_ * img_0_from_ref_frame->T_c_w_.inverse();
+
+        double norm_T_c_r = T_c_r.log().norm();
+
+        const double dt = img_0_from_current_frame->timestamp_ - img_0_from_ref_frame->timestamp_;
+
+        const Sophus::Vector6d Velocity_T_c_w = T_c_r.log()/dt;
+        img_0_from_current_frame->setVelocityTcw(Velocity_T_c_w);
+
+    }
+    else{
+        LOG(INFO) << YELLOW << "lack of reference camera frame to set camera 0 velocity " << RESET;
+    }
+    
+}
+    
 
 void CameraFrame::propogateMappointWitchMatchInTimeRelationship(){
 
