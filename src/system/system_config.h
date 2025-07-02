@@ -23,13 +23,12 @@ class SystemParameters: public Parameters{
     public:
 
         std::string log_verbosity_; // VERBOSE, KEY, QUIET
-        int num_used_camera; // number of cameras, 2 for stereo, 1 for monocular
-        int num_used_imu; // number of IMUs
-        int num_used_lidar; // number of cameras, 2 for stereo, 1 for monocular
-        int num_used_imu; // number of IMUs
+        int num_used_camera_; // number of cameras, 2 for stereo, 1 for monocular
+        int num_used_imu_; // number of IMUs
+        int num_used_lidar_; // number of cameras, 2 for stereo, 1 for monocular
 
         int maximum_num_fail_;
-        int minimum_num_in_ref_camera_frame_;
+        int minimum_num_in_ref_frame_;
         double minimum_cumulative_translation_;
 
         double threshold_for_tracking_descriptor_in_time_;
@@ -48,7 +47,7 @@ class SystemParameters: public Parameters{
         double minimum_estimated_depth_;
 
 
-        double minimum_key_camera_frame_translation_;
+        double minimum_key_frame_translation_;
 
         std::string feature_and_tracker_config_name_;
 
@@ -96,7 +95,7 @@ class SystemConfig: public Config
         void setComparisonConfig(const std::shared_ptr<ComparisonConfig> comparison_config);
         void calculateTransformationsBetweenRobotBaseAndSensors();
         template<typename ConfigType, typename ParameterType>
-        void loadSensorConfigAndParameters(const std::shared_ptr<ConfigType> &sensor_config, const std::string &config_path, const int num_used_sensors);
+        void loadSensorConfigAndParameters(std::shared_ptr<ConfigType> &sensor_config, const std::string &config_path, int num_used_sensors);
 
     
     public:

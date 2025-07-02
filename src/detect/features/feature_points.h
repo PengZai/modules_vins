@@ -2,7 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d.hpp>
-#include "../../data/camera.h"
+#include "../../data/frame.h"
 #include "../../system/system_config.h"
 
 
@@ -18,7 +18,7 @@ class FeaturePoint{
 
 
     virtual void detect(const std::shared_ptr<Image> &img) = 0;
-    virtual void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
+    virtual void pipeline(const std::shared_ptr<Frame> &frame) = 0;
 
     protected:
     std::shared_ptr<SystemConfig> sys_config_;
@@ -33,7 +33,7 @@ class ORBFeature : public FeaturePoint{
     ORBFeature(const std::shared_ptr<SystemConfig> &sys_config);
 
     void detect(const std::shared_ptr<Image> &img) override;
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
+    void pipeline(const std::shared_ptr<Frame> &frame) override;
 
     protected:
     int block_size_;
@@ -52,7 +52,7 @@ class GoodFeature : public FeaturePoint{
     public:
     GoodFeature(const std::shared_ptr<SystemConfig> &sys_config);
     void detect(const std::shared_ptr<Image> &img) override;
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
+    void pipeline(const std::shared_ptr<Frame> &frame) override;
 
 
     protected:

@@ -64,11 +64,11 @@ void Visualizer::setMap(const std::shared_ptr<Map> &map){
 
 
 
-void Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state){
+void Visualizer::publish(const std::shared_ptr<Frame> &frame, const std::shared_ptr<State> &state){
 
     
     if(this->sys_config_->visualizer_config_->params_->use_opencv_vis_){
-        this->opencv_visualizer_->publish(camera_frame);
+        this->opencv_visualizer_->publish(frame);
     }
 
     if(this->sys_config_->visualizer_config_->params_->use_pangolin_vis_){
@@ -76,7 +76,7 @@ void Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const
     }
 
     if(this->sys_config_->visualizer_config_->params_->use_rviz_vis_){
-        this->ros1_visualizer_->publish(camera_frame, state);
+        this->ros1_visualizer_->publish(frame, state);
     }
 
     

@@ -18,8 +18,9 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
     // we reconstruct geometry of keypoint in camera coordinate with sensor detph
 
     
-    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();
-    const Sophus::SE3d &T_c_w = img->T_c_w_;
+    cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVIntrinsicsMatrix();
+    const Eigen::Matrix<double,4,4> &T_b_c = (this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->T_base_sensor_);
+    const Sophus::SE3d &T_w_c = img->frame_->T_b_w_.inverse() * Sophus::SE3d::fitToSE3(T_b_c)  ;
 
     for (int row = 0; row < img->color_data_.rows; ++row) {
         for (int col = 0; col < img->color_data_.cols; ++col) {
@@ -53,7 +54,6 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
         }
 
         cv::Point3d pt3d_in_cam = pixel2camera(tracked_pt2f_from_img, depth, cv_K);
-        Sophus::SE3d T_w_c = img->T_c_w_.inverse();
         Eigen::Vector3d pt3d_in_world = T_w_c.rotationMatrix() * Eigen::Vector3d(pt3d_in_cam.x, pt3d_in_cam.y, pt3d_in_cam.z) + T_w_c.translation();
         
         std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(pt3d_in_world);
@@ -78,7 +78,6 @@ void SensorDepthReconstruction::reconstruct(const std::shared_ptr<Image> &img){
             }
             cv::Point2f pt2f = cv::Point2f(col, row);
             cv::Point3d pt3d_in_cam = pixel2camera(pt2f, depth, cv_K);
-            Sophus::SE3d T_w_c = img->T_c_w_.inverse();
             Eigen::Vector3d pt3d_in_world = T_w_c.rotationMatrix() * Eigen::Vector3d(pt3d_in_cam.x, pt3d_in_cam.y, pt3d_in_cam.z) + T_w_c.translation();
             
             std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(pt3d_in_world);

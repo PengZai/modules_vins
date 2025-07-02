@@ -19,14 +19,14 @@ VisualFrontend::Status VisualFrontend::getStatus(){
 }
 
 
-const std::deque<std::shared_ptr<CameraFrame>> &VisualFrontend::getRefCameraFrameDeque(){
-    return this->ref_camera_frame_deque_;
+const std::deque<std::shared_ptr<Frame>> &VisualFrontend::getRefFrameDeque(){
+    return this->ref_frame_deque_;
 }
 
 void VisualFrontend::printfStatus(){
 
     LOG(INFO) << GREEN << "Initializer::Status: " << StatusToString(this->status_) << RESET;
-    LOG(INFO) << GREEN << "ref_camera_frame_deque_.size : " << this->ref_camera_frame_deque_.size() << RESET;
+    LOG(INFO) << GREEN << "ref_frame_deque_.size : " << this->ref_frame_deque_.size() << RESET;
 
 }
 
@@ -60,9 +60,9 @@ void VisualFrontend::setVisualizer(const std::shared_ptr<Visualizer> &visualizer
     this->visualizer_ = visualizer;
 }
 
-void VisualFrontend::setRefCameraFrameDeque(const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque){
+void VisualFrontend::setRefFrameDeque(const std::deque<std::shared_ptr<Frame>> &ref_frame_deque){
 
-    this->ref_camera_frame_deque_ = ref_camera_frame_deque;
+    this->ref_frame_deque_ = ref_frame_deque;
     
 }
 
@@ -76,21 +76,20 @@ void VisualFrontend::setState(const std::shared_ptr<State> &state){
     this->state_ = state;
 }
 
-void VisualFrontend::maintainRefCameraFrameDeque(){
+void VisualFrontend::maintainRefFrameDeque(){
 
     double culmulative_trans = 0;
     int start_erase_index = -1;
-    if(this->ref_camera_frame_deque_.size() > 0){
+    if(this->ref_frame_deque_.size() > 0){
 
-        double Tcw_translation_norm = this->ref_camera_frame_deque_.front()->image_vector_.at(0)->T_c_w_.translation().norm();
-        for(size_t i=1;i<this->ref_camera_frame_deque_.size();i++){
+        double Tbw_translation_norm = this->ref_frame_deque_.front()->T_b_w_.translation().norm();
+        for(size_t i=1;i<this->ref_frame_deque_.size();i++){
 
-            const std::shared_ptr<CameraFrame> &prev_camera_frame = this->ref_camera_frame_deque_.at(i);
+            const std::shared_ptr<Frame> &prev_frame = this->ref_frame_deque_.at(i);
 
-            const std::shared_ptr<Image> &img_0_from_previous_camera_frame = prev_camera_frame->image_vector_.at(0);
-            double prev_Tcw_translation_norm = img_0_from_previous_camera_frame->T_c_w_.translation().norm();
-            culmulative_trans  += Tcw_translation_norm - prev_Tcw_translation_norm;
-            Tcw_translation_norm = prev_Tcw_translation_norm;
+            double prev_Tbw_translation_norm = prev_frame->T_b_w_.translation().norm();
+            culmulative_trans  += Tbw_translation_norm - prev_Tbw_translation_norm;
+            Tbw_translation_norm = prev_Tbw_translation_norm;
 
             if(culmulative_trans > this->sys_config_->params_->minimum_cumulative_translation_){
                 start_erase_index = i;
@@ -99,7 +98,7 @@ void VisualFrontend::maintainRefCameraFrameDeque(){
         }
 
         if(start_erase_index != -1){
-            ref_camera_frame_deque_.erase(ref_camera_frame_deque_.begin() + start_erase_index, ref_camera_frame_deque_.end());
+            ref_frame_deque_.erase(ref_frame_deque_.begin() + start_erase_index, ref_frame_deque_.end());
         }
 
     }
@@ -108,30 +107,30 @@ void VisualFrontend::maintainRefCameraFrameDeque(){
 
 }
 
-bool VisualFrontend::initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame){
+bool VisualFrontend::initializeGTTcwWithFrame(const std::shared_ptr<Frame> &frame){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
     if(!img_0){
         return false;
     }
 
-    this->state_->SynchronizeAndTransformComparisonPoseToTcw(img_0->timestamp_);
+    this->state_->SynchronizeAndTransformComparisonPoseToRobotBaseCoordinate(img_0->timestamp_);
 
     return true;
 }
 
 
-void VisualFrontend::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+void VisualFrontend::pipeline(const std::shared_ptr<Frame> &frame){
 
 
         switch (this->status_) {
 
             case Status::NOT_INITIALIZED:
-                initPipeline(camera_frame);
+                initPipeline(frame);
                 break;
             case Status::NORMAL:
-                normalPipeline(camera_frame);
+                normalPipeline(frame);
                 break;
             case Status::GET_LOST:
                 break;

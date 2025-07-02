@@ -93,7 +93,7 @@ void System::RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInsta
 }
 
 
-void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups){
+void System::addFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups){
 
 
  
@@ -111,9 +111,9 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
         std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
 
         Eigen::Matrix<double, 4, 4> T_cam_j_cam_0 = this->config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(cam_id, 0);
-        img->setTcc0Extrinsic(Sophus::SE3d::fitToSE3(T_cam_j_cam_0));
+        // img->setTcc0Extrinsic(Sophus::SE3d::fitToSE3(T_cam_j_cam_0));
 
-        if(this->config_->camera_config_->params_vector_.at(cam_id)->use_sensor_depth_){
+        if(this->config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->use_sensor_depth_){
             RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["depth"], cv_ptr);
             img->setSensorDepth(cv_ptr->image.clone());
         }
@@ -125,38 +125,38 @@ void System::addCameraFrameDeque(const std::vector<std::map<std::string, std::sh
     
     const std::shared_ptr<State> &state = getState();
 
-    std::shared_ptr<CameraFrame>camera_frame = std::make_shared<CameraFrame>(image_vector);
-    camera_frame->status_ = CameraFrame::Status::NORMAL;
-    camera_frame->use_comparison_pose_for_pose_estimation_ = this->config_->params_->use_comparison_pose_for_pose_estimation_;
-    camera_frame->comparison_pose_idx_for_pose_estimation_ = this->config_->params_->comparison_pose_idx_for_pose_estimation_;
+    std::shared_ptr<Frame> frame = std::make_shared<Frame>();
+    frame->setImages(image_vector);
+    frame->status_ = Frame::Status::NORMAL;
+    frame->use_comparison_pose_for_pose_estimation_ = this->config_->params_->use_comparison_pose_for_pose_estimation_;
+    frame->comparison_pose_idx_for_pose_estimation_ = this->config_->params_->comparison_pose_idx_for_pose_estimation_;
 
-    this->camera_frame_deque_.push_back(camera_frame);
+    this->frame_deque_.push_back(frame);
 
 
 
 }
 
 
-void System::updateState(const std::shared_ptr<CameraFrame> &camera_frame){
+void System::updateState(const std::shared_ptr<Frame> &frame){
 
-    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
+    if(frame->status_ != Frame::Status::NORMAL){
         return;
     }
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
 
-    this->state_->timestamp_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
+    this->state_->timestamp_T_b_w_map_[frame->timestamp_] = frame->T_b_w_;
     LOG(INFO) << GREEN << "new state has been added to system" << RESET;
 
-    if(camera_frame->is_key_camera_frame_){
-        this->state_->timestamp_key_T_c_w_map_[img_0->timestamp_] = img_0->T_c_w_;
+    if(frame->is_key_frame_){
+        this->state_->timestamp_key_T_b_w_map_[frame->timestamp_] = frame->T_b_w_;
         LOG(INFO) << GREEN << "new key camera frame has been added to system" << RESET;
     }
 
     // T_w_c is actual position and orientation of camera in world, because Pw = T_w_c * Pc, 
     // that means T_w_c is far away from origin
-    Sophus::SE3<double> T_w_c_ = img_0->T_c_w_.inverse();
-    this->evo_recorder_->writeTrajectoryOnce(img_0->timestamp_, T_w_c_.translation(), T_w_c_.unit_quaternion());
+    Sophus::SE3<double> T_w_b_ = frame->T_b_w_.inverse();
+    this->evo_recorder_->writeTrajectoryOnce(frame->timestamp_, T_w_b_.translation(), T_w_b_.unit_quaternion());
 
 
 }
@@ -184,13 +184,13 @@ void System::callbackVisualNavigation(){
 
     //     // this->config_->params_->max_cameras_
 
-    //     while(!this->camera_frame_deque_.empty()){
+    //     while(!this->frame_deque_.empty()){
 
-    //         CameraFrame camera_frame = this->camera_frame_deque_.at(0);
+    //         Frame frame = this->frame_deque_.at(0);
             
 
-    //         this->visual_frontend_->pipeline(camera_frame);
-    //         this->camera_frame_deque_.pop_front();
+    //         this->visual_frontend_->pipeline(frame);
+    //         this->frame_deque_.pop_front();
 
 
     //     }
@@ -202,29 +202,29 @@ void System::callbackVisualNavigation(){
 
     // thread.join();
 
-    if(!this->camera_frame_deque_.empty()){
+    if(!this->frame_deque_.empty()){
         
 
-        std::shared_ptr<CameraFrame> &camera_frame = this->camera_frame_deque_.back();
+        std::shared_ptr<Frame> &frame = this->frame_deque_.back();
 
 
 
-        camera_frame->status_ = CameraFrame::Status::NORMAL;
+        frame->status_ = Frame::Status::NORMAL;
 
-        this->visual_frontend_->pipeline(camera_frame);
+        this->visual_frontend_->pipeline(frame);
 
         VisualFrontend::Status visual_frontend_status = this->visual_frontend_->getStatus();
         if(visual_frontend_status  == VisualFrontend::Status::NORMAL && this->status_ == Status::NOT_INITIALIZED){
 
-            const std::deque<std::shared_ptr<CameraFrame>> &visual_frontend_ref_camera_frame_deque = this->visual_frontend_->getRefCameraFrameDeque();
+            const std::deque<std::shared_ptr<Frame>> &visual_frontend_ref_frame_deque = this->visual_frontend_->getRefFrameDeque();
             this->status_ = Status::NORMAL;
         }   
 
         
-        if(this->status_ == Status::NORMAL && camera_frame->status_ == CameraFrame::Status::NORMAL){
-            key_frame_manager_->updateKeyFrame(camera_frame);                    
-            this->state_->map_->update(camera_frame);
-            updateState(camera_frame);
+        if(this->status_ == Status::NORMAL && frame->status_ == Frame::Status::NORMAL){
+            key_frame_manager_->updateKeyFrame(frame);                    
+            this->state_->map_->update(frame);
+            updateState(frame);
         }
 
         if(visual_frontend_status == VisualFrontend::Status::GET_LOST){
@@ -238,12 +238,12 @@ void System::callbackVisualNavigation(){
 
         
 
-        if(camera_frame->is_key_camera_frame_){
-            LOG(INFO) <<  "camera_id: " << camera_frame->id_ << " is a key camera frame";
+        if(frame->is_key_frame_){
+            LOG(INFO) <<  "camera_id: " << frame->id_ << " is a key camera frame";
         }
 
-        this->visualizer_->publish(camera_frame, this->state_);
-        LOG(INFO) << GREEN << "finished process camera frame " << camera_frame->id_ << RESET;
+        this->visualizer_->publish(frame, this->state_);
+        LOG(INFO) << GREEN << "finished process camera frame " << frame->id_ << RESET;
 
     }
 

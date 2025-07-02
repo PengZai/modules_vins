@@ -8,41 +8,22 @@
 
 #include "config.h"
 #include "../utils/utils.h"
+#include "lidar_config.h"
 
 
 namespace modules_vins
 {
 
-class LidarParameters : public Parameters
-{
+LidarParameters::LidarParameters(){
 
-    public:
-
-        LidarParameters();
-
-        void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+}
 
 
+void LidarParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
 
-    public:
-        Eigen::Matrix4d T_imu0_lidar;
-        Eigen::Matrix4d T_base_lidar;
+    this->node_ = node;
 
-        
-
-};
-
-class LidarConfig : public Config
-{
-
-    public:
-        std::vector<std::shared_ptr<LidarParameters>> params_vector_;
-
-
-}; 
-
-
-
+}
 
 
 } // namespace modules_vins

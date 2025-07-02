@@ -88,11 +88,11 @@ void PangolinVisualizer::publish(const std::shared_ptr<State> &state){
 
 void PangolinVisualizer::publishKeyPoses(const std::shared_ptr<State> &state){
 
-    if(!state->timestamp_key_T_c_w_map_.empty()){
+    if(!state->timestamp_key_T_b_w_map_.empty()){
 
-        for (const auto& [timestamp, T_c_w] : state->timestamp_key_T_c_w_map_) {
+        for (const auto& [timestamp, T_b_w] : state->timestamp_key_T_b_w_map_) {
 
-            drawFrame(T_c_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
+            drawFrame(T_b_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
 
         }
 
@@ -105,16 +105,16 @@ void PangolinVisualizer::publishKeyPoses(const std::shared_ptr<State> &state){
 void PangolinVisualizer::publishPoses(const std::shared_ptr<State> &state){
 
 
-    if(!state->timestamp_T_c_w_map_.empty()){
+    if(!state->timestamp_T_b_w_map_.empty()){
 
-        auto it = state->timestamp_T_c_w_map_.rbegin();
+        auto it = state->timestamp_T_b_w_map_.rbegin();
         const double newest_timestamp = it->first;
-        const Sophus::SE3<double> &newest_T_c_w = it->second;
+        const Sophus::SE3<double> &newest_T_b_w = it->second;
 
-        drawFrame(newest_T_c_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
+        drawFrame(newest_T_b_w.inverse().matrix(), Eigen::Vector3i(0,255,0));
 
         if(*is_follow_camera_){
-            s_cam_.Follow(newest_T_c_w.inverse().matrix());
+            s_cam_.Follow(newest_T_b_w.inverse().matrix());
         }
 
 
@@ -122,19 +122,19 @@ void PangolinVisualizer::publishPoses(const std::shared_ptr<State> &state){
 
             for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
-                std::map<double, Sophus::SE3<double>>  timestamp_comparison_T_c_w_map = state->timestamp_comparison_T_c_w_map_vector_.at(idx);
+                std::map<double, Sophus::SE3<double>>  timestamp_pose_comparison_in_base_map = state->timestamp_pose_comparison_in_base_map_vector_.at(idx);
 
-                double synchronized_gt_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
-                    this->sys_config_->comparison_config_->params_vector_.at(idx)->max_tolerant_time_offset_, 
-                    state->timestamp_comparison_T_w_c_full_map_vector_.at(idx));
+                double synchronized_comparison_pose_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
+                    this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->max_tolerant_time_offset_, 
+                    state->timestamp_pose_comparison_in_comparison_full_map_vector_.at(idx));
 
-                if(synchronized_gt_timestamp == -1){
+                if(synchronized_comparison_pose_timestamp == -1){
                     return;
                 }
-                const Sophus::SE3<double> &synchronized_GT_T_c_w = timestamp_comparison_T_c_w_map.at(synchronized_gt_timestamp);
+                const Sophus::SE3<double> &synchronized_pose_comparison_in_base = timestamp_pose_comparison_in_base_map.at(synchronized_comparison_pose_timestamp);
 
-                Eigen::VectorXd color = this->sys_config_->comparison_config_->params_vector_.at(idx)->color_;
-                drawFrame(synchronized_GT_T_c_w.inverse().matrix(), Eigen::Vector3i(color(0), color(1), color(2)));
+                Eigen::VectorXd color = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->color_;
+                drawFrame(synchronized_pose_comparison_in_base.matrix(), Eigen::Vector3i(color(0), color(1), color(2)));
             }
 
         }
@@ -143,31 +143,31 @@ void PangolinVisualizer::publishPoses(const std::shared_ptr<State> &state){
 
 void PangolinVisualizer::publishTrajectories(const std::shared_ptr<State> &state){
 
-    if(!state->timestamp_T_c_w_map_.empty()){
-         publishTrajectory(state->timestamp_T_c_w_map_, Eigen::Vector3i(0,255,0));
+    if(!state->timestamp_T_b_w_map_.empty()){
+         publishTrajectory(state->timestamp_T_b_w_map_, Eigen::Vector3i(0,255,0));
          if(this->sys_config_->visualizer_config_->pangolin_params_->show_comparison_trajectory_){
 
-            auto it = state->timestamp_T_c_w_map_.rbegin();
+            auto it = state->timestamp_T_b_w_map_.rbegin();
             const double newest_timestamp = it->first;
 
             for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
-                std::map<double, Sophus::SE3<double>>  timestamp_comparison_T_c_w_map = state->timestamp_comparison_T_c_w_map_vector_.at(idx);
+                std::map<double, Sophus::SE3<double>>  timestamp_pose_comparison_in_base_map = state->timestamp_pose_comparison_in_base_map_vector_.at(idx);
 
-                double synchronized_gt_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
-                    this->sys_config_->comparison_config_->params_vector_.at(idx)->max_tolerant_time_offset_, 
-                    state->timestamp_comparison_T_w_c_full_map_vector_.at(idx));
+                double synchronized_timestamp_for_pose_comparison = state->getSynchronizedPoseTimestamp(newest_timestamp, 
+                    this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->max_tolerant_time_offset_, 
+                    state->timestamp_pose_comparison_in_comparison_full_map_vector_.at(idx));
                     
-                if(synchronized_gt_timestamp == -1){
+                if(synchronized_timestamp_for_pose_comparison == -1){
                     return;
                 }
 
-                auto it_end = timestamp_comparison_T_c_w_map.find(synchronized_gt_timestamp);
+                auto it_end = timestamp_pose_comparison_in_base_map.find(synchronized_timestamp_for_pose_comparison);
 
-                std::map<double, Sophus::SE3<double>> timestamp_comparison_T_c_w_sub_map(timestamp_comparison_T_c_w_map.begin(), it_end);
+                std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_base_sub_map(timestamp_pose_comparison_in_base_map.begin(), it_end);
                 
-                Eigen::VectorXd color = this->sys_config_->comparison_config_->params_vector_.at(idx)->color_;
-                publishGTTrajectory(timestamp_comparison_T_c_w_sub_map, Eigen::Vector3i(color(0), color(1), color(2)));
+                Eigen::VectorXd color = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->color_;
+                publishGTTrajectory(timestamp_pose_comparison_in_base_sub_map, Eigen::Vector3i(color(0), color(1), color(2)));
             }  
          } 
     }

@@ -29,14 +29,16 @@ timestamp_(timestamp),
 sensor_id_(sensor_id), 
 color_data_(data)
 {
-    this->T_c_w_ = Sophus::SE3<double>();
-    this->T_c_c0_ = Sophus::SE3<double>();
-    this->Velocity_T_c_w_.setZero();
+
     this->depth_.create(this->color_data_.rows, this->color_data_.cols, CV_64FC1);
     this->depth_.setTo(-1);
 
 }
 
+
+void Image::setFrame(const std::shared_ptr<Frame> &frame){
+    this->frame_ = frame;
+}
 
 void Image::setKeyPoints(std::vector<cv::KeyPoint> &cv_key_points){
 
@@ -208,27 +210,27 @@ void Image::setSensorDepth(const cv::Mat &sensor_depth){
 }
 
 
-void Image::setTcw(const Sophus::SE3<double> T_c_w){
+// void Image::setTcw(const Sophus::SE3<double> T_c_w){
 
-    this->T_c_w_ = T_c_w;
+//     this->T_c_w_ = T_c_w;
 
 
-}
+// }
 
-void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
+// void Image::setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
 
-    this->T_c_w_ = Sophus::SE3<double>(Sophus::SO3<double>(rotation), position);
-}
+//     this->T_c_w_ = Sophus::SE3<double>(Sophus::SO3<double>(rotation), position);
+// }
 
-void Image::setVelocityTcw(const Sophus::Vector6d Velocity_T_c_w){
-    this->Velocity_T_c_w_ = Velocity_T_c_w;
-}
+// void Image::setVelocityTcw(const Sophus::Vector6d Velocity_T_c_w){
+//     this->Velocity_T_c_w_ = Velocity_T_c_w;
+// }
 
 
 // set extrinsics from this camera to camera 0
-void Image::setTcc0Extrinsic(const Sophus::SE3<double> T_c_c0){
-    this->T_c_c0_ = T_c_c0;
-}
+// void Image::setTcc0Extrinsic(const Sophus::SE3<double> T_c_c0){
+//     this->T_c_c0_ = T_c_c0;
+// }
 
 
 
@@ -257,15 +259,6 @@ void Image::cleanFeaturePoints(){
 }
 
 
-Eigen::Matrix3d Image::getRotation(){
-
-    return T_c_w_.rotationMatrix();
-}
-Eigen::Vector3d Image::getPosition(){
-
-    return T_c_w_.translation();
-}
-
 
 bool Image::isInImage(const cv::Point2d &pixel){
 
@@ -274,155 +267,6 @@ bool Image::isInImage(const cv::Point2d &pixel){
 }
 
 
-// just for auto incremental
-int CameraFrame::id_counter_=-1;
-
-
-CameraFrame::CameraFrame():
-id_(++CameraFrame::id_counter_),
-ref_camera_frame_(nullptr),
-is_key_camera_frame_(false),
-status_(CameraFrame::Status::NOT_INITIALIZED)
-{
-
-
-}
-
-CameraFrame::CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector):
-CameraFrame()
-{
-    this->image_vector_ = image_vector;
-
-}
-
-// initialized Tcw with veclocity according to reference frame;
-void CameraFrame::initializeTcwWithVelocity(){
-
-    if(this->ref_camera_frame_ != nullptr){
-        const std::shared_ptr<Image> img_0_from_current_frame = this->image_vector_.at(0);
-        const std::shared_ptr<Image> img_0_from_ref_frame = this->ref_camera_frame_->image_vector_.at(0);
-        const double dt = img_0_from_current_frame->timestamp_ - img_0_from_ref_frame->timestamp_;
-        // const double dt = 1;
-        Sophus::SE3d relative_T_curr_ref = Sophus::SE3d::exp( img_0_from_ref_frame->Velocity_T_c_w_ * dt);
-        this->setTcwWithCamera0(relative_T_curr_ref * img_0_from_ref_frame->T_c_w_);
-
-        LOG(INFO) << GREEN << "initialize Tcw with velocity with :\n" << img_0_from_current_frame->T_c_w_.matrix() << RESET;
-    }
-
-}
-
-void CameraFrame::cleanTrackInFrameRelationship(){
-
-    for( std::shared_ptr<Image> image : this->image_vector_){
-        image->cleanTrackInFrameRelationship();
-    }
-}
-
-void CameraFrame::cleanTrackInTimeRelationship(){
-
-    for( std::shared_ptr<Image> image : this->image_vector_){
-        image->cleanTrackInTimeRelationship();
-    }
-}
-
-void CameraFrame::cleanFeaturePoints(){
-
-    for( std::shared_ptr<Image> image : this->image_vector_){
-        image->cleanFeaturePoints();
-    }
-}
-
-void CameraFrame::setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches){
-
-    std::shared_ptr<Image> &img_0 = this->image_vector_.at(0);
-    img_0->matches_in_time_.clear();
-    for (size_t i=0; i < matches.size(); i++) {
-        const cv::DMatch &match = matches[i];
-        
-        std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
-
-
-        tracked_keypoint_from_img_0 ->setMatchInTime(match);
-        img_0->matches_in_time_.push_back(match);
-
-    }
-}
-
-
-void CameraFrame::setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches){
-
-    std::shared_ptr<Image> &img_0 = this->image_vector_.at(0);
-    img_0->matches_in_frame_.clear();
-    for (size_t i=0; i < matches.size(); i++) {
-            
-            const cv::DMatch &match = matches[i];
-            std::shared_ptr<KeyPoint> &tracked_keypoint_from_img_0 = img_0->keypoint_vector_[match.queryIdx];
-
-            tracked_keypoint_from_img_0 ->setMatchInFrame(match);
-            img_0->matches_in_frame_.push_back(match);
-    }
-}
-
-void CameraFrame::setTcwWithCamera0(const Sophus::SE3d &Tc0w){
-
-    std::shared_ptr<Image> &img_0 = image_vector_.at(0);
-    img_0->setTcw(Tc0w);
-    
-    for(size_t i=1; i<this->image_vector_.size();i++){
-
-        std::shared_ptr<Image> &img_i = image_vector_.at(i);
-        img_i->setTcw(img_i->T_c_c0_ * img_0->T_c_w_);
-    }
-}
-
-void CameraFrame::setCamera0VelocityWithCamera0Tcw(){
-
-    if(this->ref_camera_frame_){
-
-        const std::shared_ptr<Image> img_0_from_current_frame = this->image_vector_.at(0);
-        const std::shared_ptr<Image> img_0_from_ref_frame = this->ref_camera_frame_->image_vector_.at(0);
-
-        const Sophus::SE3d T_c_r =  img_0_from_current_frame->T_c_w_ * img_0_from_ref_frame->T_c_w_.inverse();
-
-        double norm_T_c_r = T_c_r.log().norm();
-
-        const double dt = img_0_from_current_frame->timestamp_ - img_0_from_ref_frame->timestamp_;
-
-        const Sophus::Vector6d Velocity_T_c_w = T_c_r.log()/dt;
-        img_0_from_current_frame->setVelocityTcw(Velocity_T_c_w);
-
-    }
-    else{
-        LOG(INFO) << YELLOW << "lack of reference camera frame to set camera 0 velocity " << RESET;
-    }
-    
-}
-    
-
-void CameraFrame::propogateMappointWitchMatchInTimeRelationship(){
-
-    if(this->ref_camera_frame_ != nullptr){
-        const std::shared_ptr<CameraFrame> &ref_camera_frame = this->ref_camera_frame_;
-        for(int i=0; i<ref_camera_frame->image_vector_.at(0)->matches_in_time_.size(); i++){
-
-            const std::shared_ptr<Image> img_0_from_ref_camera_frame = ref_camera_frame->image_vector_.at(0);
-            const std::shared_ptr<Image> img_0_from_camera_frame = this->image_vector_.at(0);
-            const cv::DMatch &match = img_0_from_ref_camera_frame->matches_in_time_.at(i);
-            const std::shared_ptr<KeyPoint> kp_from_img_0_ref_camera_frame = img_0_from_ref_camera_frame->keypoint_vector_.at(match.queryIdx);
-
-            if(kp_from_img_0_ref_camera_frame->map_point_ptr_ != nullptr){
-                const std::shared_ptr<KeyPoint> kp_from_img_0_camera_frame = img_0_from_camera_frame->keypoint_vector_.at(match.trainIdx);
-                kp_from_img_0_camera_frame->map_point_ptr_ = kp_from_img_0_ref_camera_frame->map_point_ptr_;
-            }
-
-            if(kp_from_img_0_ref_camera_frame->map_point_ptr2_ != nullptr){
-                const std::shared_ptr<KeyPoint> kp_from_img_0_camera_frame = img_0_from_camera_frame->keypoint_vector_.at(match.trainIdx);
-                kp_from_img_0_camera_frame->map_point_ptr2_ = kp_from_img_0_ref_camera_frame->map_point_ptr2_;
-            }
-        }
-    }
-    
-}
 
 
 
@@ -440,18 +284,18 @@ std::ostream& operator<<(std::ostream& os, const Image &img) {
 
 
 // // just for auto incremental
-// int KeyCameraFrame::id_counter_=-1;
+// int KeyFrame::id_counter_=-1;
 
 
-// KeyCameraFrame::KeyCameraFrame():
-// CameraFrame()
+// KeyFrame::KeyFrame():
+// Frame()
 // {
-//     id_ = ++KeyCameraFrame::id_counter_;
+//     id_ = ++KeyFrame::id_counter_;
 
 // }
 
-// KeyCameraFrame::KeyCameraFrame(const std::vector<std::shared_ptr<Image>> image_vector):
-// KeyCameraFrame()
+// KeyFrame::KeyFrame(const std::vector<std::shared_ptr<Image>> image_vector):
+// KeyFrame()
 // {
 //     this->image_vector_ = image_vector;
 

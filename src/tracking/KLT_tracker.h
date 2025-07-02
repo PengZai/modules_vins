@@ -19,8 +19,8 @@ class KLTTracker : public Tracker{
         const int max_count, const float epsilon, const float y_distance_threshold = -1.0);
 
 
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame) override;
-    void trackInFrame(const std::shared_ptr<CameraFrame> &camera_frame) override;
+    void pipeline(const std::shared_ptr<Frame> &frame) override;
+    void trackInFrame(const std::shared_ptr<Frame> &frame) override;
 
     protected:
     // int max_count_;	// Max number of iterations (used if COUNT is set)

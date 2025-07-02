@@ -15,6 +15,9 @@
 namespace modules_vins {
 
 
+// forward declare
+class Frame;
+
 struct SegmentOutput {
     int class_id_; // class id
     float confidence_; // confidence score
@@ -28,6 +31,9 @@ struct BoxOutput {
     cv::Rect2f box_; // bounding box
 };
 
+
+
+
 class Image{
 
     public:
@@ -36,10 +42,13 @@ class Image{
         std::vector<Eigen::Vector3d> getMapPoints() const;
 
         void setSensorDepth(const cv::Mat &sensor_depth);
-        void setTcw(const Sophus::SE3<double> T_c_w);
-        void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
-        void setVelocityTcw(const Sophus::Vector6d Velocity_T_c_w);
-        void setTcc0Extrinsic(const Sophus::SE3<double> T_c_c0);
+
+        void setFrame(const std::shared_ptr<Frame> &frame);
+
+        // void setTcw(const Sophus::SE3<double> T_c_w);
+        // void setTcw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
+        // void setVelocityTcw(const Sophus::Vector6d Velocity_T_c_w);
+        // void setTcc0Extrinsic(const Sophus::SE3<double> T_c_c0);
 
         double getPointDepthFromSensor(const cv::Point2f &pt);
         void cleanTrackInTimeRelationship();
@@ -80,6 +89,8 @@ class Image{
         // std::vector<cv::KeyPoint> cv_keypoint_vector_;
 
 
+        std::shared_ptr<Frame> frame_;
+
         std::vector<std::shared_ptr<KeyPoint>> keypoint_vector_;
         std::vector<std::shared_ptr<MapPoint>> mappoint_vector_;
 
@@ -96,9 +107,9 @@ class Image{
         std::vector<cv::DMatch> matches_in_frame_;
 
         // Eigen::Matrix<double, 4, 4> T_c_w_;
-        Sophus::SE3<double> T_c_w_;
-        Sophus::Vector6d Velocity_T_c_w_;
-        Sophus::SE3<double> T_c_c0_; // extrinsics between camera i to camera 0
+        // Sophus::SE3<double> T_c_w_;
+        // Sophus::Vector6d Velocity_T_c_w_;
+        // Sophus::SE3<double> T_c_c0_; // extrinsics between camera i to camera 0
 
 
         friend std::ostream& operator<<(std::ostream& os, const Image& img);
@@ -110,64 +121,18 @@ class Image{
 
 
 
-class CameraFrame {
-
-    public:
-    CameraFrame();
-    CameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
-    
-    void cleanTrackInTimeRelationship();
-    void cleanTrackInFrameRelationship();
-    void setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches);
-    void setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches);
-    void setTcwWithCamera0(const Sophus::SE3d &Tc0w);
-    void setCamera0VelocityWithCamera0Tcw();
-    void initializeTcwWithVelocity();
-    void propogateMappointWitchMatchInTimeRelationship();
-
-    void cleanFeaturePoints();
-
-    // CameraFrame(const CameraFrame &camera_frame);
-
-    std::vector<std::shared_ptr<Image>> image_vector_;
-    static int id_counter_;
-    int id_;
-    std::shared_ptr<CameraFrame> ref_camera_frame_;
-
-
-    enum Status{
-        NOT_INITIALIZED=-1,
-        NORMAL=0,
-        FAIL
-    };
-
-
-    bool use_comparison_pose_for_pose_estimation_;
-    size_t comparison_pose_idx_for_pose_estimation_; 
-    
-    bool is_key_camera_frame_;
-
-    Status status_;
 
 
 
-    // Sophus::SE3<double> Tcw;
-
-
-
-
-};
-
-
-// class KeyCameraFrame : public CameraFrame {
+// class KeyFrame : public Frame {
 
 //     public:
 
-//     KeyCameraFrame();
-//     KeyCameraFrame(const std::vector<std::shared_ptr<Image>> image_vector);
+//     KeyFrame();
+//     KeyFrame(const std::vector<std::shared_ptr<Image>> image_vector);
 
 //     static int id_counter_;
-//     std::shared_ptr<KeyCameraFrame> ref_key_camera_frame_;
+//     std::shared_ptr<KeyFrame> ref_key_frame_;
 
 
 

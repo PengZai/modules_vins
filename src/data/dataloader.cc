@@ -16,11 +16,11 @@ void FileDataLoader::load_trajectories(const std::shared_ptr<State> &state){
     
     for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
-        std::shared_ptr<ComparisonParameters> comparison_params = this->sys_config_->comparison_config_->params_vector_.at(idx);
+        std::shared_ptr<ComparisonParameters> comparison_params = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx);
         std::string path = comparison_params->path_;
-        std::map<double, Sophus::SE3<double>> timestamp_T_w_c_full_map;
-        this->load_trajectory(path, timestamp_T_w_c_full_map);
-        state->timestamp_comparison_T_w_c_full_map_vector_.emplace_back(timestamp_T_w_c_full_map);
+        std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_comparison_full_map;
+        this->load_trajectory(path, timestamp_pose_comparison_in_comparison_full_map);
+        state->timestamp_pose_comparison_in_comparison_full_map_vector_.emplace_back(timestamp_pose_comparison_in_comparison_full_map);
     }
 }
 
@@ -89,15 +89,15 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
             break;
         }
         
-        for (int cam_id = 0; cam_id < this->sys_config_->params_->max_cameras_; cam_id++) {
+        for (int cam_id = 0; cam_id < this->sys_config_->params_->num_used_camera_; cam_id++) {
             
             const std::string &msg_topic = msg.getTopic();
-            if (msg_topic ==  this->sys_config_->camera_config_->params_vector_.at(cam_id)->rgb_rostopic_) {
+            if (msg_topic ==  this->sys_config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->rgb_rostopic_) {
                 this->loaded_msgs_.push_back(msg);
               this->max_camera_time_ = std::max(this->max_camera_time_, msg.getTime().toSec());
             }
 
-            if (msg_topic ==  this->sys_config_->camera_config_->params_vector_.at(cam_id)->sensor_depth_rostopic_) {
+            if (msg_topic ==  this->sys_config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->sensor_depth_rostopic_) {
                 this->loaded_msgs_.push_back(msg);
                 this->max_camera_time_ = std::max(this->max_camera_time_, msg.getTime().toSec());
               }
@@ -125,7 +125,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
 
         // we process camera data based on cam id = 0
         int base_cam_id = 0;
-        std::string base_cam_rgb_rostopic = this->sys_config_->camera_config_->params_vector_.at(base_cam_id)->rgb_rostopic_;
+        std::string base_cam_rgb_rostopic = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(base_cam_id)->rgb_rostopic_;
 
         if (this->loaded_msgs_.at(m).getTopic() != base_cam_rgb_rostopic){
             continue;
@@ -135,7 +135,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
         // where intialization process is very slow.
         std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> msg_group;
 
-        for(int cam_id=0; cam_id < this->sys_config_->params_->max_cameras_; cam_id++){
+        for(int cam_id=0; cam_id < this->sys_config_->params_->num_used_camera_; cam_id++){
 
             std::map<std::string, std::shared_ptr<rosbag::MessageInstance>> dtype_to_msg_ptr_map;
             std::map<std::string, int> dtype_to_msg_idx_map;
@@ -147,7 +147,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
             else{
 
                 // find bgr according to base cam index, which m is base cam index.
-                std::string cam_rgb_rostopic = this->sys_config_->camera_config_->params_vector_.at(cam_id)->rgb_rostopic_;
+                std::string cam_rgb_rostopic = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->rgb_rostopic_;
                 int synchronized_idx = findSynchronizedIndex(cam_rgb_rostopic, m, this->sys_config_->params_->max_stereo_time_offset_);
                 
                 if (synchronized_idx != -1) {
@@ -163,9 +163,9 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
             dtype_to_msg_ptr_map["bgr"] = std::make_shared<rosbag::MessageInstance>(this->loaded_msgs_.at(dtype_to_msg_idx_map["bgr"]));
             
             // find sensor depth according to cam index which could be get from dtype_to_msg_idx_map
-            if(this->sys_config_->camera_config_->params_vector_.at(cam_id)->use_sensor_depth_){
+            if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->use_sensor_depth_){
 
-                std::string sensor_depth_rostopic = this->sys_config_->camera_config_->params_vector_.at(cam_id)->sensor_depth_rostopic_;
+                std::string sensor_depth_rostopic = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->sensor_depth_rostopic_;
                 int synchronized_idx = findSynchronizedIndex(sensor_depth_rostopic, dtype_to_msg_idx_map["bgr"], this->sys_config_->params_->max_color_sensor_depth_pair_time_offset_);
 
                 if (synchronized_idx != -1) {
@@ -183,7 +183,7 @@ void ROSDataLoader::load_data(const std::string &path_to_bag, std::vector<std::v
         }
 
 
-        if(msg_group.size() == this->sys_config_->params_->max_cameras_){
+        if(msg_group.size() == this->sys_config_->params_->num_used_camera_){
             msg_groups_ready_for_process.emplace_back(msg_group);
         }
         else{

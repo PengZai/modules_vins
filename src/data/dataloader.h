@@ -18,7 +18,7 @@
 #include "../system/system_config.h"
 #include "map.h"
 #include "../system/state.h"
-
+#include "../data/frame.h"
 
 namespace modules_vins
 {

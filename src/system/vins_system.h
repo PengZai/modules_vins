@@ -10,7 +10,7 @@
 
 #include "../frontend/visual_frontend.h"
 #include "../visualization/visualizer.h"
-#include "../data/camera.h"
+#include "../data/frame.h"
 #include "system_config.h"
 #include "../init/initializer.h"
 #include "../log/logging.h"
@@ -46,10 +46,10 @@ class System {
         void RosMessagePtrToCvImageConstPtr(std::shared_ptr<rosbag::MessageInstance> &msg_ptr, cv_bridge::CvImageConstPtr &cv_ptr);
         
         const std::shared_ptr<State> &getState() const;
-        void updateState(const std::shared_ptr<CameraFrame> &camera_frame);
+        void updateState(const std::shared_ptr<Frame> &frame);
         // msg0 and msg1 come from camera 0 and camera 1 respectively, 
         // in which msg0 and msg1 have been software synchronized
-        void addCameraFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups);
+        void addFrameDeque(const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_groups);
 
         void callbackVisualNavigation();
 
@@ -65,7 +65,7 @@ class System {
         std::shared_ptr<VisualFrontend> visual_frontend_;
         std::shared_ptr<KeyFrameManager> key_frame_manager_;
         std::shared_ptr<Visualizer> visualizer_;
-        std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
+        std::deque<std::shared_ptr<Frame>> frame_deque_;
         std::atomic<bool> is_thread_running_;
         std::shared_ptr<ros::NodeHandle> nh_;
         std::shared_ptr<EVORecorder> evo_recorder_;

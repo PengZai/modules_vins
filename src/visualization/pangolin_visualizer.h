@@ -12,7 +12,7 @@
 
 #include "../system/state.h"
 #include "../system/system_config.h"
-#include "../data/camera.h"
+#include "../data/frame.h"
 
 namespace modules_vins
 {

@@ -7,7 +7,7 @@
 
 #include "../system/system_config.h"
 #include "../log/logging.h"
-#include "camera.h"
+#include "frame.h"
 #include "point.h"
 
 
@@ -21,7 +21,7 @@ class Map{
 
     void insertMapPoint(const std::shared_ptr<MapPoint> &mappoint);
     bool isExistedMapPoint(const std::shared_ptr<MapPoint> &mappoint);
-    void update(const std::shared_ptr<CameraFrame> &camera_frame);
+    void update(const std::shared_ptr<Frame> &frame);
     const std::map<unsigned int, std::shared_ptr<MapPoint>>& getMapPoints() const;
     void maintainSize();
 

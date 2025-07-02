@@ -113,14 +113,45 @@ class Config
 
 
         void loadConfigFromPath(const std::string &config_path);
-        void calculateExtrinsicsAndProjectionMatrixBetweenSensors();
+
+        template<typename ParameterType>
+        void calculateExtrinsicsAndProjectionMatrixBetweenSensors(){
+
+            for(size_t sensor_id_i=0;sensor_id_i< this->params_vector_.size(); sensor_id_i++){
+
+                Eigen::Matrix4d &T_imu0_sensor_i = this->getParamsAt<ParameterType>(sensor_id_i)->T_imu0_sensor_;
+
+                for(int sensor_id_j=0;sensor_id_j<(int)this->params_vector_.size(); sensor_id_j++){
+
+                    Eigen::Matrix4d &T_imu0_sensor_j = this->getParamsAt<ParameterType>(sensor_id_j)->T_imu0_sensor_;
+                    
+                    Eigen::Matrix4d T_sensor_i_sensor_j = T_imu0_sensor_i.inverse() * T_imu0_sensor_j;
+
+                    this->sensor_id_sensor_id_extrinsics_map_[{sensor_id_i, sensor_id_j}] =  T_sensor_i_sensor_j;
+
+                }
+            }
+            
+        }
+
+
+
         Eigen::Matrix<double, 4, 4> getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j);
+
+        template<typename ParameterType>
+        std::shared_ptr<ParameterType> getParamsAt(int idx) const{
+            if(idx < 0 || idx >= static_cast<int>(params_vector_.size())){
+                return nullptr;
+            }
+
+            return std::dynamic_pointer_cast<ParameterType>(params_vector_.at(idx));
+        }
 
     public:
         std::shared_ptr<cv::FileStorage> file_storage_ = nullptr;
         std::string path_;
-
         std::vector<std::shared_ptr<Parameters>> params_vector_;
+
         std::map<std::pair<unsigned int, unsigned int>, Eigen::Matrix4d> sensor_id_sensor_id_extrinsics_map_;
 
 

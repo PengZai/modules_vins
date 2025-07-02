@@ -69,13 +69,16 @@ class CameraConfig : public Config
 {
     public:
 
+        
 
-        void calculateExtrinsicsAndProjectionMatrixBetweenCameras();
-
-        Eigen::Matrix<double, 4, 4> getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_0, const unsigned int sensor_id_1);
+        // void calculateExtrinsicsAndProjectionMatrixBetweenCameras();
+        // Eigen::Matrix<double, 4, 4> getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_0, const unsigned int sensor_id_1);
         // Eigen::Matrix<double, 3, 4> getProjectionMatrixBetweenCamerasBySensorID(Eigen::Matrix4d T_cam_i_world, const unsigned int sensor_id_i, const unsigned int sensor_id_j);
 
     public:
+
+        // std::vector<std::shared_ptr<CameraParameters>> params_vector_;
+
 
     protected:
 

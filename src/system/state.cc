@@ -11,10 +11,10 @@ sys_config_(sys_config)
 
     for(size_t i=0;i<this->sys_config_->comparison_config_->params_vector_.size();i++){
 
-        const std::shared_ptr<ComparisonParameters> &comparison_params = this->sys_config_->comparison_config_->params_vector_.at(i);
-        Eigen::Matrix<double, 4, 4> T_imu_GT = comparison_params->T_imu_comparison_; //Rotation only
-        // R_cam_GT.block<3,1>(0, 3).setZero(); 
-        this->T_imu_comparison_vector_.emplace_back(Sophus::SE3d::fitToSE3(T_imu_GT));
+        const std::shared_ptr<ComparisonParameters> &comparison_params = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(i);
+        Eigen::Matrix<double, 4, 4> T_base_comparison = comparison_params->T_base_sensor_; //Rotation only
+        T_base_comparison.block<3,1>(0, 3).setZero(); 
+        this->T_base_comparison_vector_.emplace_back(Sophus::SE3d::fitToSE3(T_base_comparison));
 
     }
 }
@@ -24,52 +24,42 @@ bool State::SynchronizeAndTransformComparisonPoseToRobotBaseCoordinate(const dou
 
     for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
-        const std::shared_ptr<ComparisonParameters> &comparison_params = this->sys_config_->comparison_config_->params_vector_.at(idx);
+        const std::shared_ptr<ComparisonParameters> &comparison_params = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx);
         const std::string &comparison_name = comparison_params->name_;
-        const std::map<double, Sophus::SE3<double>> &timestamp_comparison_T_w_c_full_map_ = this->timestamp_comparison_T_w_c_full_map_vector_.at(idx);
+        const std::map<double, Sophus::SE3<double>> &timestamp_pose_comparison_in_comparison_full_map = this->timestamp_pose_comparison_in_comparison_full_map_vector_.at(idx);
 
 
-        double synchronized_gt_timestamp = getSynchronizedPoseTimestamp(base_timestamp, comparison_params->max_tolerant_time_offset_, timestamp_comparison_T_w_c_full_map_);
+        double synchronized_gt_timestamp = getSynchronizedPoseTimestamp(base_timestamp, comparison_params->max_tolerant_time_offset_, timestamp_pose_comparison_in_comparison_full_map);
         if(synchronized_gt_timestamp == -1){
             return false;
         }
 
-        Sophus::SE3<double> system_initialized_first_GT_T_w_inv = timestamp_comparison_T_w_c_full_map_.at(synchronized_gt_timestamp).inverse();
+        // Sophus::SE3<double> system_initialized_first_comparison_pose_inv = timestamp_pose_comparison_in_comparison_full_map.at(synchronized_gt_timestamp).inverse();
 
-        auto it_start = timestamp_comparison_T_w_c_full_map_.find(synchronized_gt_timestamp);
-        auto it_end = timestamp_comparison_T_w_c_full_map_.end();
+        auto it_start = timestamp_pose_comparison_in_comparison_full_map.find(synchronized_gt_timestamp);
+        auto it_end = timestamp_pose_comparison_in_comparison_full_map.end();
 
-        std::map<double, Sophus::SE3d> comparison_T_sub_map(it_start, it_end);
+        std::map<double, Sophus::SE3d> timestamp_pose_comparison_in_comparison_sub_map(it_start, it_end);
 
-        Sophus::SE3d coordinate_transformation;
+        Sophus::SE3d T_base_comparison;
 
         if(comparison_params->set_first_pose_in_origin_){
-            // coordinate_transformation = this->R_cam_comparison_vector_.at(idx) * system_initialized_first_GT_T_w_inv;
-            coordinate_transformation = this->R_cam_comparison_vector_.at(idx);
+            // coordinate_transformation = this->T_imu0_comparison_vector_.at(idx) * system_initialized_first_GT_T_w_comp_inv;
+            T_base_comparison = this->T_base_comparison_vector_.at(idx);
 
         }
         else{
-            coordinate_transformation = this->R_cam_comparison_vector_.at(idx);
+            T_base_comparison = this->T_base_comparison_vector_.at(idx);
         }
 
 
-        std::map<double, Sophus::SE3<double>> timestamp_comparison_T_c_w_sub_map_;
-        for (const auto& [timestamp, comparison_T_w_c] : timestamp_comparison_T_w_c_full_map_) {
-                timestamp_comparison_T_c_w_sub_map_[timestamp] =  (coordinate_transformation * comparison_T_w_c).inverse();    
-                // Eigen::Vector4d new_translation;
-                // new_translation << comparison_T_w_c.translation(), 1.0;
-
-                // new_translation = coordinate_transformation * new_translation;
-
-          
-                // timestamp_comparison_T_c_w_sub_map_[timestamp] =  Sophus::SE3d(
-                //                                 Sophus::SO3d(comparison_T_w_c.rotationMatrix()), 
-                //                                 Eigen::Vector3d(new_translation(0),new_translation(1),new_translation(2))
-                //                                 ).inverse();    
+        std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_base_map;
+        for (const auto& [timestamp, comparison_pose_in_comparison] : timestamp_pose_comparison_in_comparison_sub_map) {
+                timestamp_pose_comparison_in_base_map[timestamp] =  (T_base_comparison * comparison_pose_in_comparison).inverse();
 
         }
 
-        this->timestamp_comparison_T_c_w_map_vector_.emplace_back(timestamp_comparison_T_c_w_sub_map_);
+        this->timestamp_pose_comparison_in_base_map_vector_.emplace_back(timestamp_pose_comparison_in_base_map);
 
     }
     
@@ -79,22 +69,23 @@ bool State::SynchronizeAndTransformComparisonPoseToRobotBaseCoordinate(const dou
 }
 
 
-bool State::getTransformationComparisonWorldWithIdx(const double base_timestamp, size_t used_idx, Sophus::SE3d &T_c_w){
+bool State::getPoseComparisonForTbwWithIdx(const double base_timestamp, size_t used_idx, Sophus::SE3d &T_b_w){
     
 
-    const std::shared_ptr<ComparisonParameters> &comparison_param = this->sys_config_->comparison_config_->params_vector_.at(used_idx);
+    const std::shared_ptr<ComparisonParameters> &comparison_param = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(used_idx);
 
 
-    std::map<double, Sophus::SE3<double>> timestamp_comparison_T_c_w_map = this->timestamp_comparison_T_c_w_map_vector_.at(used_idx);
-    double synchronized_gt_timestamp = getSynchronizedPoseTimestamp(base_timestamp, comparison_param->max_tolerant_time_offset_, timestamp_comparison_T_c_w_map);
-    double time_difference = synchronized_gt_timestamp - base_timestamp;
-    if(synchronized_gt_timestamp == -1){
+    std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_base_map = this->timestamp_pose_comparison_in_base_map_vector_.at(used_idx);
+    double synchronized_pose_comparison_in_base_timestamp = getSynchronizedPoseTimestamp(base_timestamp, comparison_param->max_tolerant_time_offset_, timestamp_pose_comparison_in_base_map);
+    if(synchronized_pose_comparison_in_base_timestamp == -1){
         return false;
     }
+    double time_difference = synchronized_pose_comparison_in_base_timestamp - base_timestamp;
 
-    Sophus::SE3<double> T_GT_w_ = timestamp_comparison_T_c_w_map.at(synchronized_gt_timestamp);
 
-    T_c_w = T_GT_w_;
+    Sophus::SE3<double> pose_comparison_in_base = timestamp_pose_comparison_in_base_map.at(synchronized_pose_comparison_in_base_timestamp);
+
+    T_b_w = pose_comparison_in_base;
 
     return true;
 }

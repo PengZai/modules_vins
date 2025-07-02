@@ -14,8 +14,8 @@ ros_rate_(40)
 
 {
 
-    for(size_t i=0; i < this->sys_config_->params_->max_cameras_; i++){
-        this->output_image_pub_vector_.push_back(this->it_.advertise(this->sys_config_->camera_config_->params_vector_.at(i)->output_rostopic_, 1));
+    for(size_t i=0; i < this->sys_config_->params_->num_used_camera_; i++){
+        this->output_image_pub_vector_.push_back(this->it_.advertise(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(i)->output_rostopic_, 1));
     }
 
 
@@ -26,7 +26,7 @@ ros_rate_(40)
     
     for(size_t i=0;i<this->sys_config_->comparison_config_->params_vector_.size();i++){
         
-        const std::shared_ptr<ComparisonParameters> & coparison_param = this->sys_config_->comparison_config_->params_vector_.at(i);
+        const std::shared_ptr<ComparisonParameters> & coparison_param = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(i);
         const std::string output_comparison_pose_rostopic = this->sys_config_->visualizer_config_->rviz_params_->output_comparison_pose_rostopic_ + "/" + coparison_param->name_;
         const std::string output_comparison_trajectory_rostopic = this->sys_config_->visualizer_config_->rviz_params_->output_comparison_trajectory_rostopic_ + "/" + coparison_param->name_;
         ros::Publisher output_comparison_pose_pub = this->nh_->advertise<geometry_msgs::PoseStamped>(output_comparison_pose_rostopic, 1);
@@ -57,13 +57,13 @@ void ROS1Visualizer::setMap(const std::shared_ptr<Map> &map){
     this->map_ = map;
 }
 
-void ROS1Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state){
+void ROS1Visualizer::publish(const std::shared_ptr<Frame> &frame, const std::shared_ptr<State> &state){
     
 
 
     if(ros::ok()){
         publishTF();
-        publishImages(camera_frame);
+        publishImages(frame);
         publishPoses(state);
         publishKeyPoses(state);
         publishTrajectories(state);
@@ -78,12 +78,12 @@ void ROS1Visualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame, c
 
 }
 
-void ROS1Visualizer::publishImages(const std::shared_ptr<CameraFrame> &camera_frame){
+void ROS1Visualizer::publishImages(const std::shared_ptr<Frame> &frame){
 
     std_msgs::Header header;
 
-    for(size_t i=0; i < this->sys_config_->params_->max_cameras_; i++){
-        const std::shared_ptr<Image> &img = camera_frame->image_vector_.at(i);
+    for(size_t i=0; i < this->sys_config_->params_->num_used_camera_; i++){
+        const std::shared_ptr<Image> &img = frame->image_vector_.at(i);
         header.stamp = ros::Time::now();
         header.frame_id = "cam" + img->sensor_id_;
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(header, "bgr8", img->color_data_).toImageMsg();
@@ -179,13 +179,13 @@ void ROS1Visualizer::constructPoseMsg(const Sophus::SE3<double> &pose, geometry_
 void ROS1Visualizer::publishPoses(const std::shared_ptr<State> &state){
 
     // const Sophus::SE3<double> &T_c_w = state.T_c_w_vector_.back().inverse(); // the vector of pose of robot in world coordinate
-    if(!state->timestamp_T_c_w_map_.empty()){
-        auto it = state->timestamp_T_c_w_map_.rbegin();
+    if(!state->timestamp_T_b_w_map_.empty()){
+        auto it = state->timestamp_T_b_w_map_.rbegin();
         const double newest_timestamp = it->first;
-        const Sophus::SE3<double> &newest_T_c_w = it->second;
+        const Sophus::SE3<double> &newest_T_b_w = it->second;
 
         geometry_msgs::PoseStamped pose_msg;
-        constructPoseMsg(newest_T_c_w.inverse(), pose_msg);
+        constructPoseMsg(newest_T_b_w.inverse(), pose_msg);
         this->output_pose_pub_.publish(pose_msg);
 
 
@@ -195,18 +195,18 @@ void ROS1Visualizer::publishPoses(const std::shared_ptr<State> &state){
 
             for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
-                std::map<double, Sophus::SE3<double>>  timestamp_comparison_T_c_w_map = state->timestamp_comparison_T_c_w_map_vector_.at(idx);
+                std::map<double, Sophus::SE3<double>>  timestamp_pose_comparison_in_base_map_ = state->timestamp_pose_comparison_in_base_map_vector_.at(idx);
 
-                double synchronized_gt_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
-                    this->sys_config_->comparison_config_->params_vector_.at(idx)->max_tolerant_time_offset_, 
-                    state->timestamp_comparison_T_w_c_full_map_vector_.at(idx));
+                double synchronized_timestamp_for_pose_comparison = state->getSynchronizedPoseTimestamp(newest_timestamp, 
+                    this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->max_tolerant_time_offset_, 
+                    state->timestamp_pose_comparison_in_comparison_full_map_vector_.at(idx));
 
-                if(synchronized_gt_timestamp == -1){
+                if(synchronized_timestamp_for_pose_comparison == -1){
                     return;
                 }
-                const Sophus::SE3<double> &synchronized_GT_T_c_w = timestamp_comparison_T_c_w_map.at(synchronized_gt_timestamp);
+                const Sophus::SE3<double> &synchronized_pose_comparison_in_base = timestamp_pose_comparison_in_base_map_.at(synchronized_timestamp_for_pose_comparison);
 
-                constructPoseMsg(synchronized_GT_T_c_w.inverse(), pose_msg);
+                constructPoseMsg(synchronized_pose_comparison_in_base, pose_msg);
                 this->output_comparison_pose_pub_vector_.at(idx).publish(pose_msg);
 
             }
@@ -222,16 +222,16 @@ void ROS1Visualizer::publishPoses(const std::shared_ptr<State> &state){
 
 void ROS1Visualizer::publishKeyPoses(const std::shared_ptr<State> &state){
 
-    if(!state->timestamp_key_T_c_w_map_.empty()){
+    if(!state->timestamp_key_T_b_w_map_.empty()){
         
         geometry_msgs::PoseArray pose_array_msg;
         pose_array_msg.header.stamp = ros::Time::now();
         pose_array_msg.header.frame_id = this->pose_frame_id_;
 
-        for (const auto& [timestamp, T_c_w] : state->timestamp_key_T_c_w_map_) {
+        for (const auto& [timestamp, T_b_w] : state->timestamp_key_T_b_w_map_) {
             
             geometry_msgs::Pose pose_msg;
-            constructPoseMsg(T_c_w.inverse(), pose_msg);
+            constructPoseMsg(T_b_w.inverse(), pose_msg);
             pose_array_msg.poses.push_back(pose_msg);
         }
 
@@ -245,32 +245,32 @@ void ROS1Visualizer::publishKeyPoses(const std::shared_ptr<State> &state){
 void ROS1Visualizer::publishTrajectories(const std::shared_ptr<State> &state){
 
     nav_msgs::Path path_msgs;
-    if(!state->timestamp_T_c_w_map_.empty()){
-        publishTrajectory(state->timestamp_T_c_w_map_, path_msgs, this->output_trajectory_pub_);
+    if(!state->timestamp_T_b_w_map_.empty()){
+        publishTrajectory(state->timestamp_T_b_w_map_, path_msgs, this->output_trajectory_pub_);
         if(this->sys_config_->visualizer_config_->rviz_params_->show_comparison_trajectory_){
 
-            auto it = state->timestamp_T_c_w_map_.rbegin();
+            auto it = state->timestamp_T_b_w_map_.rbegin();
             const double newest_timestamp = it->first;
 
             for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
 
 
-                std::map<double, Sophus::SE3<double>>  timestamp_comparison_T_c_w_map = state->timestamp_comparison_T_c_w_map_vector_.at(idx);
+                std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_base_map = state->timestamp_pose_comparison_in_base_map_vector_.at(idx);
 
       
-                double synchronized_gt_timestamp = state->getSynchronizedPoseTimestamp(newest_timestamp, 
-                    this->sys_config_->comparison_config_->params_vector_.at(idx)->max_tolerant_time_offset_, 
-                    state->timestamp_comparison_T_w_c_full_map_vector_.at(idx));
+                double synchronized_timestamp_for_pose_comparison = state->getSynchronizedPoseTimestamp(newest_timestamp, 
+                    this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->max_tolerant_time_offset_, 
+                    state->timestamp_pose_comparison_in_comparison_full_map_vector_.at(idx));
 
-                if(synchronized_gt_timestamp == -1){
+                if(synchronized_timestamp_for_pose_comparison == -1){
                     return;
                 }
 
-                auto it_end = timestamp_comparison_T_c_w_map.find(synchronized_gt_timestamp);
+                auto it_end = timestamp_pose_comparison_in_base_map.find(synchronized_timestamp_for_pose_comparison);
 
-                std::map<double, Sophus::SE3<double>> timestamp_comparison_T_c_w_sub_map(timestamp_comparison_T_c_w_map.begin(), it_end);
+                std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_base_sub_map(timestamp_pose_comparison_in_base_map.begin(), it_end);
 
-                publishGTTrajectory(timestamp_comparison_T_c_w_sub_map, path_msgs, this->output_comparison_trajectory_pub_vector_.at(idx));
+                publishGTTrajectory(timestamp_pose_comparison_in_base_sub_map, path_msgs, this->output_comparison_trajectory_pub_vector_.at(idx));
             }
         }
     }

@@ -72,31 +72,31 @@ void DescriptorTracker::matching(const std::shared_ptr<Image> &img0, const std::
 }
 
 // trackInTime
-void DescriptorTracker::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+void DescriptorTracker::pipeline(const std::shared_ptr<Frame> &frame){
 
 
-    std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
+    std::shared_ptr<Frame> &ref_frame = frame->ref_frame_;
 
-    if(ref_camera_frame == nullptr){
+    if(ref_frame == nullptr){
 
-        LOG(INFO) << RED << "ref_camera_frame is nullptr" << RESET;
+        LOG(INFO) << RED << "ref_frame is nullptr" << RESET;
         return ;
     }
 
-    std::shared_ptr<Image> &img0_from_current_frame = camera_frame->image_vector_.at(0);
+    std::shared_ptr<Image> &img0_from_current_frame = frame->image_vector_.at(0);
 
-    std::shared_ptr<Image> &img0_from_ref_frame = ref_camera_frame->image_vector_.at(0);
+    std::shared_ptr<Image> &img0_from_ref_frame = ref_frame->image_vector_.at(0);
     
-    ref_camera_frame->cleanTrackInTimeRelationship();
-    camera_frame->cleanTrackInTimeRelationship();
+    ref_frame->cleanTrackInTimeRelationship();
+    frame->cleanTrackInTimeRelationship();
 
     std::vector<cv::DMatch> matches;
     // we track feature according to the feature in camera 0(left camera)
     this->matching(img0_from_ref_frame, img0_from_current_frame, matches, this->sys_config_->feature_and_tracker_config_->orb_params_->threshold_for_tracking_descriptor_in_time_);
-    ref_camera_frame->setTrackInTimeRelationship(matches);
+    ref_frame->setTrackInTimeRelationship(matches);
 
 
-    LOG(INFO) << GREEN << img0_from_ref_frame->matches_in_time_.size() << " points were trakced in time for camera frame bewteen ref " << ref_camera_frame->id_ << " and curr " << camera_frame->id_  << RESET;
+    LOG(INFO) << GREEN << img0_from_ref_frame->matches_in_time_.size() << " points were trakced in time for camera frame bewteen ref " << ref_frame->id_ << " and curr " << frame->id_  << RESET;
 
 
 
@@ -106,22 +106,22 @@ void DescriptorTracker::pipeline(const std::shared_ptr<CameraFrame> &camera_fram
 
 
 
-void DescriptorTracker::trackInFrame(const std::shared_ptr<CameraFrame> &camera_frame){
+void DescriptorTracker::trackInFrame(const std::shared_ptr<Frame> &frame){
 
 
-    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
 
-    std::shared_ptr<Image> &img_1 = camera_frame->image_vector_.at(1);
+    std::shared_ptr<Image> &img_1 = frame->image_vector_.at(1);
     
-    camera_frame->cleanTrackInFrameRelationship();
+    frame->cleanTrackInFrameRelationship();
     std::vector<cv::DMatch> matches;
     this->matching(img_0, img_1, matches, 
         this->sys_config_->feature_and_tracker_config_->orb_params_->threshold_for_tracking_descriptor_in_frame_, 10);
 
-    camera_frame->setTrackInFrameRelationship(matches);   
+    frame->setTrackInFrameRelationship(matches);   
 
-    LOG(INFO) << GREEN << img_0->matches_in_frame_.size() << " points were trakced in frame for camera frame " << camera_frame->id_  << RESET;
+    LOG(INFO) << GREEN << img_0->matches_in_frame_.size() << " points were trakced in frame for camera frame " << frame->id_  << RESET;
 
     
 }

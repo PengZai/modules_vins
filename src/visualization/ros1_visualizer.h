@@ -16,7 +16,7 @@
 
 #include "../system/state.h"
 #include "../system/system_config.h"
-#include "../data/camera.h"
+#include "../data/frame.h"
 #include "../log/logging.h"
 
 
@@ -35,9 +35,9 @@ class ROS1Visualizer{
 
     void setNodehandler(const std::shared_ptr<ros::NodeHandle> &nh);
     void setMap(const std::shared_ptr<Map> &map);
-    void publish(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state);
+    void publish(const std::shared_ptr<Frame> &frame, const std::shared_ptr<State> &state);
     void publishTF();
-    void publishImages(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publishImages(const std::shared_ptr<Frame> &frame);
     void constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::PoseStamped &pose_msg);
     void constructPoseMsg(const Sophus::SE3<double> &pose, geometry_msgs::Pose &pose_msg);
     void publishPoses(const std::shared_ptr<State> &state);

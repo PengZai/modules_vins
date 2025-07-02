@@ -37,19 +37,19 @@ void Map::insertMapPoint(const std::shared_ptr<MapPoint> &mappoint){
 
 
 
-void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
+void Map::update(const std::shared_ptr<Frame> &frame){
 
-    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
+    if(frame->status_ != Frame::Status::NORMAL){
         return;
     }
 
-    if(camera_frame->image_vector_.size()==0){
+    if(frame->image_vector_.size()==0){
 
         LOG(INFO) << RED << "size of image vector equal to 0" << RESET;
         std::exit(EXIT_FAILURE);
     }
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
     // project 3d point in camera coordinate to map coordinate
     // for(size_t i=0; i<(int)img_0->keypoint_vector_.size(); i++){
@@ -65,16 +65,16 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
     //         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
     //         kp->setMapPointPtr(map_point_ptr);
-    //         camera_frame->map_point_vector_.emplace_back(map_point_ptr);
+    //         frame->map_point_vector_.emplace_back(map_point_ptr);
             
     //     }
         
 
     // }
 
-    // if(camera_frame->is_key_camera_frame_){
+    // if(frame->is_key_frame_){
 
-    //     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
+    //     cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_0->sensor_id_)->getCVIntrinsicsMatrix();
 
         
     //     for (int row = 0; row < img_0->depth_.rows; ++row) {
@@ -108,7 +108,7 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
     //             std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);            
     //             cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(pt2i);
     //             map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
-    //             camera_frame->map_point_vector_.emplace_back(map_point_ptr);
+    //             frame->map_point_vector_.emplace_back(map_point_ptr);
     //             // LOG(INFO) << "pt2i : " << pt2i << " depth : "  << depth << " color : " << bgr;
     //             // LOG(INFO) << "pt3d : " << pt3d ;
     //         }
@@ -119,9 +119,9 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
 
     int count_new_mappoint = 0;
 
-    for(size_t i=0; i<camera_frame->image_vector_.size();i++){
+    for(size_t i=0; i<frame->image_vector_.size();i++){
         
-            const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+            const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
             
             for(size_t j=0;j<img_i->keypoint_vector_.size();j++){
                 
@@ -133,9 +133,9 @@ void Map::update(const std::shared_ptr<CameraFrame> &camera_frame){
             }
     }
 
-    for(size_t i=0; i < camera_frame->image_vector_.size();i++){
+    for(size_t i=0; i < frame->image_vector_.size();i++){
         
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
 
         for(size_t j=0;j<img_i->mappoint_vector_.size();j++){
                 

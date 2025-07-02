@@ -68,16 +68,16 @@ void OpenCVVisualizer::drawTrackingPointPattern(cv::Mat &img, const std::shared_
     
 }
 
-void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<Frame> &frame){
 
 
     std::shared_ptr<Image> img_0;
     cv::Mat img_0_data;
 
-    for(size_t i=0; i<(int)camera_frame->image_vector_.size(); i++){
+    for(size_t i=0; i<(int)frame->image_vector_.size(); i++){
 
         
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
         cv::Mat img_i_data = img_i->gray_data_.clone();
 
         if(i==0){
@@ -121,7 +121,7 @@ void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame>
                 cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
             );
 
-            // cv::imshow("matches in frame between img 0 and img " + std::to_string(i) + " in frame id:" + std::to_string(camera_frame->id_), img_0_matches_in_frame);
+            // cv::imshow("matches in frame between img 0 and img " + std::to_string(i) + " in frame id:" + std::to_string(frame->id_), img_0_matches_in_frame);
             cv::imshow("matches in frame between img 0 and img " + std::to_string(i), img_0_matches_in_frame);
 
         }
@@ -132,10 +132,10 @@ void OpenCVVisualizer::publishMatchingInFrame(const std::shared_ptr<CameraFrame>
 
 }
 
-void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<Frame> &frame){
 
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->gray_data_.clone();
 
 
@@ -154,23 +154,23 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
 
 
 
-    const std::shared_ptr<CameraFrame> &ref_camera_frame = camera_frame->ref_camera_frame_;
-    if(ref_camera_frame){
+    const std::shared_ptr<Frame> &ref_frame = frame->ref_frame_;
+    if(ref_frame){
 
-        const std::shared_ptr<Image> &img_0_from_ref_camera_frame = ref_camera_frame->image_vector_.at(0);
-        cv::Mat img_0_color_data_from_ref_camera_frame = img_0_from_ref_camera_frame->gray_data_.clone();
+        const std::shared_ptr<Image> &img_0_from_ref_frame = ref_frame->image_vector_.at(0);
+        cv::Mat img_0_color_data_from_ref_frame = img_0_from_ref_frame->gray_data_.clone();
     
         cv::Mat img_0_matches_in_time;
          std::vector<cv::KeyPoint> cv_key_points_from_img0, cv_key_points_from_img0_ref_frame;
         img_0->getCVKeyPoints(cv_key_points_from_img0);
-        img_0_from_ref_camera_frame->getCVKeyPoints(cv_key_points_from_img0_ref_frame);
+        img_0_from_ref_frame->getCVKeyPoints(cv_key_points_from_img0_ref_frame);
 
-        cv::drawMatches(img_0_color_data_from_ref_camera_frame, cv_key_points_from_img0_ref_frame, img_0_color_data, cv_key_points_from_img0, img_0_from_ref_camera_frame->matches_in_time_, img_0_matches_in_time,
+        cv::drawMatches(img_0_color_data_from_ref_frame, cv_key_points_from_img0_ref_frame, img_0_color_data, cv_key_points_from_img0, img_0_from_ref_frame->matches_in_time_, img_0_matches_in_time,
             cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::DEFAULT
         );
     
     
-        // cv::imshow("img 0 matches in time between ref frame id: " +  std::to_string(ref_camera_frame->id_) + " and current frame id: " + std::to_string(camera_frame->id_) , img_0_matches_in_time);
+        // cv::imshow("img 0 matches in time between ref frame id: " +  std::to_string(ref_frame->id_) + " and current frame id: " + std::to_string(frame->id_) , img_0_matches_in_time);
         cv::imshow("img 0 matches in time", img_0_matches_in_time);
 
     }
@@ -180,25 +180,27 @@ void OpenCVVisualizer::publishMatchingInTime(const std::shared_ptr<CameraFrame> 
 }   
 
 
-void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<Frame> &frame){
 
 
-    const std::shared_ptr<Image> img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> img_0 = frame->image_vector_.at(0);
     cv::Mat img_0_color_data = img_0->color_data_.clone();
 
-    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
+    cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_0->sensor_id_)->getCVIntrinsicsMatrix();
+    const Eigen::Matrix<double, 4, 4> &Tc0b = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->T_base_sensor_.inverse();
     std::vector<double> valid_depths;
     std::vector<cv::Point2d> valid_pts2d;
     std::vector<Eigen::Vector3d> valid_pts3d_in_cam;
 
     double max_depth = -1;
-    // const std::shared_ptr<Map> &map = camera_frame.getMap();
+    // const std::shared_ptr<Map> &map = frame.getMap();
     const std::map<unsigned int, std::shared_ptr<MapPoint>>& map_points = this->map_->getMapPoints();
 
     for(const std::pair<const unsigned int, std::shared_ptr<MapPoint>> &item_pair: map_points){
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;
 
-       const Eigen::Vector3d pt3d_in_cam = img_0->T_c_w_ * map_point->pt3d_;
+       Eigen::Matrix<double, 4, 4> T_c0_w = Tc0b * frame->T_b_w_.matrix();
+       const Eigen::Vector3d pt3d_in_cam = T_c0_w.block<3,3>(0,0) * map_point->pt3d_ + T_c0_w.block<3,1>(0,3);
        const cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
        const double d = pt3d_in_cam.z();
        if(img_0->isInImage(reprojected_pixel) && 
@@ -251,9 +253,9 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<CameraFram
 }
 
 
-void OpenCVVisualizer::publishStereoDepth(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishStereoDepth(const std::shared_ptr<Frame> &frame){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
     if(img_0->stereo_depth_.empty()){
         return;
@@ -268,11 +270,11 @@ void OpenCVVisualizer::publishStereoDepth(const std::shared_ptr<CameraFrame> &ca
 }
 
 
-void OpenCVVisualizer::publishSensorDepth(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishSensorDepth(const std::shared_ptr<Frame> &frame){
 
 
-    for(size_t i=0; i<(int)camera_frame->image_vector_.size(); i++){
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+    for(size_t i=0; i<(int)frame->image_vector_.size(); i++){
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
 
         cv::Mat img_i_sensor_detph = img_i->sensor_depth_;
         if(img_i->sensor_depth_.empty()){
@@ -285,11 +287,11 @@ void OpenCVVisualizer::publishSensorDepth(const std::shared_ptr<CameraFrame> &ca
 
 }
 
-void OpenCVVisualizer::publishLearnedDepth(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishLearnedDepth(const std::shared_ptr<Frame> &frame){
 
 
-    for(size_t i=0; i<(int)camera_frame->image_vector_.size(); i++){
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+    for(size_t i=0; i<(int)frame->image_vector_.size(); i++){
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
 
         if(img_i->learned_depth_.empty()){
             continue;
@@ -306,10 +308,10 @@ void OpenCVVisualizer::publishLearnedDepth(const std::shared_ptr<CameraFrame> &c
 
 }
 
-void OpenCVVisualizer::publishLearnedStereoDisparity(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishLearnedStereoDisparity(const std::shared_ptr<Frame> &frame){
 
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
     if(img_0->learned_stereo_depth_.empty()){
         return;
@@ -357,12 +359,12 @@ void OpenCVVisualizer::invDepthAndMixColor(const cv::Mat &input_depth, const cv:
 
 
 
-void OpenCVVisualizer::publishObjectDetection(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishObjectDetection(const std::shared_ptr<Frame> &frame){
 
-    for(size_t i=0; i<(int)camera_frame->image_vector_.size(); i++){
+    for(size_t i=0; i<(int)frame->image_vector_.size(); i++){
 
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
-        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_object_detection_){
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
+        if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->use_learned_object_detection_){
 
 
             cv::Mat img_i_color_data = img_i->color_data_.clone();
@@ -395,13 +397,13 @@ void OpenCVVisualizer::publishObjectDetection(const std::shared_ptr<CameraFrame>
     
 }
 
-void OpenCVVisualizer::publishSemanticSegmentation(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishSemanticSegmentation(const std::shared_ptr<Frame> &frame){
 
-    for(size_t i=0; i<(int)camera_frame->image_vector_.size(); i++){
+    for(size_t i=0; i<(int)frame->image_vector_.size(); i++){
 
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
 
-        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_semantic_segmentation_){
+        if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->use_learned_semantic_segmentation_){
 
         
 
@@ -443,12 +445,12 @@ void OpenCVVisualizer::publishSemanticSegmentation(const std::shared_ptr<CameraF
 
 
 
-void OpenCVVisualizer::publishTrackingInTime(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publishTrackingInTime(const std::shared_ptr<Frame> &frame){
 
 
-    if(camera_frame->ref_camera_frame_){
+    if(frame->ref_frame_){
 
-        const std::shared_ptr<Image> &img_0 = camera_frame->ref_camera_frame_->image_vector_.at(0);
+        const std::shared_ptr<Image> &img_0 = frame->ref_frame_->image_vector_.at(0);
         cv::Mat img_0_color_data = img_0->color_data_.clone();
 
 
@@ -474,20 +476,20 @@ void OpenCVVisualizer::publishTrackingInTime(const std::shared_ptr<CameraFrame> 
 
 
 
-void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame){
+void OpenCVVisualizer::publish(const std::shared_ptr<Frame> &frame){
 
 
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_matching_in_frame_){
-        publishMatchingInFrame(camera_frame);
+        publishMatchingInFrame(frame);
 
     }
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_matching_in_time_){
-        publishMatchingInTime(camera_frame);
+        publishMatchingInTime(frame);
     }
     if(this->sys_config_->visualizer_config_->opencv_params_->show_projected_mappoint_){
-        publishProjectedMapPoint(camera_frame);
+        publishProjectedMapPoint(frame);
     }
 
     if(this->sys_config_->params_->check_triangulation_){
@@ -495,13 +497,13 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
     }
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_stereo_depth_){
-        publishStereoDepth(camera_frame);
+        publishStereoDepth(frame);
     }
    
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_sensor_depth_){
 
-        publishSensorDepth(camera_frame);
+        publishSensorDepth(frame);
     }
 
  
@@ -509,27 +511,27 @@ void OpenCVVisualizer::publish(const std::shared_ptr<CameraFrame> &camera_frame)
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_tracking_in_time_){
 
-        publishTrackingInTime(camera_frame);
+        publishTrackingInTime(frame);
     }
 
     #ifdef USE_LIBTORCH
     if(this->sys_config_->visualizer_config_->opencv_params_->show_learned_depth_){
-        publishLearnedDepth(camera_frame);
+        publishLearnedDepth(frame);
     }
    
     if(this->sys_config_->visualizer_config_->opencv_params_->show_object_detection_){
 
-        publishObjectDetection(camera_frame);
+        publishObjectDetection(frame);
     }    
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_semantic_segmentation_){
 
-        publishSemanticSegmentation(camera_frame);
+        publishSemanticSegmentation(frame);
     }
 
     if(this->sys_config_->visualizer_config_->opencv_params_->show_learned_stereo_disparity_){
 
-        publishLearnedStereoDisparity(camera_frame);
+        publishLearnedStereoDisparity(frame);
     }
 
     

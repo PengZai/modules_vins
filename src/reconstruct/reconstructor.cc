@@ -10,13 +10,13 @@ Reconstructor::Reconstructor(const std::shared_ptr<SystemConfig> &sys_config){
     this->sensor_depth_reconstructor_ = std::make_shared<SensorDepthReconstruction>(sys_config);
 
     #ifdef USE_LIBTORCH
-    if(this->sys_config_->camera_config_->params_vector_.at(0)->use_learned_depth_){
-        this->midas_reconstructor_ = std::make_shared<MiDas>(sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_depth_);
+    if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->use_learned_depth_){
+        this->midas_reconstructor_ = std::make_shared<MiDas>(sys_config->params_->model_path_ + "/" + sys_config->camera_config_->getParamsAt<CameraParameters>(0)->model_name_learned_depth_);
     }
-    if(this->sys_config_->camera_config_->params_vector_.at(0)->use_learned_stereo_matching_){
+    if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->use_learned_stereo_matching_){
 
-        this->fast_acvnet_plus_reconstructor_ = std::make_shared<FastACVNetPlus>(this->sys_config_, sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_stereo_matching_);
-        // this->foundation_stereo_reconstructor_ = std::make_shared<FoundationStereo>(this->sys_config_, sys_config->params_->model_path_ + "/" + sys_config->camera_config_->params_vector_.at(0)->model_name_learned_stereo_matching_);
+        this->fast_acvnet_plus_reconstructor_ = std::make_shared<FastACVNetPlus>(this->sys_config_, sys_config->params_->model_path_ + "/" + sys_config->camera_config_->getParamsAt<CameraParameters>(0)->model_name_learned_stereo_matching_);
+        // this->foundation_stereo_reconstructor_ = std::make_shared<FoundationStereo>(this->sys_config_, sys_config->params_->model_path_ + "/" + sys_config->camera_config_->getParamsAt<CameraParameters>(0)->model_name_learned_stereo_matching_);
 
     }
 
@@ -32,22 +32,22 @@ void Reconstructor::setTracker(const std::shared_ptr<Tracker> &tracker){
 
 
 
-void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+void Reconstructor::pipeline(const std::shared_ptr<Frame> &frame){
 
 
 
 
     // sensor depth reconstruction
-    for(size_t i=0;i<(int)camera_frame->image_vector_.size();i++){
+    for(size_t i=0;i<(int)frame->image_vector_.size();i++){
 
-        std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+        std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
 
-        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_sensor_depth_){
+        if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->use_sensor_depth_){
             this->sensor_depth_reconstructor_->reconstruct(img_i);
         }
 
         #ifdef USE_LIBTORCH
-        if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_depth_){
+        if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->use_learned_depth_){
             this->midas_reconstructor_->reconstruct(img_i);
         }
         #endif
@@ -55,22 +55,22 @@ void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     }
     
 
-    std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
-    if(camera_frame->image_vector_.size() > 1){
-        this->tracker_->trackInFrame(camera_frame);
+    std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
+    if(frame->image_vector_.size() > 1){
+        this->tracker_->trackInFrame(frame);
 
         // two view reconstruction
-        for(size_t i=1;i<(int)camera_frame->image_vector_.size();i++){
+        for(size_t i=1;i<(int)frame->image_vector_.size();i++){
 
-            std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(1);
+            std::shared_ptr<Image> &img_i = frame->image_vector_.at(1);
             this->two_view_reconstructor_->reconstruct(img_0, img_i);
 
-            if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_stereo_matching_){
+            if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->use_stereo_matching_){
                 this->two_view_reconstructor_->stereoBatchMatching(img_0, img_i);
             }
 
             #ifdef USE_LIBTORCH
-            if(this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->use_learned_stereo_matching_){
+            if(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->use_learned_stereo_matching_){
                 this->fast_acvnet_plus_reconstructor_->reconstruct(img_0, img_i);
 
                 // this->foundation_stereo_reconstructor_->reconstruct(img_0, img_i);
@@ -99,14 +99,14 @@ void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     //         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
 
     //         kp->setMapPointPtr(map_point_ptr);
-    //         camera_frame->map_point_vector_.emplace_back(map_point_ptr);
+    //         frame->map_point_vector_.emplace_back(map_point_ptr);
             
     //     }
         
 
     // }
 
-    // cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img_0->sensor_id_)->getCVIntrinsicsMatrix();
+    // cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_0->sensor_id_)->getCVIntrinsicsMatrix();
 
     // for (int row = 0; row < img_0->depth_.rows; ++row) {
     //     for (int col = 0; col < img_0->depth_.cols; ++col) {
@@ -136,7 +136,7 @@ void Reconstructor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
     //         std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(map_point);            
     //         cv::Vec3b bgr = img_0->color_data_.at<cv::Vec3b>(pt2i);
     //         map_point_ptr->setColor(bgr[0], bgr[1], bgr[2]);
-    //         camera_frame->map_point_vector_.emplace_back(map_point_ptr);
+    //         frame->map_point_vector_.emplace_back(map_point_ptr);
 
 
     //     }

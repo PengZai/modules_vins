@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 
-#include "../data/camera.h"
+#include "../data/frame.h"
 #include "../system/system_config.h"
 #include "../optimization/bundle_adjustment.h"
 
@@ -21,7 +21,7 @@ class PoseEstimator{
     public:
 
     PoseEstimator(const std::shared_ptr<SystemConfig> &sys_config);
-    bool checkEstimatedPose(const Sophus::SE3<double> &estimated_T,const Sophus::SE3<double> &initial_guess, const int num_inliers);
+    bool checkEstimatedPose(const Sophus::SE3<double> &estimated_T_b_w,const Sophus::SE3<double> &initial_guess, const int num_inliers);
     int epipolarGeometryEstimator(const std::vector<cv::Point2d> &ref_pt2ds, 
         const std::vector<cv::Point2d> &pt2ds, 
         cv::Mat &cv_R, 
@@ -30,19 +30,19 @@ class PoseEstimator{
     int PnpEstimator(
         const std::vector<cv::Point3d> &pt3ds, 
         const std::vector<cv::Point2d> &pt2ds, 
-        Sophus::SE3<double> &estimated_T
+        Sophus::SE3<double> &estimated_T_b_w
     );
 
     int PnpEstimator(
         const std::vector<cv::Point3d> &pt3ds, 
         const std::vector<cv::Point2d> &pt2ds, 
-        Sophus::SE3<double> &estimated_T,
+        Sophus::SE3<double> &estimated_T_b_w,
         const cv::Mat K,
         const cv::Mat cv_distortion_coeffs);
 
     std::shared_ptr<SystemConfig> sys_config_;
    
-    bool pipeline(const std::shared_ptr<CameraFrame> &camera_frame, int &num_inlier, double maximum_motion_norm);
+    bool pipeline(const std::shared_ptr<Frame> &frame, int &num_inlier, double maximum_motion_norm);
 
 
 };

@@ -23,15 +23,15 @@ sys_config_(sys_config)
 
 
     
-bool Initializer::initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state){
+bool Initializer::initializeGTTbwWithFrame(const std::shared_ptr<Frame> &frame, const std::shared_ptr<State> &state){
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
     if(!img_0){
         return false;
     }
 
-    state->SynchronizeAndTransformComparisonPoseToTcw(img_0->timestamp_);
+    state->SynchronizeAndTransformComparisonPoseToRobotBaseCoordinate(img_0->timestamp_);
 
     return true;
 }

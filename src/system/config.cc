@@ -30,24 +30,6 @@ void Config::loadConfigFromPath(const std::string &config_path){
 
 
 
-void Config::calculateExtrinsicsAndProjectionMatrixBetweenSensors(){
-
-    for(size_t sensor_id_i=0;sensor_id_i< this->params_vector_.size(); sensor_id_i++){
-
-        Eigen::Matrix4d &T_imu0_sensor_i = this->params_vector_.at(sensor_id_i)->T_imu0_sensor_;
-
-        for(int sensor_id_j=0;sensor_id_j<(int)this->params_vector_.size(); sensor_id_j++){
-
-            Eigen::Matrix4d &T_imu0_sensor_j = this->params_vector_.at(sensor_id_j)->T_imu0_sensor_;
-            
-            Eigen::Matrix4d T_sensor_i_sensor_j = T_imu0_sensor_i.inverse() * T_imu0_sensor_j;
-
-            this->sensor_id_sensor_id_extrinsics_map_[{sensor_id_i, sensor_id_j}] =  T_sensor_i_sensor_j;
-
-        }
-    }
-    
-}
 
 
 Eigen::Matrix<double, 4, 4> Config::getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j){

@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     for(size_t i=0; i < msg_groups_ready_for_process.size(); i++){
 
         const std::vector<std::map<std::string, std::shared_ptr<rosbag::MessageInstance>>> &msg_group = msg_groups_ready_for_process.at(i);
-        sys.addCameraFrameDeque(msg_group);
+        sys.addFrameDeque(msg_group);
 
         sys.callbackVisualNavigation();
 

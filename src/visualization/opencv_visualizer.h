@@ -7,7 +7,7 @@
 #include "../log/logging.h"
 #include "../system/system_config.h"
 #include "../data/map.h"
-#include "../data/camera.h"
+#include "../data/frame.h"
 
 namespace modules_vins
 {
@@ -18,20 +18,20 @@ class OpenCVVisualizer{
     public:
 
     OpenCVVisualizer(const std::shared_ptr<SystemConfig> &config);
-    void publish(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publish(const std::shared_ptr<Frame> &frame);
     void setMap(const std::shared_ptr<Map> &map);
     void drawTrackingPointPattern(cv::Mat &img, const std::shared_ptr<KeyPoint> &keypoint, const cv::Scalar &color);
-    void publishMatchingInFrame(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishMatchingInTime(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishProjectedMapPoint(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishStereoDepth(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishLearnedStereoDisparity(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishSensorDepth(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishLearnedDepth(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publishMatchingInFrame(const std::shared_ptr<Frame> &frame);
+    void publishMatchingInTime(const std::shared_ptr<Frame> &frame);
+    void publishProjectedMapPoint(const std::shared_ptr<Frame> &frame);
+    void publishStereoDepth(const std::shared_ptr<Frame> &frame);
+    void publishLearnedStereoDisparity(const std::shared_ptr<Frame> &frame);
+    void publishSensorDepth(const std::shared_ptr<Frame> &frame);
+    void publishLearnedDepth(const std::shared_ptr<Frame> &frame);
     void invDepthAndMixColor(const cv::Mat &input_depth, const cv::Mat &input_color, cv::Mat &mixed_depth_color);
-    void publishObjectDetection(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishSemanticSegmentation(const std::shared_ptr<CameraFrame> &camera_frame);
-    void publishTrackingInTime(const std::shared_ptr<CameraFrame> &camera_frame);
+    void publishObjectDetection(const std::shared_ptr<Frame> &frame);
+    void publishSemanticSegmentation(const std::shared_ptr<Frame> &frame);
+    void publishTrackingInTime(const std::shared_ptr<Frame> &frame);
 
 
     public:

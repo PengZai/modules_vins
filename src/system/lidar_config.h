@@ -33,6 +33,7 @@ class LidarConfig : public Config
     public:
 
 
+        // std::vector<std::shared_ptr<LidarParameters>> params_vector_;
 
     protected:
 

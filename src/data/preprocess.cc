@@ -6,13 +6,13 @@ namespace modules_vins
 
 
 
-void DataPreprocesor::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+void DataPreprocesor::pipeline(const std::shared_ptr<Frame> &frame){
 
 
-    for(int i=0;i<camera_frame->image_vector_.size();i++){
+    for(int i=0;i<frame->image_vector_.size();i++){
 
 
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
 
         if(img_i->color_data_.channels() == 3){
         cv::cvtColor(img_i->color_data_, img_i->gray_data_, cv::COLOR_BGR2GRAY);

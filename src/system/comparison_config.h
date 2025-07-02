@@ -42,9 +42,7 @@ class ComparisonConfig : public Config
 {
     public:
 
-
-    public:
-
+        // std::vector<std::shared_ptr<ComparisonParameters>> params_vector_;
 
  
 

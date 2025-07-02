@@ -149,7 +149,7 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("distortion_coeffs", this->distortion_coeffs_);
     parse("intrinsics", this->intrinsics_);
 
-    parse("T_imu_cam", this->T_imu_cam_);
+    // parse("T_imu_cam", this->T_imu_cam_);
 
 
 

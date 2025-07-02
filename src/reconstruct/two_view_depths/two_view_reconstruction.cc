@@ -80,7 +80,7 @@ void TwoViewReconstructor::stereoBatchMatching(const std::shared_ptr<Image> &lef
     Eigen::Matrix<double, 4, 4> T_right_cam_left_cam= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(right_img->sensor_id_, left_img->sensor_id_);
     Eigen::Vector3d t = T_right_cam_left_cam.block<3,1>(0, 3);  // Get translation vector
     double B = t.norm();
-    const Eigen::Matrix3d K_left = this->sys_config_->camera_config_->params_vector_.at(left_img->sensor_id_)->getIntrinsicsMatrix();
+    const Eigen::Matrix3d K_left = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(left_img->sensor_id_)->getIntrinsicsMatrix();
     double fx = K_left(0,0);
 
     cv::Mat validMask = disparity > 0;
@@ -143,17 +143,21 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
 
     std::vector<Eigen::Matrix<double, 3, 4>> poses;
 
-    cv::Mat cv_Ki = this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->getCVIntrinsicsMatrix();
-    cv::Mat cv_Kj = this->sys_config_->camera_config_->params_vector_.at(img_j->sensor_id_)->getCVIntrinsicsMatrix();
+    cv::Mat cv_Ki = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->getCVIntrinsicsMatrix();
+    cv::Mat cv_Kj = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_j->sensor_id_)->getCVIntrinsicsMatrix();
+
+    Eigen::Matrix<double, 4, 4> T_cam_i_cam_0= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_i->sensor_id_, 0);
+    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_j->sensor_id_, img_i->sensor_id_);
 
 
-    const Eigen::Matrix<double, 4, 4> &T_cam_i_w = img_i->T_c_w_.matrix();
+    // Tciw = Tcic0 * (Tbc0)^(-1) * * Tbw 
+    const Eigen::Matrix<double, 4, 4> &T_cam_i_w = T_cam_i_cam_0 * this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->T_base_sensor_.inverse() * img_i->frame_->T_b_w_.matrix();
+    const Eigen::Matrix<double, 4, 4> &T_cam_j_w = T_cam_j_cam_i * T_cam_i_w;
+
 
     Eigen::Matrix<double, 3, 4> Ti;
     Ti = T_cam_i_w.block<3,4>(0,0);
 
-    Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_j->sensor_id_, img_i->sensor_id_);
-    const Eigen::Matrix<double, 4, 4> &T_cam_j_w = T_cam_j_cam_i * T_cam_i_w;
     Eigen::Matrix<double, 3, 4> Tj = T_cam_j_w.topRows(3);
 
     poses.emplace_back(Ti);
@@ -234,8 +238,8 @@ void TwoViewReconstructor::twoViewTriangulationWithOpenCV(const std::shared_ptr<
 
 
 
-    cv::Mat cv_Ki = this->sys_config_->camera_config_->params_vector_.at(img_i->sensor_id_)->getCVIntrinsicsMatrix();
-    cv::Mat cv_Kj = this->sys_config_->camera_config_->params_vector_.at(img_j->sensor_id_)->getCVIntrinsicsMatrix();
+    cv::Mat cv_Ki = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->getCVIntrinsicsMatrix();
+    cv::Mat cv_Kj = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_j->sensor_id_)->getCVIntrinsicsMatrix();
 
 
     // we collected these tracked points haven't been triangulated yet

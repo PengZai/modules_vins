@@ -12,6 +12,7 @@
 #include "../system/system_config.h"
 #include "../utils/utils.h"
 #include "../data/camera.h"
+#include "../data/frame.h"
 #include "../data/map.h"
 #include "../log/logging.h"
 #include "../data/preprocess.h"
@@ -48,18 +49,18 @@ class VisualFrontend{
     VisualFrontend(const std::shared_ptr<SystemConfig> &sys_config);
     virtual ~VisualFrontend() = default;
 
-    void updateMap(const CameraFrame &camera_frame);
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
-    virtual void initPipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
-    virtual void normalPipeline(const std::shared_ptr<CameraFrame> &camera_frame) = 0;
-    void setRefCameraFrameDeque(const std::deque<std::shared_ptr<CameraFrame>> &ref_camera_frame_deque);
-    void maintainRefCameraFrameDeque();
+    void updateMap(const Frame &frame);
+    void pipeline(const std::shared_ptr<Frame> &frame);
+    virtual void initPipeline(const std::shared_ptr<Frame> &frame) = 0;
+    virtual void normalPipeline(const std::shared_ptr<Frame> &frame) = 0;
+    void setRefFrameDeque(const std::deque<std::shared_ptr<Frame>> &ref_frame_deque);
+    void maintainRefFrameDeque();
     Status getStatus();
-    const std::deque<std::shared_ptr<CameraFrame>> &getRefCameraFrameDeque();
+    const std::deque<std::shared_ptr<Frame>> &getRefFrameDeque();
     void updateStautsInitialized2Normal();
-    void checkInitializationAndUpdateStatusNotInitialized2Initialized(const std::shared_ptr<CameraFrame> &camera_frame);
-    void propogateMappointWitchMatchInTimeRelationship(const std::shared_ptr<CameraFrame> &camera_frame);
-    bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame);
+    void checkInitializationAndUpdateStatusNotInitialized2Initialized(const std::shared_ptr<Frame> &frame);
+    void propogateMappointWitchMatchInTimeRelationship(const std::shared_ptr<Frame> &frame);
+    bool initializeGTTcwWithFrame(const std::shared_ptr<Frame> &frame);
 
     void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);
@@ -85,8 +86,8 @@ class VisualFrontend{
     std::shared_ptr<Reconstructor> reconstructor_;
     std::shared_ptr<PoseEstimator> pose_estimator_;
     std::shared_ptr<Visualizer> visualizer_;
-    std::deque<std::shared_ptr<CameraFrame>> camera_frame_deque_;
-    std::deque<std::shared_ptr<CameraFrame>> ref_camera_frame_deque_;
+    std::deque<std::shared_ptr<Frame>> frame_deque_;
+    std::deque<std::shared_ptr<Frame>> ref_frame_deque_;
     Status status_;
 
 

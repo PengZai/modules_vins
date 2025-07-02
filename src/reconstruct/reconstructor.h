@@ -32,7 +32,7 @@ class Reconstructor{
     public:
 
     Reconstructor(const std::shared_ptr<SystemConfig> &sys_config);
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
+    void pipeline(const std::shared_ptr<Frame> &frame);
     void setTracker(const std::shared_ptr<Tracker> &tracker);
 
 

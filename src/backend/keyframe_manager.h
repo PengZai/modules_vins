@@ -18,11 +18,11 @@ class KeyFrameManager{
     std::shared_ptr<SystemConfig> sys_config_;
 
     KeyFrameManager(const std::shared_ptr<SystemConfig> &sys_config);
-    bool isKeyCameraKeyFrame(const std::shared_ptr<CameraFrame> &camera_frame);
-    void updateKeyFrame(const std::shared_ptr<CameraFrame> &camera_frame);
+    bool isKeyFrame(const std::shared_ptr<Frame> &frame);
+    void updateKeyFrame(const std::shared_ptr<Frame> &frame);
 
     protected:
-    std::vector<std::shared_ptr<CameraFrame>> key_camera_frame_vector_;
+    std::vector<std::shared_ptr<Frame>> key_frame_vector_;
     std::shared_ptr<Map> map_;
 
     std::shared_ptr<Reconstructor> reconstructor_;

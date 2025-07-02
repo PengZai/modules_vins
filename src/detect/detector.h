@@ -24,7 +24,7 @@ class Detector{
     public:
     Detector(const std::shared_ptr<SystemConfig> &sys_config);
     void setFeaturePoint(const std::shared_ptr<FeaturePoint> &feature_point);
-    void pipeline(const std::shared_ptr<CameraFrame> &camera_frame);
+    void pipeline(const std::shared_ptr<Frame> &frame);
     void detect(const std::shared_ptr<Image> &img);
 
 

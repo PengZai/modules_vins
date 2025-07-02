@@ -13,16 +13,16 @@ sys_config_(sys_config)
 }
 
 
-bool KeyFrameManager::isKeyCameraKeyFrame(const std::shared_ptr<CameraFrame> &camera_frame){
+bool KeyFrameManager::isKeyFrame(const std::shared_ptr<Frame> &frame){
 
-    if(this->key_camera_frame_vector_.size() == 0){
+    if(this->key_frame_vector_.size() == 0){
         return true;
     }
 
-    const std::shared_ptr<CameraFrame> &ref_key_camera_frame = this->key_camera_frame_vector_.back();
-    double diff_trans = std::abs(camera_frame->image_vector_.at(0)->T_c_w_.translation().norm() - ref_key_camera_frame->image_vector_.at(0)->T_c_w_.translation().norm());
+    const std::shared_ptr<Frame> &ref_key_frame = this->key_frame_vector_.back();
+    double diff_trans = std::abs(frame->T_b_w_.translation().norm() - ref_key_frame->T_b_w_.translation().norm());
     
-    if(diff_trans > this->sys_config_->params_->minimum_key_camera_frame_translation_){
+    if(diff_trans > this->sys_config_->params_->minimum_key_frame_translation_){
         return true;
     }
     else{
@@ -32,14 +32,14 @@ bool KeyFrameManager::isKeyCameraKeyFrame(const std::shared_ptr<CameraFrame> &ca
 }
 
 
-void KeyFrameManager::updateKeyFrame(const std::shared_ptr<CameraFrame> &camera_frame){
+void KeyFrameManager::updateKeyFrame(const std::shared_ptr<Frame> &frame){
 
-    if(isKeyCameraKeyFrame(camera_frame)){
-        camera_frame->is_key_camera_frame_ = true;
-        key_camera_frame_vector_.emplace_back(camera_frame);
+    if(isKeyFrame(frame)){
+        frame->is_key_frame_ = true;
+        key_frame_vector_.emplace_back(frame);
     }
     else{
-        camera_frame->is_key_camera_frame_ = false;
+        frame->is_key_frame_ = false;
     }
 
 }

@@ -9,7 +9,7 @@
 
 #include "../../system/system_config.h"
 #include "../../data/point.h"
-#include "../../data/camera.h"
+#include "../../data/frame.h"
 #include "../../log/logging.h"
 
 

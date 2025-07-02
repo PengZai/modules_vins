@@ -25,7 +25,7 @@ class Initializer{
 
     Initializer(const std::shared_ptr<SystemConfig> sys_config);
     ~Initializer() = default;
-    bool initializeGTTcwWithCameraFrame(const std::shared_ptr<CameraFrame> &camera_frame, const std::shared_ptr<State> &state);
+    bool initializeGTTbwWithFrame(const std::shared_ptr<Frame> &frame, const std::shared_ptr<State> &state);
 
     std::shared_ptr<SystemConfig> sys_config_;
 

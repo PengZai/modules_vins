@@ -102,7 +102,7 @@ void FoundationStereo::reconstruct(const std::shared_ptr<Image> &left_img, const
     // Eigen::Matrix<double, 4, 4> T_right_cam_left_cam= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(right_img->sensor_id_, left_img->sensor_id_);
     // Eigen::Vector3d t = T_right_cam_left_cam.block<3,1>(0, 3);  // Get translation vector
     // double B = t.norm();
-    // const Eigen::Matrix3d K_left = this->sys_config_->camera_config_->params_vector_.at(left_img->sensor_id_)->getIntrinsicsMatrix();
+    // const Eigen::Matrix3d K_left = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(left_img->sensor_id_)->getIntrinsicsMatrix();
     // double fx = K_left(0,0);
 
     // auto valid_mask = cropped_output_disparity > 0;

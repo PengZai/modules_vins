@@ -43,8 +43,8 @@ FeaturePoint(sys_config)
 //     cv::Mat descriptors;
 //     this->orb_->compute(img->gray_data_, cv_key_points, descriptors);
 
-//     cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();         
-//     cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVDistortionCoeffs();
+//     cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVIntrinsicsMatrix();         
+//     cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVDistortionCoeffs();
 
 
 //     img->appendAndUndistotKeyPoints(cv_key_points, descriptors, cv_K, cv_distortion_coeffs);
@@ -100,8 +100,8 @@ void ORBFeature::detect(const std::shared_ptr<Image> &img){
     cv::Mat descriptors;
     this->orb_->compute(img->gray_data_, cv_key_points, descriptors);
 
-    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();         
-    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVDistortionCoeffs();
+    cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVDistortionCoeffs();
 
 
     img->appendAndUndistotKeyPoints(cv_key_points, descriptors, cv_K, cv_distortion_coeffs);
@@ -113,16 +113,16 @@ void ORBFeature::detect(const std::shared_ptr<Image> &img){
 
 
 
-void ORBFeature::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+void ORBFeature::pipeline(const std::shared_ptr<Frame> &frame){
     
-    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
+    if(frame->status_ != Frame::Status::NORMAL){
         return;
     }
 
 
-    for(size_t i=0;i<camera_frame->image_vector_.size();i++){
+    for(size_t i=0;i<frame->image_vector_.size();i++){
 
-        const std::shared_ptr<Image> &img_i = camera_frame->image_vector_.at(i);
+        const std::shared_ptr<Image> &img_i = frame->image_vector_.at(i);
         detect(img_i);
 
         LOG(INFO) << GREEN << "Detect " << img_i->keypoint_vector_.size() << " new features" << RESET;
@@ -167,8 +167,8 @@ void GoodFeature::detect(const std::shared_ptr<Image> &img){
 
     this->gftt_->detect(img->gray_data_, cv_key_points, mask);
 
-    cv::Mat cv_K = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVIntrinsicsMatrix();         
-    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->params_vector_.at(img->sensor_id_)->getCVDistortionCoeffs();
+    cv::Mat cv_K = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVIntrinsicsMatrix();         
+    cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img->sensor_id_)->getCVDistortionCoeffs();
 
     img->appendAndUndistotKeyPoints(cv_key_points, cv_K, cv_distortion_coeffs);
 
@@ -176,15 +176,15 @@ void GoodFeature::detect(const std::shared_ptr<Image> &img){
 }
 
 
-void GoodFeature::pipeline(const std::shared_ptr<CameraFrame> &camera_frame){
+void GoodFeature::pipeline(const std::shared_ptr<Frame> &frame){
     
-    if(camera_frame->status_ != CameraFrame::Status::NORMAL){
+    if(frame->status_ != Frame::Status::NORMAL){
         return;
     }
 
 
 
-    const std::shared_ptr<Image> &img_0 = camera_frame->image_vector_.at(0);
+    const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 
     // if(img_0->keypoint_vector_.size() < this->num_feature_points_ ){
     //     detect(img_0);

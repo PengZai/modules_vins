@@ -43,18 +43,20 @@ int main(int argc, char* argv[]) {
     image_vector_1.push_back(img_1);
     image_vector_2.push_back(img_2);
 
-    std::shared_ptr<CameraFrame>camera_frame_1 = std::make_shared<CameraFrame>(image_vector_1);
-    std::shared_ptr<CameraFrame>camera_frame_2 = std::make_shared<CameraFrame>(image_vector_2);
+    std::shared_ptr<Frame>frame_1 = std::make_shared<Frame>();
+    frame_1->setImages(image_vector_1);
+    std::shared_ptr<Frame>frame_2 = std::make_shared<Frame>();
+    frame_2->setImages(image_vector_2);
 
-    camera_frame_1->status_ = CameraFrame::Status::NORMAL;
-    camera_frame_2->status_ = CameraFrame::Status::NORMAL;
-    camera_frame_2->ref_camera_frame_ = camera_frame_1;
+    frame_1->status_ = Frame::Status::NORMAL;
+    frame_2->status_ = Frame::Status::NORMAL;
+    frame_2->ref_frame_ = frame_1;
 
-    data_preprocesor->pipeline(camera_frame_1);
-    data_preprocesor->pipeline(camera_frame_2);
+    data_preprocesor->pipeline(frame_1);
+    data_preprocesor->pipeline(frame_2);
 
-    detector->pipeline(camera_frame_1);
-    detector->pipeline(camera_frame_2);
+    detector->pipeline(frame_1);
+    detector->pipeline(frame_2);
 
     cv::Mat descriptor1, descriptor2;
     std::vector<cv::KeyPoint> keypoints1, keypoints2;
@@ -64,8 +66,8 @@ int main(int argc, char* argv[]) {
     img_1->getCVKeyPoints(keypoints1);
     img_2->getCVKeyPoints(keypoints2);
 
-    tracker->pipeline(camera_frame_2);
-    // std::vector<cv::DMatch> &matches  = camera_frame_1->image_vector_.at(0)->matches_in_time_;
+    tracker->pipeline(frame_2);
+    // std::vector<cv::DMatch> &matches  = frame_1->image_vector_.at(0)->matches_in_time_;
 
     std::vector<cv::DMatch> matches;
     // Step 2: Match descriptors using brute-force matcher with Hamming distance
