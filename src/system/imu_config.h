@@ -9,13 +9,18 @@ namespace modules_vins
 {
     
 
-
-class ImuConfig : public Config 
+class ImuParameters : public Parameters
 {
-    public:
 
     public:
-        Eigen::Matrix2d T_i_b_;
+
+        ImuParameters();
+
+        void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
+
+
+    public:
+
         double accelerometer_noise_density_; // [ m / s^2 / sqrt(Hz) ]   ( accel "white noise" )
         double accelerometer_random_walk_;  // [ m / s^3 / sqrt(Hz) ].  ( accel bias diffusion )
         double gyroscope_noise_density_;  // [ rad / s / sqrt(Hz) ]   ( gyro "white noise" )
@@ -24,6 +29,20 @@ class ImuConfig : public Config
         double time_offset_;
         double update_rate_;
         std::string model_;
+
+
+
+        
+
+};
+
+
+class ImuConfig : public Config 
+{
+    public:
+
+
+
 
 
 };

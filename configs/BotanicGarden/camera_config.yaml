@@ -1,7 +1,8 @@
 %YAML:1.0
 
 cam0:
-  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+  name: dalsa_rgb0
+  T_imu0_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
     - [-0.00140533,-0.00896721,0.99995881,0.18377395]
     - [-0.99999022,0.0042065,-0.00136765,0.14789743]
     - [-0.00419407,-0.99995095,-0.00897304,-0.0087318]
@@ -41,7 +42,8 @@ cam0:
 
 
 cam1:
-  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+  name: dalsa_rgb1
+  T_imu0_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
     - [-0.00120822,-0.00094742,0.99999882,0.18313715]
     - [-0.99997156,0.00744575,-0.00120114,-0.10587443]
     - [-0.00744461,-0.99997183,-0.00095639,-0.00933521]

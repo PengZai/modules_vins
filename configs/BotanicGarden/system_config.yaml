@@ -24,8 +24,6 @@ system:
   # backend
   minimum_key_camera_frame_translation: 0.5
 
-  #robot base
-  robot_base: imu0
 
   # map
   max_num_local_map_size: 2000000

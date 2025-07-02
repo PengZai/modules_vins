@@ -20,7 +20,7 @@ class CameraParameters : public Parameters
 
         CameraParameters();
 
-        void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+        void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
         const Eigen::Matrix3d getIntrinsicsMatrix();
         const cv::Mat getCVIntrinsicsMatrix();
         const Eigen::VectorXd getDistortionCoeffs();
@@ -28,7 +28,8 @@ class CameraParameters : public Parameters
 
 
     public:
-        Eigen::Matrix4d T_imu_cam_;
+
+
         Eigen::VectorXd resolution_;
         Eigen::VectorXd distortion_coeffs_;
         Eigen::VectorXd intrinsics_;
@@ -75,11 +76,9 @@ class CameraConfig : public Config
         // Eigen::Matrix<double, 3, 4> getProjectionMatrixBetweenCamerasBySensorID(Eigen::Matrix4d T_cam_i_world, const unsigned int sensor_id_i, const unsigned int sensor_id_j);
 
     public:
-        std::vector<std::shared_ptr<CameraParameters>> params_vector_;
 
     protected:
 
-        std::map<std::pair<unsigned int, unsigned int>, Eigen::Matrix4d> map_extrinsics_between_cameras_;
 
 }; 
 

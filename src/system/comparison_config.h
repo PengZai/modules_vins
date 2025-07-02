@@ -19,17 +19,15 @@ class ComparisonParameters : public Parameters
     public:
         ComparisonParameters();
 
-        void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+        void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
 
         void setName(const std::string name);
         
         bool enable_;
-        std::string name_;
         double max_tolerant_time_offset_;
         Eigen::VectorXd color_;
         int set_first_pose_in_origin_;
         std::string path_;        
-        Eigen::Matrix4d T_cam_comparison_;
 
 
     public:
@@ -47,7 +45,6 @@ class ComparisonConfig : public Config
 
     public:
 
-        std::vector<std::shared_ptr<ComparisonParameters>> params_vector_;
 
  
 

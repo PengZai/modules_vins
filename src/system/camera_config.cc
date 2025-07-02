@@ -6,33 +6,11 @@ namespace modules_vins
 
 
 
-void CameraConfig::calculateExtrinsicsAndProjectionMatrixBetweenCameras(){
 
-    for(int sensor_id_i=0;sensor_id_i<(int)this->params_vector_.size(); sensor_id_i++){
-
-        Eigen::Matrix4d &T_imu_cam_i = this->params_vector_.at(sensor_id_i)->T_imu_cam_;
-
-        for(int sensor_id_j=0;sensor_id_j<(int)this->params_vector_.size(); sensor_id_j++){
-
-            Eigen::Matrix4d &T_imu_cam_j = this->params_vector_.at(sensor_id_j)->T_imu_cam_;
-            
-            Eigen::Matrix4d T_cam_i_cam_j = T_imu_cam_i.inverse() * T_imu_cam_j;
-
-            this->map_extrinsics_between_cameras_[{sensor_id_i, sensor_id_j}] =  T_cam_i_cam_j;
-
-        }
-    }
-    
-}
 
  
 
 
-Eigen::Matrix<double, 4, 4> CameraConfig::getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j){
-
-    return this->map_extrinsics_between_cameras_[{sensor_id_i, sensor_id_j}];
-
-}
 
 
 CameraParameters::CameraParameters():

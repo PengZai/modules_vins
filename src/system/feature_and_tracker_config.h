@@ -11,7 +11,7 @@ namespace modules_vins{
 class ORBParameters: public Parameters{
 
     public:
-    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
 
     public:
     int num_feature_points_;
@@ -30,7 +30,7 @@ class ORBParameters: public Parameters{
 class KLTParameters: public Parameters{
 
     public:
-    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
 
     public:
     int num_feature_points_;
@@ -45,7 +45,7 @@ class FeatureAndTrackerParameters : public Parameters{
 
 
     public:
-    void loadFromNode(const std::shared_ptr<cv::FileNode> &node);
+    void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
 
     public:
 

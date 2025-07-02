@@ -1,6 +1,6 @@
 %YAML:1.0 # need to specify the file type at the top!
 
-commond:
+common:
   placeholder: 1
 
 ORB:

@@ -12,14 +12,14 @@ sys_config_(sys_config)
     for(size_t i=0;i<this->sys_config_->comparison_config_->params_vector_.size();i++){
 
         const std::shared_ptr<ComparisonParameters> &comparison_params = this->sys_config_->comparison_config_->params_vector_.at(i);
-        Eigen::Matrix<double, 4, 4> R_cam_GT = comparison_params->T_cam_comparison_; //Rotation only
-        R_cam_GT.block<3,1>(0, 3).setZero(); 
-        this->R_cam_comparison_vector_.emplace_back(Sophus::SE3d::fitToSE3(R_cam_GT));
+        Eigen::Matrix<double, 4, 4> T_imu_GT = comparison_params->T_imu_comparison_; //Rotation only
+        // R_cam_GT.block<3,1>(0, 3).setZero(); 
+        this->T_imu_comparison_vector_.emplace_back(Sophus::SE3d::fitToSE3(T_imu_GT));
 
     }
 }
 
-bool State::SynchronizeAndTransformComparisonPoseToTcw(const double base_timestamp){
+bool State::SynchronizeAndTransformComparisonPoseToRobotBaseCoordinate(const double base_timestamp){
 
 
     for(size_t idx=0; idx < this->sys_config_->comparison_config_->params_vector_.size(); idx++){
@@ -79,7 +79,7 @@ bool State::SynchronizeAndTransformComparisonPoseToTcw(const double base_timesta
 }
 
 
-bool State::getCameraPoseWithComparisonPoseIdx(const double base_timestamp, size_t used_idx, Sophus::SE3d &T_c_w){
+bool State::getTransformationComparisonWorldWithIdx(const double base_timestamp, size_t used_idx, Sophus::SE3d &T_c_w){
     
 
     const std::shared_ptr<ComparisonParameters> &comparison_param = this->sys_config_->comparison_config_->params_vector_.at(used_idx);

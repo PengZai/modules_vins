@@ -24,7 +24,7 @@ void ComparisonParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &nod
     
     parse("set_first_pose_in_origin", this->set_first_pose_in_origin_);
     parse("path", this->path_);
-    parse("T_cam_comparison", this->T_cam_comparison_);
+    parse("T_imu0_comparison", this->T_imu0_sensor_);
 
 
 

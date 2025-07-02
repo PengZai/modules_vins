@@ -18,18 +18,7 @@ namespace modules_vins
 {   
 
 
-class Config
-{
-    public:
 
-
-        void loadConfigFromPath(const std::string &config_path);
-    
-    public:
-        std::shared_ptr<cv::FileStorage> file_storage_ = nullptr;
-        std::string path_;
-
-};
 
 
 class Parameters{
@@ -38,9 +27,8 @@ class Parameters{
 
         virtual ~Parameters() = default;
         virtual void loadFromNode(const std::shared_ptr<cv::FileNode> &node) = 0;
+        void setName(const std::string name);
 
-
-        std::shared_ptr<cv::FileNode> node_;
 
         template <typename T>
         void parse(const std::string &parameter_name, T &parsed_value){
@@ -108,6 +96,33 @@ class Parameters{
 
 
         }
+
+
+
+        std::shared_ptr<cv::FileNode> node_;
+        Eigen::Matrix4d T_imu0_sensor_;
+        Eigen::Matrix4d T_base_sensor_;
+        std::string name_;
+
+};
+
+
+class Config
+{
+    public:
+
+
+        void loadConfigFromPath(const std::string &config_path);
+        void calculateExtrinsicsAndProjectionMatrixBetweenSensors();
+        Eigen::Matrix<double, 4, 4> getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j);
+
+    public:
+        std::shared_ptr<cv::FileStorage> file_storage_ = nullptr;
+        std::string path_;
+
+        std::vector<std::shared_ptr<Parameters>> params_vector_;
+        std::map<std::pair<unsigned int, unsigned int>, Eigen::Matrix4d> sensor_id_sensor_id_extrinsics_map_;
+
 
 };
 

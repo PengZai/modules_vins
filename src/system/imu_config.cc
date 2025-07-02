@@ -6,6 +6,10 @@ namespace modules_vins
     
 
 
+ImuParameters::ImuParameters()
+{
+
+}
 
 
 
