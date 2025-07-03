@@ -34,9 +34,11 @@ void Config::loadConfigFromPath(const std::string &config_path){
 
 Eigen::Matrix<double, 4, 4> Config::getExtrinsicsBetweenCamerasBySensorID(const unsigned int sensor_id_i, const unsigned int sensor_id_j){
 
-    return this->sensor_id_sensor_id_extrinsics_map_[{sensor_id_i, sensor_id_j}];
+    return this->sensor_id_sensor_id_extrinsics_map_[{sensor_id_i, sensor_id_j}].matrix();
 
 }
+
+
 
 
 } // modules_vins

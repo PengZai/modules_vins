@@ -23,14 +23,13 @@ class Frame {
     void setTrackInTimeRelationship(const std::vector<cv::DMatch> &matches);
     void setTrackInFrameRelationship(const std::vector<cv::DMatch> &matches);
     // void setTcwWithCamera0(const Sophus::SE3d &Tc0w);
-    void setCamera0VelocityWithCamera0Tcw();
     void initializeTbwWithVelocity();
     void propogateMappointWitchMatchInTimeRelationship();
 
     void setTbw(const Sophus::SE3<double> T_b_w);
     void setTbw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position);
-    void setVelocityTbw(const Sophus::Vector6d Velocity_T_b_w);
-
+    void setVelocity(const Sophus::Vector6d Velocity_T_b_w);
+    void calculateVelocityWithRefFrame();
     void cleanFeaturePoints();
 
     // Frame(const Frame &frame);

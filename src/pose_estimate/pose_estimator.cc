@@ -343,7 +343,7 @@ bool PoseEstimator::pipeline(const std::shared_ptr<Frame> &frame, int &num_inlie
 
     frame->setTbw(estimated_T_b_w);
     // const double dt = 1;
-    frame->setVelocityTbw(Velocity_T_b_w);
+    frame->setVelocity(Velocity_T_b_w);
 
     // double relative_T_curr_ref_norm = this->relative_T_curr_ref.log().norm();
     // LOG(INFO) << "relative_T_curr_ref_norm : " << relative_T_curr_ref_norm;

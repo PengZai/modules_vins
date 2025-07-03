@@ -47,13 +47,13 @@ void KLTFrontend::initPipeline(const std::shared_ptr<Frame> &frame){
 
          if(frame->status_ == Frame::NORMAL){
             this->status_ = Status::NORMAL;
-            initializeGTTcwWithFrame(frame);
+            initializeComparisonPosewWithFrame(frame);
             frame->propogateMappointWitchMatchInTimeRelationship();
             if(frame->use_comparison_pose_for_pose_estimation_){
                 bool success = state_->getPoseComparisonForTbwWithIdx(frame->timestamp_, 
                 this->sys_config_->params_->comparison_pose_idx_for_pose_estimation_, 
                 frame->T_b_w_);
-
+                frame->calculateVelocityWithRefFrame();
                 // frame->setTcwWithCamera0(frame->T_b_w_);
                 // frame->setCamera0VelocityWithCamera0Tcw();
             }
@@ -122,7 +122,7 @@ void KLTFrontend::normalPipeline(const std::shared_ptr<Frame> &frame){
             bool success = state_->getPoseComparisonForTbwWithIdx(frame->timestamp_, 
             this->sys_config_->params_->comparison_pose_idx_for_pose_estimation_, 
             frame->T_b_w_);
-
+            frame->calculateVelocityWithRefFrame();
             // frame->setTcwWithCamera0(frame->image_vector_.at(0)->T_c_w_);
             // frame->setCamera0VelocityWithCamera0Tcw();
         }

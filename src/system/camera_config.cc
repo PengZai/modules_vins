@@ -139,7 +139,6 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("learned_semantic_segmentation_rostopic", this->learned_semantic_segmentation_rostopic_);
 
 
-  
 
     parse("output_rostopic", this->output_rostopic_);
     parse("camera_model", this->camera_model_);
@@ -149,7 +148,7 @@ void CameraParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node)
     parse("distortion_coeffs", this->distortion_coeffs_);
     parse("intrinsics", this->intrinsics_);
 
-    // parse("T_imu_cam", this->T_imu_cam_);
+    parse("T_imu0_cam", this->T_imu0_sensor_);
 
 
 

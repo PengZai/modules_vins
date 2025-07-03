@@ -124,25 +124,22 @@ void Frame::setTbw(const Eigen::Matrix3d &rotation, Eigen::Vector3d position){
 }
 
 
-void Frame::setVelocityTbw(const Sophus::Vector6d Velocity_T_b_w){
+void Frame::setVelocity(const Sophus::Vector6d Velocity_T_b_w){
     this->Velocity_T_b_w_ = Velocity_T_b_w;
 }
 
-void Frame::setCamera0VelocityWithCamera0Tcw(){
+void Frame::calculateVelocityWithRefFrame(){
 
     if(this->ref_frame_){
-
-        const std::shared_ptr<Image> img_0_from_current_frame = this->image_vector_.at(0);
-        const std::shared_ptr<Image> img_0_from_ref_frame = this->ref_frame_->image_vector_.at(0);
 
         const Sophus::SE3d T_curr_ref =  this->T_b_w_ * ref_frame_->T_b_w_.inverse();
 
         double norm_T_curr_ref = T_curr_ref.log().norm();
 
-        const double dt = img_0_from_current_frame->timestamp_ - img_0_from_ref_frame->timestamp_;
+        const double dt = this->timestamp_ - ref_frame_->timestamp_;
 
         const Sophus::Vector6d Velocity_T_b_w = T_curr_ref.log()/dt;
-        this->setVelocityTbw(Velocity_T_b_w);
+        this->setVelocity(Velocity_T_b_w);
 
     }
     else{

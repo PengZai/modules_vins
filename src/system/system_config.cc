@@ -17,9 +17,9 @@ void SystemConfig::loadFromPath(const std::string &config_path){
     std::string relative_folder = this->path_.substr(0, this->path_.find_last_of('/')) + "/";
 
     loadSensorConfigAndParameters<CameraConfig, CameraParameters>(this->camera_config_, relative_folder + this->params_->camera_config_name_, this->params_->num_used_camera_);
-    loadSensorConfigAndParameters<LidarConfig, LidarParameters>(this->lidar_config_, relative_folder + this->params_->lidar_config_name_, this->params_->num_used_imu_);
-    loadSensorConfigAndParameters<ImuConfig, ImuParameters>(this->imu_config_, relative_folder + this->params_->imu_config_name_, this->params_->num_used_lidar_);
     loadSensorConfigAndParameters<ComparisonConfig, ComparisonParameters>(this->comparison_config_, relative_folder + this->params_->comparison_config_name_, -1);
+    loadSensorConfigAndParameters<ImuConfig, ImuParameters>(this->imu_config_, relative_folder + this->params_->imu_config_name_, this->params_->num_used_imu_);
+    loadSensorConfigAndParameters<LidarConfig, LidarParameters>(this->lidar_config_, relative_folder + this->params_->lidar_config_name_, this->params_->num_used_lidar_);
     
     
     calculateTransformationsBetweenRobotBaseAndSensors();
@@ -148,7 +148,7 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     
     this->node_ = node;
     parse("log_verbosity", this->log_verbosity_);
-    parse("mum_used_camera", this->num_used_camera_);
+    parse("num_used_camera", this->num_used_camera_);
     parse("num_used_imu", this->num_used_imu_);
     parse("num_used_lidar", this->num_used_lidar_);
 
@@ -171,6 +171,10 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
     //backend
     parse("minimum_key_frame_translation", this->minimum_key_frame_translation_);
 
+    // base name 
+    parse("robot_base", this->robot_base_);
+
+
     //map
     parse("max_num_local_map_size", this->max_num_local_map_size_);
 
@@ -180,6 +184,8 @@ void SystemParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
 
     parse("imu_config_name", this->imu_config_name_);
     parse("camera_config_name", this->camera_config_name_);
+    parse("lidar_config_name", this->lidar_config_name_);
+
     parse("visualizer_config_name", this->visualizer_config_name_);
     parse("feature_and_tracker_config_name", this->feature_and_tracker_config_name_);
     parse("comparison_config_name", this->comparison_config_name_);

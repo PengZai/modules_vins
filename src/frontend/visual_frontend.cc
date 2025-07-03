@@ -107,7 +107,7 @@ void VisualFrontend::maintainRefFrameDeque(){
 
 }
 
-bool VisualFrontend::initializeGTTcwWithFrame(const std::shared_ptr<Frame> &frame){
+bool VisualFrontend::initializeComparisonPosewWithFrame(const std::shared_ptr<Frame> &frame){
 
     const std::shared_ptr<Image> &img_0 = frame->image_vector_.at(0);
 

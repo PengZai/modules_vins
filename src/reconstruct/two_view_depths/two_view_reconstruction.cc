@@ -151,6 +151,11 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
 
 
     // Tciw = Tcic0 * (Tbc0)^(-1) * * Tbw 
+    // const std::shared_ptr<CameraParameters> camera_params = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0);
+    // const Eigen::Matrix4d T_cam_0_b =  camera_params->T_base_sensor_.inverse();
+    // const Eigen::Matrix4d Tbw = img_i->frame_->T_b_w_.matrix();
+    // const Eigen::Matrix<double, 4, 4> &T_cam_i_w = T_cam_i_cam_0 * T_cam_0_b * img_i->frame_->T_b_w_.matrix();
+
     const Eigen::Matrix<double, 4, 4> &T_cam_i_w = T_cam_i_cam_0 * this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->T_base_sensor_.inverse() * img_i->frame_->T_b_w_.matrix();
     const Eigen::Matrix<double, 4, 4> &T_cam_j_w = T_cam_j_cam_i * T_cam_i_w;
 

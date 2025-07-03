@@ -4,15 +4,11 @@
 namespace modules_vins{
 
 
-ComparisonParameters::ComparisonParameters():
-color_(3)
+ComparisonParameters::ComparisonParameters()
 {
 
 }
 
-void ComparisonParameters::setName(const std::string name){
-    this->name_ = name;
-}
 
 void ComparisonParameters::loadFromNode(const std::shared_ptr<cv::FileNode> &node){
 

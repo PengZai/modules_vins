@@ -60,7 +60,7 @@ class VisualFrontend{
     void updateStautsInitialized2Normal();
     void checkInitializationAndUpdateStatusNotInitialized2Initialized(const std::shared_ptr<Frame> &frame);
     void propogateMappointWitchMatchInTimeRelationship(const std::shared_ptr<Frame> &frame);
-    bool initializeGTTcwWithFrame(const std::shared_ptr<Frame> &frame);
+    bool initializeComparisonPosewWithFrame(const std::shared_ptr<Frame> &frame);
 
     void setDataProprocesor(const std::shared_ptr<DataPreprocesor> &data_preprocesor);
     void setDetector(const std::shared_ptr<Detector> &detector);

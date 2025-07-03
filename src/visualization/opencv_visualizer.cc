@@ -200,7 +200,7 @@ void OpenCVVisualizer::publishProjectedMapPoint(const std::shared_ptr<Frame> &fr
        const std::shared_ptr<MapPoint> &map_point = item_pair.second;
 
        Eigen::Matrix<double, 4, 4> T_c0_w = Tc0b * frame->T_b_w_.matrix();
-       const Eigen::Vector3d pt3d_in_cam = T_c0_w.block<3,3>(0,0) * map_point->pt3d_ + T_c0_w.block<3,1>(0,3);
+       const Eigen::Vector3d pt3d_in_cam = T_c0_w.block<3,4>(0,0) * map_point->pt3d_.homogeneous();
        const cv::Point2d reprojected_pixel = camera2pixel(cv::Point3d(pt3d_in_cam.x(), pt3d_in_cam.y(), pt3d_in_cam.z()), cv_K);
        const double d = pt3d_in_cam.z();
        if(img_0->isInImage(reprojected_pixel) && 

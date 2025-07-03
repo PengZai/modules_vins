@@ -98,6 +98,8 @@ void System::addFrameDeque(const std::vector<std::map<std::string, std::shared_p
 
  
     std::vector<std::shared_ptr<Image>> image_vector;
+    std::shared_ptr<Frame> frame = std::make_shared<Frame>();
+
 
     for(int cam_id=0; cam_id < (int)msg_groups.size(); cam_id++){
 
@@ -110,14 +112,12 @@ void System::addFrameDeque(const std::vector<std::map<std::string, std::shared_p
         RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["bgr"], cv_ptr, "bgr8");
         std::shared_ptr<Image> img = std::make_shared<Image>(cv_ptr->header.stamp.toSec(), cam_id, cv_ptr->image.clone());
 
-        Eigen::Matrix<double, 4, 4> T_cam_j_cam_0 = this->config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(cam_id, 0);
-        // img->setTcc0Extrinsic(Sophus::SE3d::fitToSE3(T_cam_j_cam_0));
-
         if(this->config_->camera_config_->getParamsAt<CameraParameters>(cam_id)->use_sensor_depth_){
             RosMessagePtrToCvImageConstPtr(dtype_to_msg_ptr_map["depth"], cv_ptr);
             img->setSensorDepth(cv_ptr->image.clone());
         }
 
+        img->setFrame(frame);
         image_vector.emplace_back(img);
         
     }
@@ -125,7 +125,6 @@ void System::addFrameDeque(const std::vector<std::map<std::string, std::shared_p
     
     const std::shared_ptr<State> &state = getState();
 
-    std::shared_ptr<Frame> frame = std::make_shared<Frame>();
     frame->setImages(image_vector);
     frame->status_ = Frame::Status::NORMAL;
     frame->use_comparison_pose_for_pose_estimation_ = this->config_->params_->use_comparison_pose_for_pose_estimation_;

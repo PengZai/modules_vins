@@ -50,7 +50,7 @@ void DescriptorMatchFrontend::initPipeline(const std::shared_ptr<Frame> &frame){
         if(frame->status_ == Frame::NORMAL){
             this->status_ = Status::NORMAL;
             frame->propogateMappointWitchMatchInTimeRelationship();
-            initializeGTTcwWithFrame(frame);
+            initializeComparisonPosewWithFrame(frame);
 
             this->reconstructor_->pipeline(frame);
             this->ref_frame_deque_.clear();

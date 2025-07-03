@@ -20,12 +20,10 @@ class ComparisonParameters : public Parameters
         ComparisonParameters();
 
         void loadFromNode(const std::shared_ptr<cv::FileNode> &node) override;
-
-        void setName(const std::string name);
         
         bool enable_;
         double max_tolerant_time_offset_;
-        Eigen::VectorXd color_;
+        Eigen::Vector3d color_;
         int set_first_pose_in_origin_;
         std::string path_;        
 
