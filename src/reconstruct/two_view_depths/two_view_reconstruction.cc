@@ -146,7 +146,7 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
     cv::Mat cv_Ki = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_i->sensor_id_)->getCVIntrinsicsMatrix();
     cv::Mat cv_Kj = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_j->sensor_id_)->getCVIntrinsicsMatrix();
 
-    Eigen::Matrix<double, 4, 4> T_cam_i_cam_0= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_i->sensor_id_, 0);
+    Eigen::Matrix<double, 4, 4> T_cam_0_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(0, img_i->sensor_id_);
     Eigen::Matrix<double, 4, 4> T_cam_j_cam_i= this->sys_config_->camera_config_->getExtrinsicsBetweenCamerasBySensorID(img_j->sensor_id_, img_i->sensor_id_);
 
 
@@ -156,14 +156,16 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
     // const Eigen::Matrix4d Tbw = img_i->frame_->T_b_w_.matrix();
     // const Eigen::Matrix<double, 4, 4> &T_cam_i_w = T_cam_i_cam_0 * T_cam_0_b * img_i->frame_->T_b_w_.matrix();
 
-    const Eigen::Matrix<double, 4, 4> &T_cam_i_w = T_cam_i_cam_0 * this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->T_base_sensor_.inverse() * img_i->frame_->T_b_w_.matrix();
-    const Eigen::Matrix<double, 4, 4> &T_cam_j_w = T_cam_j_cam_i * T_cam_i_w;
+    const Eigen::Matrix<double, 4, 4> &T_w_cam_i = img_i->frame_->T_b_w_.inverse().matrix() * this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->T_base_sensor_ * T_cam_0_cam_i ;
+    // const Eigen::Matrix<double, 4, 4> &T_cam_j_w = T_cam_j_cam_i * T_cam_i_w;
 
+    // const Eigen::Matrix4d T_cam_j_cam_i_just_test = T_cam_j_w * T_cam_i_w.inverse();
 
     Eigen::Matrix<double, 3, 4> Ti;
-    Ti = T_cam_i_w.block<3,4>(0,0);
+    Ti.setIdentity();
+    // Ti = T_cam_i_w.block<3,4>(0,0);
 
-    Eigen::Matrix<double, 3, 4> Tj = T_cam_j_w.topRows(3);
+    Eigen::Matrix<double, 3, 4> Tj = T_cam_j_cam_i.topRows(3);
 
     poses.emplace_back(Ti);
     poses.emplace_back(Tj);
@@ -174,7 +176,7 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
     for(size_t i=0; i < img_i->matches_in_frame_.size(); i++){
 
         std::vector<Eigen::Vector3d> normalized_pt3d, normalized_pt3d_;
-        Eigen::Vector3d pt_world, pt_world_;
+        Eigen::Vector3d pt3d_in_cam_i;
         cv::DMatch &match = img_i->matches_in_frame_[i];
 
         const std::shared_ptr<KeyPoint> &kp_from_img_i = img_i->keypoint_vector_[match.queryIdx];
@@ -209,14 +211,17 @@ void TwoViewReconstructor::twoViewTriangulationWithSVD(const std::shared_ptr<Ima
         // bool success_ = triangulatePoint(poses, normalized_pt3d_, pt_world_);
 
 
-        bool success = triangulatePoint(poses, normalized_pt3d, pt_world);
+        bool success = triangulatePoint(poses, normalized_pt3d, pt3d_in_cam_i);
         if(success == false){
             continue;
         }
 
         // img_i->keypoint_vector_[match.queryIdx]->pt3d_ = cv::Point3d(pt_world(0), pt_world(1), pt_world(2));
         // LOG(INFO) << GREEN << "pt3d : " << img_i->keypoint_vector_[match.queryIdx]->pt3d_ << RESET;
-        std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world(0), pt_world(1), pt_world(2)));
+
+                
+        Eigen::Vector3d pw = T_w_cam_i.block<3,4>(0,0) * pt3d_in_cam_i.homogeneous();
+        std::shared_ptr<MapPoint> map_point_ptr = std::make_shared<MapPoint>(Eigen::Vector3d(pw(0), pw(1), pw(2)));
         // std::shared_ptr<MapPoint> map_point_ptr2 = std::make_shared<MapPoint>(Eigen::Vector3d(pt_world_(0), pt_world_(1), pt_world_(2)));
 
         cv::Vec3b bgr = img_i->color_data_.at<cv::Vec3b>(kp_from_img_i->cv_keypoint_.pt);

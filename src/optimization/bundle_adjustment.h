@@ -19,7 +19,8 @@ int bundleAdjustmentPoseOnlyCeres(
   std::vector<Eigen::Vector3d> &points_3d,
   std::vector<Eigen::Vector2d> &points_2d,
   const Eigen::Matrix<double, 3, 3> &K,
-  Sophus::SE3d &pose
+  Sophus::SE3d &Tbw,
+  Sophus::SE3d &Tcb
 );
 
 class reprojectionCostFunctionForPoseOnly : public ceres::SizedCostFunction<
@@ -106,64 +107,65 @@ class reprojectionCostFunctionForPoseOnlyWithK : public ceres::SizedCostFunction
 
 public:
 
-  reprojectionCostFunctionForPoseOnlyWithK(const Eigen::Vector3d &p_w, const Eigen::Vector2d &obs, const Eigen::Matrix<double, 3, 3> &K) : obs_(obs), p_w_(p_w), K_(K){}
+  reprojectionCostFunctionForPoseOnlyWithK(
+    const Eigen::Vector3d &p_w, 
+    const Eigen::Vector2d &obs, 
+    const Eigen::Matrix<double, 3, 3> &K, 
+    const Sophus::SE3d &Tcb) : obs_(obs), p_w_(p_w), K_(K), Tcb_(Tcb){}
 
   virtual bool Evaluate(double const * const * parameters,
                         double* residuals,
                         double** jacobians) const {
-      // se3 for pose
-      // Eigen::Matrix<double, 6, 1> se3_pose;
-      // se3_pose << parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4], parameters[0][5];
 
       Eigen::Map<const Eigen::Matrix<double, 1, 6, Eigen::RowMajor>> se3_pose(parameters[0]);
-      // Eigen::Matrix<double, 1, 6> se3_pose(parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4], parameters[0][5]);
-      // se3_pose << parameters[0][0], parameters[0][1], parameters[0][2], parameters[0][3], parameters[0][4], parameters[0][5];
 
-      Sophus::SE3d T = Sophus::SE3d::exp(se3_pose);
+      Sophus::SE3d Tbw = Sophus::SE3d::exp(se3_pose);
 
-      const Eigen::Vector3d p_c = T * p_w_;
+      const Eigen::Vector3d p_b = Tbw * p_w_;
+      const Eigen::Vector3d p_c = Tcb_ * p_b;
+      const Eigen::Matrix3d Rcb = Tcb_.rotationMatrix();
+
       Eigen::Vector3d reproject_pixel = K_* p_c;
 
-      const double X = p_c[0];
-      const double Y = p_c[1];
-      const double Z = p_c[2];
-      const double inv_Z = 1.0 / ( Z + 1e-18 );
-      const double inv_Z2 = inv_Z * inv_Z;
+
+      const double inv_Zc = 1.0 / ( p_c(2) + 1e-18 );
+      const double inv_Zc2 = inv_Zc * inv_Zc;
+  
+
       const double fx = K_(0, 0);
       const double fy = K_(1, 1);
 
-      reproject_pixel = reproject_pixel * inv_Z;
 
-      // Eigen::Map<Eigen::Vector2d> reproject_res(residuals);
-      // u - reproject_u
-      // v - reproject_v
-      // reproject_res = obs_ - reproject_pixel.head<2>(); 
+
+      reproject_pixel = reproject_pixel * inv_Zc;
+
+
       residuals[0] = obs_[0] - reproject_pixel[0];
       residuals[1] = obs_[1] - reproject_pixel[1];
 
 
       if(jacobians){
 
-        const double J00 = -fx * inv_Z;
-        const double J02 = fx * X * inv_Z2;
-        const double J03 = fx * X * Y * inv_Z2;
-        const double J04 = -fx - fx * X * X * inv_Z2;
-        const double J05 = fx * Y * inv_Z;
-
-        const double J11 = -fy * inv_Z;
-        const double J12 = fy * Y * inv_Z2;
-        const double J13 = fy + fy * Y * Y * inv_Z2;
-        const double J14 = -fy * X * Y * inv_Z2;
-        const double J15 = -fy * X * inv_Z;
-
         if(jacobians[0]){
+
+          Eigen::Matrix<double, 2, 3> jacobian_res_by_Pc;
+          jacobian_res_by_Pc << -fx * inv_Zc, 0, fx * p_c(0) * inv_Zc2,
+                                0, -fy * inv_Zc,  fy * p_c(1) * inv_Zc2;
+          Eigen::Matrix<double, 3, 3> negative_skew_symmetric_vector_for_p_b;
+          negative_skew_symmetric_vector_for_p_b <<  0, p_b(2), -p_b(1),
+                                                     -p_b(2), 0, p_b(0),
+                                                     p_b(1), -p_b(0), 0;
+          Eigen::Matrix<double, 3, 6> jacobian_Pc_by_Pose;  
+          jacobian_Pc_by_Pose.leftCols<3>() = Rcb;
+          jacobian_Pc_by_Pose.rightCols<3>() = Rcb * negative_skew_symmetric_vector_for_p_b;
+
           Eigen::Map<Eigen::Matrix<double, 2, 6, Eigen::RowMajor>> jacobian_res_by_pose(jacobians[0]);
-          jacobian_res_by_pose << J00, 0  , J02, J03, J04, J05,
-                                  0  , J11, J12, J13, J14, J15;
+          jacobian_res_by_pose = jacobian_res_by_Pc * jacobian_Pc_by_Pose;
+
+
         }
 
       }
-
 
 
       return true;
@@ -174,6 +176,7 @@ private:
   const Eigen::Vector3d p_w_;
   const Eigen::Vector2d obs_;
   const Eigen::Matrix<double, 3, 3> K_;
+  const Sophus::SE3d Tcb_;
 };
 
 

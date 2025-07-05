@@ -41,7 +41,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # Setting CMAKE_CXX_EXTENSIONS to OFF ensures strict compliance with the selected C++ standard.
 
 
-option(ENABLE_CMAKE_DEBUG "Enable detailed debug messages" ON)
+option(ENABLE_CMAKE_DEBUG "Enable detailed debug messages" OFF)
 
 if(ENABLE_CMAKE_DEBUG)
     # Debug or Release
@@ -51,7 +51,8 @@ else()
 endif()
 
 # Enable compile optimizations
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsee -fomit-frame-pointer -fno-signed-zeros -fno-math-errno -funroll-loops")
+# set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsee -fomit-frame-pointer -fno-signed-zeros -fno-math-errno -funroll-loops")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wuninitialized -fno-omit-frame-pointer")
 
 # Enable debug flags (use if you want to debug in gdb)
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -Wall -Wuninitialized -fno-omit-frame-pointer")

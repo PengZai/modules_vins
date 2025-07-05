@@ -134,7 +134,7 @@ void PangolinVisualizer::publishPoses(const std::shared_ptr<State> &state){
                 const Sophus::SE3<double> &synchronized_pose_comparison_in_base = timestamp_pose_comparison_in_base_map.at(synchronized_comparison_pose_timestamp);
 
                 Eigen::VectorXd color = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->color_;
-                drawFrame(synchronized_pose_comparison_in_base.matrix(), Eigen::Vector3i(color(0), color(1), color(2)));
+                drawFrame(synchronized_pose_comparison_in_base.inverse().matrix(), Eigen::Vector3i(color(0), color(1), color(2)));
             }
 
         }

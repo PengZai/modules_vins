@@ -43,8 +43,8 @@ class ROS1Visualizer{
     void publishPoses(const std::shared_ptr<State> &state);
     void publishKeyPoses(const std::shared_ptr<State> &state);
     void publishTrajectories(const std::shared_ptr<State> &state);
-    void publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub);
-    void publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub); 
+    void publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_b_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub);
+    void publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_b_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub); 
     void publishMapPoint(const std::shared_ptr<State> &state);
 
 

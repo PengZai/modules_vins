@@ -20,6 +20,7 @@ class KeyFrameManager{
     KeyFrameManager(const std::shared_ptr<SystemConfig> &sys_config);
     bool isKeyFrame(const std::shared_ptr<Frame> &frame);
     void updateKeyFrame(const std::shared_ptr<Frame> &frame);
+    void reconstructInKeyFrame(const std::shared_ptr<Frame> &frame);
 
     protected:
     std::vector<std::shared_ptr<Frame>> key_frame_vector_;

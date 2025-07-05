@@ -2,7 +2,7 @@
 
 system:
   log_verbosity: "VERBOSE" # VERBOSE, KEY, QUIET
-  num_used_camera: 2 # number of cameras, 2 for stereo, 1 for monocular
+  num_used_camera: 1 # number of cameras, 2 for stereo, 1 for monocular
   num_used_imu: 1 # number of IMUs
   num_used_lidar: 1 # number of IMUs
   max_stereo_time_offset: 0.02 # max time offset for stereo image pair (unit: second)
@@ -18,16 +18,16 @@ system:
   maximum_num_fail: 2  # when number of fail of pose estimation  reach this, state turn to get lost.
 
   #depth (unit meter)
-  maximum_estimated_depth: 120 # exceced this threshold, will be ignored
+  maximum_estimated_depth: 10 # exceced this threshold, will be ignored
   minimum_estimated_depth: 0.1 # exceced this threshold, will be ignored
 
 
   # backend
-  minimum_key_frame_translation: 0.5
+  minimum_key_frame_translation: 4
 
 
   # map
-  max_num_local_map_size: 2000000
+  max_num_local_map_size: 100000000
 
   # relative config file name
   imu_config_name: "imu_config.yaml"
@@ -40,10 +40,10 @@ system:
   model_path: /root/catkin_ws/src/modules_vins/models
 
   #robot_base, it have to be the name of each sensor, like imu0, cam0, cam1, or even comparison, like GT, VINSFUSION
-  robot_base: "imu0"
+  robot_base: "comparison0"
 
   #groundtruth path
-  use_comparison_pose_for_pose_estimation: 0 #if you set this to 1, then set robot_base to corresponding frame
+  use_comparison_pose_for_pose_estimation: 1 #if you set this to 1, then set robot_base to corresponding frame
   # comparison_pose_idx_for_pose_estimation: 0 # GT means ground truth
 
   # output

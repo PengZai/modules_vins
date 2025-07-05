@@ -127,6 +127,7 @@ void System::addFrameDeque(const std::vector<std::map<std::string, std::shared_p
 
     frame->setImages(image_vector);
     frame->status_ = Frame::Status::NORMAL;
+    frame->timestamp_ = image_vector.at(0)->timestamp_;
     frame->use_comparison_pose_for_pose_estimation_ = this->config_->params_->use_comparison_pose_for_pose_estimation_;
     frame->comparison_pose_idx_for_pose_estimation_ = this->config_->params_->comparison_pose_idx_for_pose_estimation_;
 
@@ -221,7 +222,11 @@ void System::callbackVisualNavigation(){
 
         
         if(this->status_ == Status::NORMAL && frame->status_ == Frame::Status::NORMAL){
-            key_frame_manager_->updateKeyFrame(frame);                    
+            key_frame_manager_->updateKeyFrame(frame); 
+            if(frame->is_key_frame_){
+                LOG(INFO) <<  "camera_id: " << frame->id_ << " is a key camera frame";
+                key_frame_manager_->reconstructInKeyFrame(frame);
+            }                   
             this->state_->map_->update(frame);
             updateState(frame);
         }
@@ -237,9 +242,7 @@ void System::callbackVisualNavigation(){
 
         
 
-        if(frame->is_key_frame_){
-            LOG(INFO) <<  "camera_id: " << frame->id_ << " is a key camera frame";
-        }
+   
 
         this->visualizer_->publish(frame, this->state_);
         LOG(INFO) << GREEN << "finished process camera frame " << frame->id_ << RESET;

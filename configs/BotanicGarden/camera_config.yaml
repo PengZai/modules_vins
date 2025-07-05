@@ -17,7 +17,7 @@ cam0:
   rgb_rostopic: /dalsa_rgb/left/image_raw
   output_rostopic: /output/left/image
 
-  use_sensor_detph: 0
+  use_sensor_detph: 1
   sensor_depth_rostopic: "/dalsa_gray/left/foundation_stereo_depth"
 
   use_learned_depth: 0

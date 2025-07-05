@@ -3,15 +3,15 @@
 visualizer:
   # visualization tool
   use_opencv_vis: 1
-  use_pangolin_vis: 1
+  use_pangolin_vis: 0
   use_rviz_vis: 1
 
 opencv_visualizer:
   cv_waitkey_num: 1
   show_projected_mappoint: 1
-  show_matching_in_frame: 1
-  show_matching_in_time: 1
-  show_tracking_in_time: 0
+  show_matching_in_frame: 0
+  show_matching_in_time: 0
+  show_tracking_in_time: 1
   show_sensor_depth: 0
   show_stereo_depth: 0
   show_learned_stereo_disparity: 0

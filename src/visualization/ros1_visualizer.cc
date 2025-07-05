@@ -42,7 +42,9 @@ ros_rate_(40)
     this->R_.setIdentity();  // Rotation matrix
     this->t_.setZero();  // Translation vector
 
-    pose_frame_id_ = "cam0";
+    std::string base_name = this->sys_config_->params_->robot_base_;
+    // pose_frame_id_ = "world";
+    pose_frame_id_ = base_name;
 
     nav_msgs::Path path_msg_;
     
@@ -95,36 +97,89 @@ void ROS1Visualizer::publishImages(const std::shared_ptr<Frame> &frame){
 }
 
 void ROS1Visualizer::publishTF(){
-    tf::StampedTransform global2cam0_trans;
-    global2cam0_trans.stamp_ = ros::Time::now();
-    global2cam0_trans.frame_id_ = "global";
-    global2cam0_trans.child_frame_id_ = "cam0";
-    tf::Quaternion global2cam0_quaternion;
-    // In ROS, use BGR-ZYX (yaw-pitch-roll) order. 
-    // this according to matrix
-    // 0,1,0
-    // 0,0,-1
-    // -1,0,0
-    global2cam0_quaternion.setRPY(-M_PI/2, 0, M_PI/2);
-    global2cam0_trans.setRotation(global2cam0_quaternion);
 
-    tf::Vector3 global2cam0_origin(-1, 0, 0);
-    global2cam0_trans.setOrigin(global2cam0_origin);
 
-    this->tf_broadcaster_->sendTransform(global2cam0_trans);
+    tf::StampedTransform world2base_trans;
+    std::string base_name = this->sys_config_->params_->robot_base_;
 
-    tf::StampedTransform global2imu_trans;
-    global2imu_trans.stamp_ = ros::Time::now();
-    global2imu_trans.frame_id_ = "global";
-    global2imu_trans.child_frame_id_ = "imu";
-    tf::Quaternion global2imu_quaternion;
-    // In ROS, use BGR-ZYX (yaw-pitch-roll) order. 
-    global2imu_quaternion.setRPY(0, 0, 0);
-    global2imu_trans.setRotation(global2imu_quaternion);
-    tf::Vector3 global2imu_origin(0, 1, 0);
-    global2imu_trans.setOrigin(global2imu_origin);
 
-    this->tf_broadcaster_->sendTransform(global2imu_trans);
+    world2base_trans.stamp_ = ros::Time::now();
+    world2base_trans.frame_id_ = "world";
+    world2base_trans.child_frame_id_ = base_name;
+
+
+    const std::shared_ptr<Parameters>& params_ptr = this->sys_config_->frame_name_to_sensor_parameters_ptr_map_[base_name];
+    const std::shared_ptr<LidarParameters>& lidar_params_ptr = this->sys_config_->lidar_config_->getParamsAt<LidarParameters>(0);
+    Eigen::Matrix4d T_base_lidar = lidar_params_ptr->T_base_sensor_;
+
+    Eigen::Quaterniond q(T_base_lidar.block<3,3>(0,0));
+    Eigen::Vector3d t(T_base_lidar.block<3,1>(0,3));
+
+    world2base_trans.setRotation(tf::Quaternion(q.x(), q.y(), q.z(), q.w()));
+    world2base_trans.setOrigin(tf::Vector3(t.x(), t.y(), t.z()));
+
+    this->tf_broadcaster_->sendTransform(world2base_trans);
+
+
+    for (const auto& pair : this->sys_config_->frame_name_to_sensor_parameters_ptr_map_) {
+        const std::string& frame_name = pair.first;
+        const std::shared_ptr<Parameters>& params_ptr = pair.second;
+
+        if(frame_name == base_name){
+            continue;
+        }
+
+        tf::StampedTransform world2sensor_trans;
+        world2sensor_trans.stamp_ = ros::Time::now();
+        world2sensor_trans.frame_id_ = base_name;
+        world2sensor_trans.child_frame_id_ = frame_name;
+
+        Eigen::Matrix4d T_sensor_base = params_ptr->T_base_sensor_;
+        Eigen::Quaterniond q(T_sensor_base.block<3,3>(0,0));
+        Eigen::Vector3d t(T_sensor_base.block<3,1>(0,3));
+
+        world2sensor_trans.setRotation(tf::Quaternion(q.x(), q.y(), q.z(), q.w()));
+        world2sensor_trans.setOrigin(tf::Vector3(t.x(), t.y(), t.z()));
+
+        this->tf_broadcaster_->sendTransform(world2sensor_trans);
+
+    }
+
+    // tf::StampedTransform global2cam0_trans;
+    // global2cam0_trans.stamp_ = ros::Time::now();
+    // global2cam0_trans.frame_id_ = "world";
+    // global2cam0_trans.child_frame_id_ = "cam0";
+
+
+    // Eigen::Quaterniond q(T_base_sensor.block<3,3>(0,0));
+    // Eigen::Quaterniond t(T_base_sensor.block<3,4>(0,0));
+
+    // tf::Quaternion global2cam0_quaternion;
+    // // In ROS, use BGR-ZYX (yaw-pitch-roll) order. 
+    // // this according to matrix
+    // // 0,1,0
+    // // 0,0,-1
+    // // -1,0,0
+    // global2cam0_quaternion.setRPY(-M_PI/2, 0, M_PI/2);
+    // global2cam0_trans.setRotation(global2cam0_quaternion);
+
+    // tf::Vector3 global2cam0_origin(-1, 0, 0);
+    // global2cam0_trans.setOrigin(global2cam0_origin);
+
+    // this->tf_broadcaster_->sendTransform(global2cam0_trans);
+
+    // tf::StampedTransform global2imu_trans;
+    // global2imu_trans.stamp_ = ros::Time::now();
+    // global2imu_trans.frame_id_ = "global";
+    // global2imu_trans.child_frame_id_ = "imu";
+    // tf::Quaternion global2imu_quaternion;
+    // // In ROS, use BGR-ZYX (yaw-pitch-roll) order. 
+    // global2imu_quaternion.setRPY(0, 0, 0);
+    // global2imu_trans.setRotation(global2imu_quaternion);
+    // tf::Vector3 global2imu_origin(0, 1, 0);
+    // global2imu_trans.setOrigin(global2imu_origin);
+
+    // this->tf_broadcaster_->sendTransform(global2imu_trans);
 
 
 }
@@ -134,6 +189,7 @@ void ROS1Visualizer::constructPoseMsg(const Sophus::SE3<double> &pose, geometry_
 
     pose_msg.header.stamp = ros::Time::now();
     pose_msg.header.frame_id = this->pose_frame_id_;
+
 
     const Eigen::Matrix3d &rotation = pose.rotationMatrix();
     const Eigen::Vector3d &position = pose.translation();
@@ -206,7 +262,7 @@ void ROS1Visualizer::publishPoses(const std::shared_ptr<State> &state){
                 }
                 const Sophus::SE3<double> &synchronized_pose_comparison_in_base = timestamp_pose_comparison_in_base_map_.at(synchronized_timestamp_for_pose_comparison);
 
-                constructPoseMsg(synchronized_pose_comparison_in_base, pose_msg);
+                constructPoseMsg(synchronized_pose_comparison_in_base.inverse(), pose_msg);
                 this->output_comparison_pose_pub_vector_.at(idx).publish(pose_msg);
 
             }
@@ -257,9 +313,9 @@ void ROS1Visualizer::publishTrajectories(const std::shared_ptr<State> &state){
 
                 std::map<double, Sophus::SE3<double>> timestamp_pose_comparison_in_base_map = state->timestamp_pose_comparison_in_base_map_vector_.at(idx);
 
-      
+                const std::shared_ptr<ComparisonParameters> &comparison_params = this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx);
                 double synchronized_timestamp_for_pose_comparison = state->getSynchronizedPoseTimestamp(newest_timestamp, 
-                    this->sys_config_->comparison_config_->getParamsAt<ComparisonParameters>(idx)->max_tolerant_time_offset_, 
+                    comparison_params->max_tolerant_time_offset_, 
                     state->timestamp_pose_comparison_in_comparison_full_map_vector_.at(idx));
 
                 if(synchronized_timestamp_for_pose_comparison == -1){
@@ -280,16 +336,16 @@ void ROS1Visualizer::publishTrajectories(const std::shared_ptr<State> &state){
 
 
 
-void ROS1Visualizer::publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub){
+void ROS1Visualizer::publishTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_b_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub){
 
     path_msgs.poses.clear();
     path_msgs.header.stamp = ros::Time::now();
     path_msgs.header.frame_id = this->pose_frame_id_;
 
-    for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
+    for (const auto& [timestamp, T_b_w] : timestamp_T_b_w_map) {
 
         geometry_msgs::PoseStamped pose_msg;
-        constructPoseMsg(T_c_w.inverse(), pose_msg);
+        constructPoseMsg(T_b_w.inverse(), pose_msg);
 
 
         path_msgs.poses.push_back(pose_msg);
@@ -299,16 +355,16 @@ void ROS1Visualizer::publishTrajectory(const std::map<double, Sophus::SE3<double
 
 }
 
-void ROS1Visualizer::publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_c_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub){
+void ROS1Visualizer::publishGTTrajectory(const std::map<double, Sophus::SE3<double>> &timestamp_T_b_w_map, nav_msgs::Path &path_msgs, ros::Publisher output_trajectory_pub){
 
     path_msgs.poses.clear();
     path_msgs.header.stamp = ros::Time::now();
     path_msgs.header.frame_id = this->pose_frame_id_;
 
-    for (const auto& [timestamp, T_c_w] : timestamp_T_c_w_map) {
+    for (const auto& [timestamp, T_b_w] : timestamp_T_b_w_map) {
 
         geometry_msgs::PoseStamped pose_msg;
-        constructPoseMsg(T_c_w.inverse(), pose_msg);
+        constructPoseMsg(T_b_w.inverse(), pose_msg);
 
 
         path_msgs.poses.push_back(pose_msg);

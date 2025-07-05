@@ -226,12 +226,13 @@ bool PoseEstimator::pipeline(const std::shared_ptr<Frame> &frame, int &num_inlie
     const Eigen::VectorXd distortion_coeffs = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_0_from_current_frame->sensor_id_)->getDistortionCoeffs();
     cv::Mat cv_distortion_coeffs = this->sys_config_->camera_config_->getParamsAt<CameraParameters>(img_0_from_current_frame->sensor_id_)->getCVDistortionCoeffs();
 
+    Sophus::SE3d Tc0b = Sophus::SE3d::fitToSE3(this->sys_config_->camera_config_->getParamsAt<CameraParameters>(0)->T_base_sensor_.inverse());
 
     for(size_t i=0; i < (int)img_0_from_ref_frame->matches_in_time_.size();i++){
 
         cv::DMatch &match_in_time = img_0_from_ref_frame->matches_in_time_.at(i);
         const std::shared_ptr<KeyPoint> &kp_from_ref_frame = img_0_from_ref_frame->keypoint_vector_.at(match_in_time.queryIdx);
-        const std::shared_ptr<KeyPoint> &kp_from_current_frame = img_0_from_current_frame->keypoint_vector_.at(match_in_time.trainIdx);
+         std::shared_ptr<KeyPoint> &kp_from_current_frame = img_0_from_current_frame->keypoint_vector_.at(match_in_time.trainIdx);
 
         
         if(kp_from_ref_frame->map_point_ptr_ == nullptr){
@@ -239,16 +240,16 @@ bool PoseEstimator::pipeline(const std::shared_ptr<Frame> &frame, int &num_inlie
         }
 
         Eigen::Vector3d &w_pt3d = kp_from_ref_frame->map_point_ptr_->pt3d_;
-        double z = w_pt3d(2);
+        // double z = w_pt3d(2);
         // Eigen::Vector3d &w_pt3d_ = kp_from_ref_frame->map_point_ptr2_->pt3d_;
         // double z2 = w_pt3d_(2);
 
         // if(z <= 0 || z2 <= 0){
         //     continue;
         // }
-        if(z <= 0){
-            continue;
-        }
+        // if(z <= 0){
+        //     continue;
+        // }
 
         // Eigen::Vector2d eigen_pt2d = Eigen::Vector2d(kp_from_current_frame->undistorted_pt2d_.x, kp_from_current_frame->undistorted_pt2d_.y);
         Eigen::Vector2d eigen_pt2d = Eigen::Vector2d(kp_from_current_frame->cv_keypoint_.pt.x, kp_from_current_frame->cv_keypoint_.pt.y);
@@ -307,7 +308,7 @@ bool PoseEstimator::pipeline(const std::shared_ptr<Frame> &frame, int &num_inlie
     LOG(INFO) << "before_BA\n" << frame->T_b_w_.matrix();
 
 
-    num_inlier = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, K, estimated_T_b_w);
+    num_inlier = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, K, estimated_T_b_w, Tc0b);
     // success = bundleAdjustmentPoseOnlyCeres(eigen_pt3ds, eigen_pt2ds, estimated_T_c_w);
 
     const Sophus::SE3d T_curr_ref = estimated_T_b_w * ref_frame->T_b_w_.inverse();
